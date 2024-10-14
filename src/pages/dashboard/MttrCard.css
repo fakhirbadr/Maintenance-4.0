@@ -1,0 +1,7 @@
+.apexcharts-toolbar {
+  color: black !important; /* Change la couleur de l'écriture de la toolbar en noir */
+}
+
+.apexcharts-toolbar button {
+  color: black !important; /* Change la couleur du texte des boutons en noir */
+}
