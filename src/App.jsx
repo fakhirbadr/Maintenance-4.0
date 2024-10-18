@@ -47,7 +47,9 @@ export default function MiniDrawer() {
         <SideBar open={open} handleDrawerClose={handleDrawerClose} />
         <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
           <DrawerHeader />
-          <Outlet />
+          <div className="max-w-screen mx-auto">
+            <Outlet />
+          </div>
         </Box>
       </Box>
     </ThemeProvider>

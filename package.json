@@ -4,7 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
+    "dev": "vite --port 8080",
     "build": "vite build",
     "lint": "eslint .",
     "preview": "vite preview"
@@ -23,8 +23,10 @@
     "@mui/styled-engine-sc": "^6.0.0-alpha.18",
     "@mui/x-charts": "^7.14.0",
     "@mui/x-data-grid": "^7.13.0",
+    "ag-charts-react": "^10.2.0",
     "apexcharts": "^3.54.0",
     "axios": "^1.7.7",
+    "clone": "^2.1.2",
     "dom-to-image": "^2.6.0",
     "file-saver": "^2.0.5",
     "flowbite": "^2.5.1",

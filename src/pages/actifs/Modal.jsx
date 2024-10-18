@@ -78,7 +78,7 @@ const Modal = ({ setModelIsOpen }) => {
       <form action="">
         <div className="flex flex-col gap-y-6">
           {/* Ligne 1 */}
-          <div className="flex flex-row gap-x-4">
+          <div className="flex   md:flex-row sm:flex-col gap-x-4">
             {/* Nom */}
             <div className="flex-1">
               <label

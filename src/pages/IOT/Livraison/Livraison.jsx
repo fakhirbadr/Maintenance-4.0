@@ -3,6 +3,9 @@ import { Tabs, Tab, Box, Typography } from "@mui/material";
 import Location from "../../../components/Location";
 import Vehicule from "./vehicule/Vehicule";
 import Config from "./configuration/Config";
+import Maps from "./maps/maps";
+import Historique from "./historique/Historique";
+import Stats from "./State/Stats";
 
 const Livraison = () => {
   const [value, setValue] = useState(0); // Début à 0 pour le premier onglet
@@ -25,6 +28,7 @@ const Livraison = () => {
           <Tab label="Configue " />
           <Tab label="Maps " />
           <Tab label="Historique" />
+          <Tab label="stats" />
         </Tabs>
 
         {/* Contenu qui change selon l'onglet sélectionné */}
@@ -45,14 +49,23 @@ const Livraison = () => {
           )}
           {value === 2 && (
             <Box>
-              <Typography variant="h6">Maps </Typography>
-              <div>Contenu des cartes</div>
+              <div>
+                <Maps />
+              </div>{" "}
             </Box>
           )}
           {value === 3 && (
             <Box>
-              <Typography variant="h6">Historique</Typography>
-              <div>Contenu de l'historique</div>
+              <div>
+                <Historique />
+              </div>{" "}
+            </Box>
+          )}
+          {value === 4 && (
+            <Box>
+              <div>
+                <Stats />
+              </div>{" "}
             </Box>
           )}
         </Box>

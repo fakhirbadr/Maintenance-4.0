@@ -20,8 +20,8 @@ const MapModal = ({ position, setMapModalIsOpen }) => {
 
   const customIcon = L.icon({
     iconUrl: customIconUrl, // L'URL de l'image de l'icône
-    iconSize: [45, 64], // Taille de l'icône
-    iconAnchor: [12, 41], // Point d'ancrage de l'icône
+    iconSize: [44, 44], // Taille de l'icône
+    iconAnchor: [22, 22], // Point d'ancrage de l'icône
     popupAnchor: [1, -34], // Point d'ancrage du popup
     shadowUrl: null, // Si vous avez une ombre pour l'icône
     shadowSize: null, // Taille de l'ombre

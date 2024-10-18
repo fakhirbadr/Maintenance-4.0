@@ -1,13 +1,13 @@
-import React, { useState } from "react"; // Ajoutez useState
+import { useState } from "react"; // Ajoutez useState
 
 import MUIDataTable from "mui-datatables";
 import { rows } from "../vehicule/Data"; // Importing rows from Data file
 import { createTheme, ThemeProvider } from "@mui/material/styles";
-import ElectricCarIcon from "@mui/icons-material/ElectricCar";
-import { Button, MenuItem, Select } from "@mui/material";
+import { MenuItem, Select } from "@mui/material";
+export const filteredRows = rows.filter((row) => row.statut === "livraison");
+
 const Config = () => {
   // Filter rows to only include those with statut 'livraison'
-  const filteredRows = rows.filter((row) => row.statut === "livraison");
 
   const options = {
     filterType: "",
@@ -51,10 +51,6 @@ const Config = () => {
     });
   const [enlargedImage, setEnlargedImage] = useState(null);
   const [status, setStatus] = useState({}); // State to hold status for each vehicle
-
-  const handleEdit = (imie) => {
-    console.log(" Statu Modifier le véhicule avec IMIE :", imie);
-  };
 
   const handleImageClick = (image) => {
     setEnlargedImage(image);
@@ -156,12 +152,6 @@ const Config = () => {
         customBodyRender: (value, tableMeta) => {
           return (
             <div>
-              <Button
-                onClick={() => handleEdit(tableMeta.rowData[0])}
-                startIcon={<ElectricCarIcon />}
-              >
-                Modifier
-              </Button>
               <Select
                 value={status[tableMeta.rowData[0]] || ""}
                 onChange={(e) => {
@@ -202,6 +192,7 @@ const Config = () => {
             title={"Liste des unites mobiles de santé"}
             data={filteredRows} // Use filtered rows
             columns={columns}
+            // @ts-ignore
             options={options}
           />
         </ThemeProvider>
