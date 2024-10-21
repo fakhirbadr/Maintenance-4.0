@@ -126,7 +126,7 @@ class ApexChart extends React.Component {
             height={350}
           />
         </div>
-        <div id="html-dist"></div>
+
         {/* Render the TicketGraph component here */}
         <StatusTicket />
       </div>
