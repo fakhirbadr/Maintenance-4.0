@@ -46,6 +46,12 @@ const Ticket = () => {
         },
       },
     });
+  const priorityColors = {
+    critique: "black",
+    élevée: "red", // High priority
+    moyen: "orange", // Medium priority
+    basse: "green", // Low priority
+  };
   const handleCloturer = (dataIndex) => {
     console.log("Clôturer:", dataIndex);
     setClosedRows((prevClosedRows) => [...prevClosedRows, dataIndex]);
@@ -155,11 +161,26 @@ const Ticket = () => {
       },
     },
     {
-      name: "commentaires",
-      label: "Commentaires",
+      name: "priorité",
+      label: "Priorité",
       options: {
         filter: false,
         sort: false,
+        customBodyRender: (value) => {
+          const color = priorityColors[value] || "inherit"; // Default color if not found
+          return (
+            <div
+              style={{
+                backgroundColor: color,
+                color: "white",
+                padding: "5px",
+                borderRadius: "4px",
+              }}
+            >
+              {value}
+            </div>
+          );
+        },
       },
     },
     {

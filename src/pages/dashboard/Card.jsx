@@ -1,99 +1,171 @@
-import React from "react";
+import React, { useState } from "react";
+import { rows } from "./data"; // Importez les lignes de data.js
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  Typography,
+  Select,
+  MenuItem,
+} from "@mui/material";
 import { PieChart } from "@mui/x-charts/PieChart";
 
-const Card = () => {
-  const data1 = [
-    { label: "Group A", value: 400, color: "#FF6384" }, // Rouge
-    { label: "x3", value: 100, color: "rgba(255, 206, 86, 0)" }, // Jaune transparent
-  ];
+const CustomCard = ({ className }) => {
+  const [selectedUnit, setSelectedUnit] = useState("tous"); // Par défaut, tous les unités
 
-  const data2 = [
-    { label: "B1", value: 100, color: "#9966FF" }, // Violet
-    { label: "x3", value: 100, color: "rgba(255, 206, 86, 0)" }, // Jaune transparent
-  ];
+  const handleUnitChange = (event) => {
+    setSelectedUnit(event.target.value); // Mettre à jour l'unité sélectionnée
+  };
 
-  const data3 = [
-    { label: "x2", value: 300, color: "#36A2EB" }, // Bleu
-    { label: "x3", value: 100, color: "rgba(255, 206, 86, 0)" }, // Jaune transparent
-  ];
+  // Filtrer les unités disponibles
+  const units = Array.from(new Set(rows.map((row) => row.Nom))); // Récupérer les noms des unités
+
+  // Calculer l'OEE et les indicateurs en fonction de l'unité sélectionnée
+  const calculateMetrics = (unit) => {
+    const unitRows =
+      unit === "tous" ? rows : rows.filter((row) => row.Nom === unit);
+
+    const totalAvailability = unitRows.reduce(
+      (acc, row) => acc + row.Temps_de_Disponibilité,
+      0
+    );
+    const totalDowntime = unitRows.reduce(
+      (acc, row) => acc + row.Temps_d_Arrêt,
+      0
+    );
+    const totalProductionReal = unitRows.reduce(
+      (acc, row) => acc + row.Production_Réelle,
+      0
+    );
+    const totalProductionPlanned = unitRows.reduce(
+      (acc, row) => acc + row.Production_Planifiée,
+      0
+    );
+    const totalQuality = unitRows.reduce((acc, row) => acc + row.Qualité, 0);
+
+    const availability =
+      (totalAvailability / (totalAvailability + totalDowntime)) * 100;
+    const performance = (totalProductionReal / totalProductionPlanned) * 100;
+    const quality = (totalQuality / totalProductionReal) * 100;
+
+    const oee = (availability * performance * quality) / 10000; // OEE = Disponibilité x Performance x Qualité
+
+    return {
+      oee,
+      indicators: {
+        disponibilite: availability,
+        performance,
+        qualite: quality,
+      },
+    };
+  };
+
+  const metrics = calculateMetrics(selectedUnit); // Calculer les métriques pour l'unité sélectionnée
+
+  // Titre dynamique en fonction de l'unité sélectionnée
+  const getTitle = () => {
+    return selectedUnit === "tous"
+      ? "OEE tous les unités"
+      : `OEE ${selectedUnit}`;
+  };
+
+  // Calculer les données pour le graphique en fonction de l'OEE sélectionné
+  const getChartData = () => {
+    return [
+      {
+        label: "Rempli",
+        value: metrics.oee, // Valeur correspondant à l'OEE
+        color: "#36A2EB",
+      },
+      {
+        label: "Vide",
+        value: 100 - metrics.oee, // Le reste du cercle sera vide
+        color: "#E0E0E0", // Couleur pour la partie vide
+      },
+    ];
+  };
 
   return (
-    <div className=" p-4   text-white w-[100%]  bg-gray-700 rounded-3xl">
-      <div className="flex flex-col gap-1">
-        <div className="flex flex-row gap-x-5 justify-between">
-          <div className="flex  sm:h-[6%] w-full text-ellipsis overflow-hidden sm:justify-center ">
+    <Card
+      className={`card ${className}`}
+      sx={{ backgroundColor: "", width: "100%" }}
+    >
+      <CardHeader
+        title={
+          <Typography variant="h6" align="center" gutterBottom>
             Temps de Disponibilité des Équipements
-          </div>
-          <div className="flex  justify-end">
-            <button>...</button>
-          </div>
-        </div>
+          </Typography>
+        }
+        action={
+          <Select
+            value={selectedUnit}
+            onChange={handleUnitChange}
+            displayEmpty
+            sx={{ color: "white" }} // Style du composant Select
+          >
+            <MenuItem value="tous">Tous les unités</MenuItem>
+            {units.map((unit, index) => (
+              <MenuItem key={index} value={unit}>
+                {unit}
+              </MenuItem>
+            ))}
+          </Select>
+        }
+      />
+      <CardContent>
         <div className="flex sm:justify-center gap-x-3">
-          <span className=" font-extrabold sm:justify-center flex">OEE </span>
-          tous les unité
+          <Typography variant="h6" component="span" fontWeight="bold">
+            {getTitle()} {/* Titre dynamique */}
+          </Typography>
         </div>
-        <div className="flex flex-row ">
-          <div className="flex justify-center items-center w-[80%]  ">
+        <div className="flex flex-row">
+          <div className="flex justify-center items-center w-[80%]">
             <PieChart
               className="flex justify-center items-center"
               series={[
-                {
-                  innerRadius: 100,
-                  outerRadius: 80,
-                  data: data1,
-                },
-                {
-                  innerRadius: 100,
-                  outerRadius: 120,
-                  data: data2,
-                },
-                {
-                  innerRadius: 120,
-                  outerRadius: 140,
-                  data: data3,
-                },
-              ]}
+                { innerRadius: 100, outerRadius: 120, data: getChartData() },
+              ]} // OEE dynamique
               width={400}
               height={300}
-              slotProps={{
-                legend: { hidden: true },
-              }}
-              sx={{
-                display: "", // Ensure the PieChart is treated as a block element
-              }}
+              slotProps={{ legend: { hidden: true } }}
+              sx={{ display: "block" }}
             />
           </div>
-          <div className="flex  w-[20%] font-extrabold text-2xl md:text-3xl sm:px-5 justify-center items-center p-8 md:w-[5%] sm:w-[5%]  ">
+          <div className="flex w-[20%] font-extrabold text-2xl md:text-3xl sm:px-5 justify-center items-center p-8 md:w-[5%] sm:w-[5%]">
             <span className="text-transparent bg-clip-text bg-gradient-to-r to-emerald-600 from-sky-400 font-extrabold">
-              70%
+              {metrics.oee.toFixed(2)}% {/* Affichage dynamique de l'OEE */}
             </span>
           </div>
         </div>
 
-        <div className="flex flex-col md:flex-wrap md:flex-row justify-evenly sm:gap-y-2 ">
-          <div className="flex justify-center items-center flex-col text-green-500 border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%]">
-            <div>Target</div>
-            <div>80%</div>
-          </div>
-
-          <div className="flex  justify-center items-center flex-col text-red-500 border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%]">
-            <div>Disponibilité</div>
-            <div>60%</div>
-          </div>
-
-          <div className="flex justify-center items-center flex-col text-blue-500 border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%]">
-            <div>Performance</div>
-            <div>55%</div>
-          </div>
-
-          <div className="flex justify-center items-center flex-col text-amber-600 border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%]">
-            <div>Qualité</div>
-            <div>66%</div>
-          </div>
+        {/* Section dynamique pour les indicateurs */}
+        <div className="flex flex-col md:flex-wrap md:flex-row justify-evenly sm:gap-y-2">
+          {["Disponibilité", "Performance", "Qualité"].map((item, index) => (
+            <div
+              key={index}
+              className={`flex justify-center items-center flex-col border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%] ${
+                item === "Disponibilité"
+                  ? "text-red-500"
+                  : item === "Performance"
+                  ? "text-blue-500"
+                  : "text-amber-600"
+              }`}
+            >
+              <div>{item}</div>
+              <div>
+                {item === "Disponibilité"
+                  ? metrics.indicators.disponibilite.toFixed(2)
+                  : item === "Performance"
+                  ? metrics.indicators.performance.toFixed(2)
+                  : metrics.indicators.qualite.toFixed(2)}
+                %
+              </div>
+            </div>
+          ))}
         </div>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 };
 
-export default Card;
+export default CustomCard;

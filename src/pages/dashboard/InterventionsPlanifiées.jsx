@@ -1,5 +1,6 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
+import { Card, CardContent, Typography } from "@mui/material"; // Importez les composants MUI
 
 const InterventionsPlanifiées = () => {
   const seriesData = [
@@ -24,7 +25,7 @@ const InterventionsPlanifiées = () => {
       enabled: true,
       style: {
         colors: ["black"],
-        fontSize: "17px", // Texte des étiquettes de données en blanc
+        fontSize: "17px", // Texte des étiquettes de données en noir
       },
     },
     xaxis: {
@@ -87,19 +88,21 @@ const InterventionsPlanifiées = () => {
   };
 
   return (
-    <div className="p-4 text-white w-full bg-gray-700 rounded-3xl">
-      <h2 className="text-center text-xl mb-4">
-        Suivi des Interventions Planifiées
-      </h2>
-      <div id="chart" className="w-full h-full">
-        <ReactApexChart
-          options={options}
-          series={seriesData}
-          type="bar"
-          height={590}
-        />
-      </div>
-    </div>
+    <Card className="bg-gray-700 text-white rounded-3xl">
+      <CardContent>
+        <Typography variant="h6" align="center" gutterBottom>
+          Suivi des Interventions Planifiées
+        </Typography>
+        <div id="chart" className="w-full h-full">
+          <ReactApexChart
+            options={options}
+            series={seriesData}
+            type="bar"
+            height={590}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 

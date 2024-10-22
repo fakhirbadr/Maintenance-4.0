@@ -88,6 +88,14 @@ export const columns = [
     },
   },
   {
+    name: "priorité",
+    label: "Priorité",
+    options: {
+      filter: true,
+      sort: true,
+    },
+  },
+  {
     name: "Action",
     label: "Action",
     options: {
@@ -110,10 +118,12 @@ export const rows = [
     heureDebut: "08:00",
     heureFin: "10:00",
     commentaires: "Intervention réussie, le système fonctionne normalement.",
+    priorité: "élevée",
+    année: "2024",
   },
   {
     id: 2,
-    Site: "UMMC  TINGHIR",
+    Site: "UMMC TINGHIR",
     date: "2024-08-23",
     technicien: "Mohamed RAZIN",
     typeIntervention: "Maintenance Préventive",
@@ -123,10 +133,12 @@ export const rows = [
     heureDebut: "09:30",
     heureFin: "",
     commentaires: "Vérification des niveaux de carburant et des filtres.",
+    priorité: "moyen",
+    année: "2024",
   },
   {
     id: 3,
-    Site: "UMMC OUMEJRANE ",
+    Site: "UMMC OUMEJRANE",
     date: "2024-08-24",
     technicien: "Ismail BELGHITI",
     typeIntervention: "Dépannage",
@@ -136,6 +148,8 @@ export const rows = [
     heureDebut: "",
     heureFin: "",
     commentaires: "L'intervention a été annulée par le client.",
+    priorité: "basse",
+    année: "2024",
   },
   {
     id: 4,
@@ -150,6 +164,8 @@ export const rows = [
     heureFin: "17:00",
     commentaires:
       "Installation terminée avec succès, tous les équipements sont fonctionnels.",
+    priorité: "critique",
+    année: "2024",
   },
   {
     id: 5,
@@ -164,6 +180,8 @@ export const rows = [
     heureFin: "",
     commentaires:
       "L'inspection est en cours, aucune anomalie détectée jusqu'à présent.",
+    priorité: "moyen",
+    année: "2024",
   },
   {
     id: 6,
@@ -177,6 +195,8 @@ export const rows = [
     heureDebut: "15:00",
     heureFin: "17:30",
     commentaires: "Réparation effectuée, test complet réalisé avec succès.",
+    priorité: "élevée",
+    année: "2024",
   },
   {
     id: 7,
@@ -190,6 +210,8 @@ export const rows = [
     heureDebut: "15:00",
     heureFin: "17:30",
     commentaires: "Réparation effectuée, test complet réalisé avec succès.",
+    priorité: "élevée",
+    année: "2024",
   },
   {
     id: 8,
@@ -203,5 +225,22 @@ export const rows = [
     heureDebut: "15:00",
     heureFin: "17:30",
     commentaires: "Réparation effectuée, test complet réalisé avec succès.",
+    priorité: "élevée",
+    année: "2024",
+  },
+  {
+    id: 9,
+    Site: "UMMC SIDI IFNI",
+    date: "2024-08-28",
+    technicien: "Mohamed RAZIN",
+    typeIntervention: "Réparation",
+    statut: "Terminé",
+    lieu: "Tanger",
+    description: "Réparation du système de chauffage central.",
+    heureDebut: "15:00",
+    heureFin: "17:30",
+    commentaires: "Réparation effectuée, test complet réalisé avec succès.",
+    priorité: "basse",
+    année: "2024",
   },
 ];

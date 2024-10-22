@@ -250,6 +250,13 @@ const RapportIntervention = () => {
           // Function to generate PDF
           const handleDownloadPdf = () => {
             const doc = new jsPDF({ format: "a4" });
+            const text =
+              "Voici un exemple de longue phrase qui doit être automatiquement découpée en plusieurs lignes si elle dépasse une certaine largeur.";
+            const maxWidth = 180;
+
+            // Position du texte (par exemple en bas à droite)
+            const x = 20; // ajuster la valeur pour l'alignement souhaité
+            const y = 280; // ajuster pour placer le texte en bas de la page
 
             const pageHeight = doc.internal.pageSize.height;
             const pageWidth = doc.internal.pageSize.width;
@@ -315,6 +322,8 @@ const RapportIntervention = () => {
             // Duration and Technician
             doc.text(`Durée de l'intervention: 4 heures 33 MIN.`, 14, 100);
             doc.text(`Équipe d'intervention: ${rowData.technicien}`, 14, 105);
+
+            doc.text(text, x, y, { maxWidth: maxWidth });
 
             // Comments
             doc.setFont("helvetica", "bold");

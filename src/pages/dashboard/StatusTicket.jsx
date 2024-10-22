@@ -1,5 +1,6 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
+import { Card, CardContent, Typography } from "@mui/material"; // Importez les composants MUI
 
 // TicketGraph component
 const StatusTicket = () => {
@@ -101,7 +102,7 @@ class ApexChart extends React.Component {
           },
         },
         title: {
-          text: "Status Ticket",
+          text: "",
           align: "center",
           style: {
             fontSize: "19px",
@@ -117,19 +118,22 @@ class ApexChart extends React.Component {
 
   render() {
     return (
-      <div>
-        <div id="chart">
-          <ReactApexChart
-            options={this.state.options}
-            series={this.state.series}
-            type="bar"
-            height={350}
-          />
-        </div>
-
-        {/* Render the TicketGraph component here */}
-        <StatusTicket />
-      </div>
+      <Card className="bg-gray-700 text-white" sx={{}}>
+        <CardContent>
+          <Typography variant="h6" align="center" gutterBottom>
+            Status Ticket
+          </Typography>
+          <div id="chart">
+            <ReactApexChart
+              options={this.state.options}
+              series={this.state.series}
+              type="bar"
+              height={350}
+            />
+          </div>
+          {/* Render the TicketGraph component here */}
+        </CardContent>
+      </Card>
     );
   }
 }

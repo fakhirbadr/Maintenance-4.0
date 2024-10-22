@@ -27,6 +27,7 @@ import ChatBot from "./pages/ChatBot/ChatBot";
 import Notfound from "./pages/not found/Notfound";
 import Rapports from "./pages/Rapport/Rapports";
 import RapportIntervention from "./pages/Rapport/Intervention_Rapports/RapportIntervention";
+import Info from "./pages/Informations/Info";
 
 // import Gestion from "./pages/gestion/Gestion";
 // import Interventions from "./pages/Interventions/Interventions";
@@ -57,6 +58,7 @@ const router = createBrowserRouter(
         <Route path="/ChatBot" element={<ChatBot />} />
         <Route path="/Rapports" element={<Rapports />} />
         <Route path="/RapportIntervention" element={<RapportIntervention />} />
+        <Route path="/Info" element={<Info />} />
 
         {/* <Route path="interventions" element={<Interventions />} />
       <Route path="Calendrier" element={<Calendrier />} />

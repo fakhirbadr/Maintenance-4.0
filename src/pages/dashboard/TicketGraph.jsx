@@ -1,35 +1,18 @@
 import React from "react";
 import ReactApexChart from "react-apexcharts";
-
-// TicketGraph component
-const TicketGraph = () => {
-  return <div style={{ color: "white" }}>TicketGraph</div>;
-};
+import { Card, CardContent, Typography } from "@mui/material"; // Import MUI components
+import { rows } from "../ticket/Data.js"; // Import your ticket data
 
 // ApexChart class component
 class ApexChart extends React.Component {
   constructor(props) {
     super(props);
 
+    // Prepare data based on rows
+    const seriesData = this.prepareData(rows);
+
     this.state = {
-      series: [
-        {
-          name: "Basse  ",
-          data: [44, 55, 41, 67, 22, 43],
-        },
-        {
-          name: "Moyenne",
-          data: [13, 23, 20, 8, 13, 27],
-        },
-        {
-          name: "Élevée",
-          data: [11, 17, 15, 15, 21, 14],
-        },
-        {
-          name: "Critique",
-          data: [21, 7, 25, 13, 22, 8],
-        },
-      ],
+      series: seriesData.series,
       options: {
         chart: {
           type: "bar",
@@ -58,8 +41,6 @@ class ApexChart extends React.Component {
           bar: {
             horizontal: false,
             borderRadius: 10,
-            borderRadiusApplication: "end",
-            borderRadiusWhenStacked: "last",
             dataLabels: {
               total: {
                 enabled: true,
@@ -73,15 +54,8 @@ class ApexChart extends React.Component {
           },
         },
         xaxis: {
-          type: "datetime",
-          categories: [
-            "01/01/2011 GMT",
-            "01/02/2011 GMT",
-            "01/03/2011 GMT",
-            "01/04/2011 GMT",
-            "01/05/2011 GMT",
-            "01/06/2011 GMT",
-          ],
+          type: "category",
+          categories: seriesData.categories,
           labels: {
             style: {
               colors: "#FFFFFF", // Change x-axis labels color to white
@@ -104,7 +78,7 @@ class ApexChart extends React.Component {
           },
         },
         title: {
-          text: "Nombre de Tickets & Priorité ",
+          text: "",
           align: "center",
           style: {
             fontSize: "19px",
@@ -118,27 +92,76 @@ class ApexChart extends React.Component {
     };
   }
 
+  prepareData(rows) {
+    const categories = [];
+    const seriesData = {
+      Basse: [],
+      Moyenne: [],
+      Élevée: [],
+      Critique: [],
+    };
+
+    rows.forEach((row) => {
+      const date = row.date; // Extract date
+      const priority = row.priorité.toLowerCase(); // Extract priority and convert to lowercase
+
+      if (!categories.includes(date)) {
+        categories.push(date);
+      }
+
+      // Increment the count for the corresponding priority
+      if (priority === "basse") seriesData.Basse.push(1);
+      else if (priority === "moyenne") seriesData.Moyenne.push(1);
+      else if (priority === "élevée") seriesData.Élevée.push(1);
+      else if (priority === "critique") seriesData.Critique.push(1);
+      else {
+        seriesData.Basse.push(0);
+        seriesData.Moyenne.push(0);
+        seriesData.Élevée.push(0);
+        seriesData.Critique.push(0);
+      }
+    });
+
+    // Pad the series data to ensure they all have the same length
+    const maxLength = Math.max(
+      ...Object.values(seriesData).map((arr) => arr.length)
+    );
+    for (const key in seriesData) {
+      while (seriesData[key].length < maxLength) {
+        seriesData[key].push(0); // Fill with zero for missing dates
+      }
+    }
+
+    return {
+      series: [
+        { name: "Basse", data: seriesData.Basse },
+        { name: "Moyenne", data: seriesData.Moyenne },
+        { name: "Élevée", data: seriesData.Élevée },
+        { name: "Critique", data: seriesData.Critique },
+      ],
+      categories: categories,
+    };
+  }
+
   render() {
     return (
-      <div>
-        <div id="chart">
-          <ReactApexChart
-            options={this.state.options}
-            series={this.state.series}
-            type="bar"
-            height={350}
-          />
-        </div>
-        <div id="html-dist"></div>
-        {/* Render the TicketGraph component here */}
-        <TicketGraph />
-      </div>
+      <Card className="bg-gray-700 text-white" sx={{}}>
+        <CardContent>
+          <Typography variant="h6" align="center" gutterBottom>
+            Nombre de Tickets & Priorité
+          </Typography>
+          <div id="chart">
+            <ReactApexChart
+              options={this.state.options}
+              series={this.state.series}
+              type="bar"
+              height={350}
+            />
+          </div>
+        </CardContent>
+      </Card>
     );
   }
 }
 
 export default ApexChart;
-
-// If you are using ReactDOM, ensure to include the rendering part where needed
-// const domContainer = document.querySelector('#app');
-// ReactDOM.render(React.createElement(ApexChart), domContainer);

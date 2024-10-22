@@ -137,7 +137,7 @@ const Array3 = [
   {
     text: "information",
     icon: <AlternateEmailOutlinedIcon />,
-    path: "/information",
+    path: "/Info",
   },
   {
     text: "ChatBot",
