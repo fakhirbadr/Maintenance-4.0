@@ -36,22 +36,24 @@ export default function MiniDrawer() {
   const theme = React.useMemo(() => createTheme(getDesignTokens(mode)), [mode]);
 
   return (
-    <ThemeProvider theme={theme}>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        <TopBar
-          open={open}
-          handleDrawerOpen={handleDrawerOpen}
-          setMode={setMode}
-        />
-        <SideBar open={open} handleDrawerClose={handleDrawerClose} />
-        <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
-          <DrawerHeader />
-          <div className=" mx-auto">
-            <Outlet />
-          </div>
+    <div className="">
+      <ThemeProvider theme={theme}>
+        <Box sx={{ display: "flex" }}>
+          <CssBaseline />
+          <TopBar
+            open={open}
+            handleDrawerOpen={handleDrawerOpen}
+            setMode={setMode}
+          />
+          <SideBar open={open} handleDrawerClose={handleDrawerClose} />
+          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+            <DrawerHeader />
+            <div className=" mx-auto">
+              <Outlet />
+            </div>
+          </Box>
         </Box>
-      </Box>
-    </ThemeProvider>
+      </ThemeProvider>{" "}
+    </div>
   );
 }

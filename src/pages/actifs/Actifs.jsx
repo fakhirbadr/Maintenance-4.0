@@ -1,144 +1,146 @@
+// Importation des composants et des bibliothèques nécessaires
 import Location from "../../components/Location";
 import Model from "./Modal";
+import { Box, IconButton, useTheme } from "@mui/material"; // Importez useTheme
+import { createTheme } from "@mui/material/styles"; // Pour personnaliser le thème MUI
+import { useEffect, useState } from "react";
+import MapIcon from "@mui/icons-material/Map"; // Icône pour afficher une carte
+import EditIcon from "@mui/icons-material/Edit"; // Icône pour modifier une ligne
+import DeleteIcon from "@mui/icons-material/Delete"; // Icône pour supprimer une ligne
+import Ajout from "../../components/Ajout"; // Composant personnalisé pour les boutons
+import ReusableTable from "../../components/Table"; // Table personnalisée
+import ReusableDialog from "../../components/ReusableDialog"; // Boîte de dialogue réutilisable
+import UpdateData from "./UpdateData"; // Composant pour mettre à jour les données
+import ExcelExporter from "../../components/ExcelExporter";
+import axios from "axios";
+import MapModal from "./mapModal";
 
-import { Box, Button, colors, IconButton } from "@mui/material";
-
-import { rows } from "./Data";
-
-import MUIDataTable from "mui-datatables";
-import MapModal from "./MapModal";
-import { createTheme, ThemeProvider } from "@mui/material/styles";
-import { useState } from "react";
-import * as XLSX from "xlsx"; // Importation de la bibliothèque xlsx
-import MapIcon from "@mui/icons-material/Map";
-import AddIcon from "@mui/icons-material/Add";
-import EditIcon from "@mui/icons-material/Edit";
-import DeleteIcon from "@mui/icons-material/Delete";
-import UpdateModal from "./UpdateModal";
-
+// Configuration des options du tableau (MUIDataTable)
 const options = {
-  filterType: "",
-  selectableRows: false,
-  rowsPerPage: 10,
-  rowsPerPageOptions: [30, 50, 70, 100],
-  search: true,
-  download: true, // Active le téléchargement CSV
+  filterType: "", // Pas de filtres supplémentaires
+  selectableRows: false, // Désactiver la sélection des lignes
+  rowsPerPage: 10, // Nombre de lignes par page
+  rowsPerPageOptions: [30, 50, 70, 100], // Options de pagination
+  search: true, // Activer la recherche
+  download: true, // Activer le téléchargement CSV
   downloadOptions: {
-    filename: "Liste des unites mobiles de santé", // Nom du fichier téléchargé
-    separator: ",", // Séparateur utilisé dans le fichier CSV
+    filename: "UMM & ULC", // Nom du fichier exporté
+    separator: ",", // Séparateur CSV
     responsive: "true",
   },
 };
 
-const getMuiTheme = () =>
-  createTheme({
+// Fonction pour personnaliser le thème MUI
+const getMuiTheme = (mode) => {
+  return createTheme({
     typography: {
-      fontFamily: "sans-serif",
+      fontFamily: "serif", // Police utilisée
     },
     palette: {
       background: {
-        paper: "#1e293b",
-        default: "#0f172a",
+        paper: mode === "dark" ? "#1e293b" : "#7cb7f2", // Couleur de fond pour les éléments
+        default: mode === "dark" ? "#0f172a" : "#f0f0f0", // Couleur de fond globale
       },
-      mode: "dark",
+      mode: mode, // Inclure le mode
+      text: {
+        primary: mode === "dark" ? "#ffffff" : "#000000", // Couleur du texte principale
+        secondary: mode === "dark" ? "#e0e0e0" : "#333333", // Couleur du texte secondaire
+      },
     },
     components: {
       MuiTableCell: {
         styleOverrides: {
           head: {
-            padding: "10px 4px",
+            padding: "10px 4px", // Marges pour les cellules d'en-tête
+            color: mode === "dark" ? "#ffffff" : "#000000",
+            background: mode === "light" ? "#66a7e8" : "", // Couleur du texte d'en-tête
           },
           body: {
-            padding: "7px 15px",
-            color: "#e2e8f0",
+            padding: "7px 15px", // Marges pour les cellules de contenu
+            color: mode === "dark" ? "#e2e8f0" : "#000000", // Couleur du texte
           },
         },
       },
     },
   });
+};
 
+// Composant principal Actifs
 const Actifs = () => {
-  const [modelIsOpen, setModelIsOpen] = useState(false);
-  const [mapModalIsOpen, setMapModalIsOpen] = useState(false);
-  const [UpdateModalIsOpen, setUpdateModalIsOpen] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null);
-  const [selectedRowData, setSelectedRowData] = useState(null);
+  // Utilisation du thème
+  const theme = useTheme();
 
+  // État pour ouvrir et fermer les modales
+  const [mapModalIsOpen, setMapModalIsOpen] = useState(false);
+  const [selectedPosition, setSelectedPosition] = useState(null); // Position sélectionnée pour la carte
+  const [selectedRowData, setSelectedRowData] = useState(null); // Données de la ligne sélectionnée
+  const [rows, setRows] = useState([]);
+  const [unites, setUnites] = useState([]);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchUnites = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/v1/unite");
+        if (Array.isArray(response.data.data.unites)) {
+          setUnites(response.data.data.unites);
+          setRows(response.data.data.unites); // Mettez à jour les rows ici
+        } else {
+          setError("La réponse de l'API n'est pas un tableau.");
+        }
+      } catch (err) {
+        setError("Erreur lors de la récupération des données.");
+      }
+    };
+
+    fetchUnites();
+  }, []);
+  if (error) {
+    return <div>{error}</div>;
+  }
+
+  // Définition des colonnes pour le tableau
   const columns = [
     {
-      name: "id",
-      label: "id",
-    },
-    {
-      name: "Etat",
-      label: "Etat",
+      name: "etat",
+      label: "État",
       options: {
-        customBodyRender: (value, tableMeta) => {
-          return (
-            <div style={{ display: "flex", alignItems: "center" }}>
-              <span
-                style={{
-                  width: "10px",
-                  height: "10px",
-                  borderRadius: "50%",
-                  backgroundColor: value === "actif" ? "green" : "red",
-                  marginRight: "8px",
-                }}
-              ></span>
-              {value}
-            </div>
-          );
-        },
+        customBodyRender: (value) => (
+          <div style={{ display: "flex", alignItems: "center" }}>
+            <span
+              style={{
+                width: "10px",
+                height: "10px",
+                borderRadius: "50%",
+                backgroundColor: value ? "green" : "red", // Utilisez la valeur booléenne directement
+                marginRight: "8px",
+              }}
+            ></span>
+            {value ? "actif" : "inactif"} {/* Affiche "actif" ou "inactif" */}
+          </div>
+        ),
       },
     },
-
+    { name: "name", label: "Nom" },
+    { name: "region", label: "Région" }, // Ensure this matches the data structure
+    { name: "province", label: "Province" }, // Ensure this matches the data structure
+    { name: "coordinateur", label: "Coordinateur" }, // Ensure this matches the data structure
+    { name: "chargeSuivi", label: "Chargé de suivi" }, // Ensure this matches the data structure
+    { name: "technicien", label: "Technicien" }, // Ensure this matches the data structure
+    { name: "docteur", label: "Docteur" }, // Ensure this matches the data structure
+    { name: "mail", label: "Email" }, // Use "Email" for clarity
+    { name: "num", label: "Numéro" }, // Use "Numéro" for clarity
     {
-      name: "Nom",
-      label: "Nom",
-    },
-    {
-      name: "Région",
-      label: "Région",
-    },
-    {
-      name: "Province",
-      label: "Province",
-    },
-    {
-      name: "Coordinateur",
-      label: "Coordinateur",
-    },
-    {
-      name: "Chargé_de_suivie",
-      label: "Chargé de suivie",
-    },
-    {
-      name: "Technicien",
-      label: "Technicien",
-    },
-    {
-      name: "Docteur",
-      label: "Docteur",
-    },
-    {
-      name: "Mail",
-      label: "Mail",
-    },
-    {
-      name: "Num",
-      label: "Num",
-    },
-    {
-      name: "Position",
+      name: "position",
       label: "Position",
       options: {
-        customBodyRender: (value, tableMeta) => (
+        customBodyRender: (value) => (
           <IconButton
             onClick={() => {
               setSelectedPosition(value);
               setMapModalIsOpen(true);
             }}
-            aria-label="x"
+            aria-label="map"
           >
             <MapIcon />
           </IconButton>
@@ -146,19 +148,22 @@ const Actifs = () => {
       },
     },
     {
-      name: "ACTION",
-      label: "ACTION",
+      name: "action",
+      label: "Actions",
       options: {
         filter: false,
         sort: false,
         customBodyRender: (value, tableMeta) => {
           const rowData = rows[tableMeta.rowIndex];
+          function handleDelete(rowData) {
+            throw new Error("Function not implemented.");
+          }
+
           return (
             <div>
-              {/* Bouton Modifier */}
               <IconButton
                 onClick={() => {
-                  setUpdateModalIsOpen(true);
+                  setOpenU(true);
                   setSelectedRowData(rowData);
                 }}
                 color="primary"
@@ -166,7 +171,6 @@ const Actifs = () => {
               >
                 <EditIcon />
               </IconButton>
-              {/* Bouton Supprimer */}
               <IconButton
                 onClick={() => handleDelete(rowData)}
                 color="secondary"
@@ -181,36 +185,44 @@ const Actifs = () => {
     },
   ];
 
-  const handleDownloadExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
-    XLSX.writeFile(workbook, "Liste_des_unites_mobiles.xlsx");
+  // États pour ouvrir et fermer les dialogues
+  const [open, setOpen] = useState(false);
+  const handleOpen = () => setOpen(true);
+  const handleClose = () => setOpen(false);
+  const handleConfirm = () => {
+    // Logique de confirmation lors de l'ajout
+    setOpen(false);
   };
 
+  const [openU, setOpenU] = useState(false);
+  const handleOpenU = () => setOpenU(true);
+  const handleCloseU = () => setOpenU(false);
+  const handleConfirmU = () => {
+    // Logique de confirmation lors de la modification
+    setOpenU(false);
+  };
+
+  // Retourne l'interface utilisateur du composant
   return (
     <>
+      {/* Affichage de la localisation */}
       <div>
         <Location />
       </div>
+
+      {/* Boutons pour ajouter ou télécharger */}
       <Box>
         <div className="flex justify-end gap-4">
-          <Button variant="outlined" onClick={handleDownloadExcel}>
-            Télécharger Excel
-          </Button>
-          <Button variant="outlined" onClick={() => setModelIsOpen(true)}>
-            Ajouter
-          </Button>
+          <ExcelExporter data={rows} filename="Liste_des_unites_mobiles" />
+          <Ajout
+            text="Ajouter"
+            variant="outlined"
+            onClick={() => setOpen(true)}
+          />
         </div>
       </Box>
-      {modelIsOpen && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="bg-blue-500 p-4 rounded-md shadow-lg">
-            <Model setModelIsOpen={setModelIsOpen} isOpen={modelIsOpen} />
-          </div>
-        </div>
-      )}
 
+      {/* Modale pour afficher la carte */}
       {mapModalIsOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
           <MapModal
@@ -220,29 +232,34 @@ const Actifs = () => {
         </div>
       )}
 
-      {UpdateModalIsOpen && selectedRowData && (
-        <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
-          <div className="bg-blue-500 p-4 rounded-md shadow-lg">
-            <UpdateModal
-              setUpdateModalIsOpen={setUpdateModalIsOpen}
-              isOpen={UpdateModalIsOpen}
-              rowData={selectedRowData} // Passer les données à la modale
-            />
-          </div>
-        </div>
-      )}
+      {/* Dialogue pour ajouter une nouvelle installation */}
+      <ReusableDialog
+        open={open}
+        onClose={handleClose}
+        title="Ajouter une nouvelle installation"
+        content={<Model />}
+        onConfirm={handleConfirm}
+      />
 
+      {/* Tableau affichant la liste des unités mobiles */}
       <div className="w-[100%] py-3">
-        <ThemeProvider theme={getMuiTheme()}>
-          <MUIDataTable
-            title={"Liste des unites mobiles de santé"}
-            data={rows}
-            columns={columns}
-            // @ts-ignore
-            options={options}
-          />
-        </ThemeProvider>
+        <ReusableTable
+          title="Liste des unités mobiles & logistiques"
+          data={rows}
+          columns={columns}
+          options={options}
+          theme={getMuiTheme(theme.palette.mode)} // Passez le mode actuel du thème
+        />
       </div>
+
+      {/* Dialogue pour modifier une installation existante */}
+      <ReusableDialog
+        open={openU}
+        onClose={handleCloseU}
+        title="Modifier les informations"
+        content={<UpdateData rowData={selectedRowData} />}
+        onConfirm={handleConfirmU}
+      />
     </>
   );
 };

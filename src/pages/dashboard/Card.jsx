@@ -8,9 +8,13 @@ import {
   Select,
   MenuItem,
 } from "@mui/material";
+import { useTheme } from "@mui/material"; // Importez useTheme
+
 import { PieChart } from "@mui/x-charts/PieChart";
 
 const CustomCard = ({ className }) => {
+  const theme = useTheme();
+
   const [selectedUnit, setSelectedUnit] = useState("tous"); // Par défaut, tous les unités
 
   const handleUnitChange = (event) => {
@@ -87,13 +91,22 @@ const CustomCard = ({ className }) => {
 
   return (
     <Card
-      className={`card ${className}`}
-      sx={{ backgroundColor: "", width: "100%" }}
+      className={`card ${className} `}
+      sx={{
+        backgroundColor: theme.palette.mode === "dark" ? "" : "#ebf8ff",
+        width: "100% ",
+        borderRadius: "12px",
+      }}
     >
       <CardHeader
         title={
-          <Typography variant="h6" align="center" gutterBottom>
-            Temps de Disponibilité des Équipements
+          <Typography
+            sx={{ color: theme.palette.mode === "dark" ? "" : "black" }}
+            variant="h6"
+            align="center"
+            gutterBottom
+          >
+            Efficacité globale de l'équipement (OEE)
           </Typography>
         }
         action={
@@ -101,7 +114,7 @@ const CustomCard = ({ className }) => {
             value={selectedUnit}
             onChange={handleUnitChange}
             displayEmpty
-            sx={{ color: "white" }} // Style du composant Select
+            sx={{ color: theme.palette.mode === "dark" ? "white " : "black" }} // Style du composant Select
           >
             <MenuItem value="tous">Tous les unités</MenuItem>
             {units.map((unit, index) => (
@@ -139,11 +152,14 @@ const CustomCard = ({ className }) => {
         </div>
 
         {/* Section dynamique pour les indicateurs */}
-        <div className="flex flex-col md:flex-wrap md:flex-row justify-evenly sm:gap-y-2">
+        <div className="flex flex-col  md:flex-wrap md:flex-row  justify-evenly sm:gap-y-2">
           {["Disponibilité", "Performance", "Qualité"].map((item, index) => (
             <div
+              style={{
+                borderColor: theme.palette.mode === "dark" ? "" : "black",
+              }}
               key={index}
-              className={`flex justify-center items-center flex-col border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%] ${
+              className={`flex justify-center items-center  flex-col border border-white px-3 py-1 rounded-lg h-[10%] w-[80%] md:w-[45%] ${
                 item === "Disponibilité"
                   ? "text-red-500"
                   : item === "Performance"
@@ -151,8 +167,8 @@ const CustomCard = ({ className }) => {
                   : "text-amber-600"
               }`}
             >
-              <div>{item}</div>
-              <div>
+              <div className="font-extrabold">{item}</div>
+              <div className="font-bold">
                 {item === "Disponibilité"
                   ? metrics.indicators.disponibilite.toFixed(2)
                   : item === "Performance"

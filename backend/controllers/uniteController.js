@@ -1,80 +1,108 @@
-import fs from "fs/promises";
-
-// Utilisation de l'importation dynamique pour charger les données depuis un fichier ES module
-const loadUniteData = async () => {
-  const { rows: unite } = await import("../../src/pages/actifs/Data.js");
-  return unite;
-};
-
-export const checkID = async (req, res, next) => {
-  try {
-    const unite = await loadUniteData(); // Load unite data
-
-    console.log(`unite id is :${req.params.id}`);
-    if (req.params.id * 1 > unite.length) {
-      return res.status(404).json({
-        status: "fail",
-        message: "invalid ID",
-      });
-    }
-    next();
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Error loading unit data",
-    });
-  }
-};
-export const checkBody = async (req, res, next) => {
-  if (!req.body.Nom || !req.body.Docteur) {
-    return res.status(400).json({
-      status: "fail",
-      message: "Missing name or Docteur",
-    });
-  }
-  next();
-};
-
+// controllers/uniteController.js
+import { Tour } from "@mui/icons-material";
+import Unite from "../models/unitesModel.js";
+// find all unites
 export const getAllUnite = async (req, res) => {
-  const unite = await loadUniteData();
+  try {
+    // 1) Construire la requête
+    // Créer une copie de l'objet de requête pour le filtrage
+    let queryObj = { ...req.query };
 
-  res.status(200).json({
-    status: "success",
-    requestedAT: req.requestTime,
-    results: unite.length,
-    data: {
-      unite,
-    },
-  });
+    // Définir les champs à exclure de la requête
+    const excludedFields = ["page", "sort", "limit", "fields"];
+    excludedFields.forEach((el) => delete queryObj[el]); // Supprimer les champs exclus de l'objet de requête
+
+    // 2) Filtrage avancé
+    // Convertir l'objet de requête en chaîne JSON pour le traitement
+    let queryStr = JSON.stringify(queryObj);
+
+    // Remplacer les opérateurs de comparaison par leurs équivalents MongoDB
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+
+    // Vérifier la chaîne de requête modifiée dans la console pour le débogage
+    console.log(JSON.parse(queryStr));
+
+    // Convertir la chaîne de requête modifiée en objet
+    queryObj = JSON.parse(queryStr);
+
+    // 3) Convertir les valeurs numériques en nombres
+    Object.keys(queryObj).forEach((key) => {
+      // Vérifier si la clé est lat, long ou un autre champ à convertir
+      if (typeof queryObj[key] === "string" && !isNaN(queryObj[key])) {
+        queryObj[key] = parseFloat(queryObj[key]); // Convertir en nombre
+      }
+    });
+
+    // Construire la requête Mongoose à partir de l'objet de requête
+    let query = Unite.find(queryObj); // Changez 'const' en 'let'
+
+    // 4) Limitation des champs
+    if (req.query.fields) {
+      // Utilisez split pour obtenir un tableau de champs et join pour les séparer par des espaces
+      const fields = req.query.fields.split(",").join(" ");
+      query = query.select(fields);
+    } else {
+      query = query.select("-__v");
+    }
+
+    //5) pagination
+    const page = req.query.page * 1 || 1;
+    const limit = req.query.limit * 1 || 100;
+    const skip = (page - 1) * limit;
+
+    query = query.skip(skip).limit(limit);
+    if (req.query.page) {
+      const numUnite = await unites.countDocuments();
+      if (skip > numUnite) throw new Error("cette page n'éxiste pas");
+    }
+
+    // Exécuter la requête et attendre les résultats
+    const unites = await query;
+
+    // Retourner la réponse avec les résultats
+    res.status(200).json({
+      status: "success",
+      results: unites.length,
+      data: {
+        unites,
+      },
+    });
+  } catch (err) {
+    // Gérer les erreurs et retourner une réponse d'échec
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
+    });
+  }
 };
 
 export const getUnite = async (req, res) => {
-  const unite = await loadUniteData();
-  const id = req.params.id * 1;
-  const uniteId = unite.find((el) => el.id === id);
-
-  res.status(200).json({
-    status: "success",
-    data: {
-      uniteId,
-    },
-  });
-};
-
-export const createUnite = async (req, res) => {
-  const unite = await loadUniteData();
-  const newId = unite[unite.length - 1].id + 1;
-  const newUnite = Object.assign({ id: newId }, req.body);
-
-  unite.push(newUnite);
-
   try {
-    const updatedData = `export const rows = ${JSON.stringify(
-      unite,
-      null,
-      2
-    )};`;
-    await fs.writeFile("../src/pages/actifs/Data.js", updatedData);
+    const unite = await Unite.findById(req.params.id);
+    if (!unite) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Unite not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        unite,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
+    });
+  }
+};
+// create
+export const createUnite = async (req, res) => {
+  try {
+    const newUnite = await Unite.create(req.body);
 
     res.status(201).json({
       status: "success",
@@ -82,30 +110,64 @@ export const createUnite = async (req, res) => {
         unite: newUnite,
       },
     });
-  } catch (error) {
-    res.status(500).json({
-      status: "error",
-      message: "Impossible d'enregistrer les données",
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
     });
   }
 };
 
 export const updateUnite = async (req, res) => {
-  const unite = await loadUniteData();
+  try {
+    const updatedUnite = await Unite.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
 
-  res.status(200).json({
-    status: "success",
-    data: {
-      uniteId: "<Unité mise à jour ici ...>",
-    },
-  });
+    if (!updatedUnite) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Unite not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        unite: updatedUnite,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
+    });
+  }
 };
 
 export const deleteUnite = async (req, res) => {
-  const unite = await loadUniteData();
+  try {
+    const deletedUnite = await Unite.findByIdAndDelete(req.params.id);
+    if (!deletedUnite) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Unite not found",
+      });
+    }
 
-  res.status(204).json({
-    status: "success",
-    data: null,
-  });
+    res.status(204).json({
+      status: "success",
+      data: null,
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
+    });
+  }
 };

@@ -133,7 +133,7 @@ export const rows = [
     heureDebut: "09:30",
     heureFin: "",
     commentaires: "Vérification des niveaux de carburant et des filtres.",
-    priorité: "moyen",
+    priorité: "moyenne",
     année: "2024",
   },
   {
@@ -164,7 +164,7 @@ export const rows = [
     heureFin: "17:00",
     commentaires:
       "Installation terminée avec succès, tous les équipements sont fonctionnels.",
-    priorité: "critique",
+    priorité: "Critique",
     année: "2024",
   },
   {
@@ -180,7 +180,7 @@ export const rows = [
     heureFin: "",
     commentaires:
       "L'inspection est en cours, aucune anomalie détectée jusqu'à présent.",
-    priorité: "moyen",
+    priorité: "moyenne",
     année: "2024",
   },
   {
@@ -195,7 +195,7 @@ export const rows = [
     heureDebut: "15:00",
     heureFin: "17:30",
     commentaires: "Réparation effectuée, test complet réalisé avec succès.",
-    priorité: "élevée",
+    priorité: "basse",
     année: "2024",
   },
   {
@@ -204,7 +204,7 @@ export const rows = [
     date: "2024-08-27",
     technicien: "Mohamed RAZIN",
     typeIntervention: "Réparation",
-    statut: "Terminé",
+    statut: "clôturé",
     lieu: "Tanger",
     description: "Réparation du système de chauffage central.",
     heureDebut: "15:00",
@@ -232,6 +232,21 @@ export const rows = [
     id: 9,
     Site: "UMMC SIDI IFNI",
     date: "2024-08-28",
+    technicien: "Mohamed RAZIN",
+    typeIntervention: "Réparation",
+    statut: "Terminé",
+    lieu: "Tanger",
+    description: "Réparation du système de chauffage central.",
+    heureDebut: "15:00",
+    heureFin: "17:30",
+    commentaires: "Réparation effectuée, test complet réalisé avec succès.",
+    priorité: "basse",
+    année: "2024",
+  },
+  {
+    id: 10,
+    Site: "UMMC SIDI IFNI",
+    date: "2024-08-23",
     technicien: "Mohamed RAZIN",
     typeIntervention: "Réparation",
     statut: "Terminé",

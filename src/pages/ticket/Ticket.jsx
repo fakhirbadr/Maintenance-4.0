@@ -1,6 +1,13 @@
 import { useState } from "react";
 import Location from "../../components/Location";
-import { Button, createTheme, ThemeProvider } from "@mui/material";
+import {
+  Box,
+  Button,
+  createTheme,
+  Paper,
+  ThemeProvider,
+  Typography,
+} from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import { rows } from "./Data";
 import * as XLSX from "xlsx";
@@ -47,9 +54,9 @@ const Ticket = () => {
       },
     });
   const priorityColors = {
-    critique: "black",
+    Critique: "black",
     élevée: "red", // High priority
-    moyen: "orange", // Medium priority
+    moyenne: "orange", // Medium priority
     basse: "green", // Low priority
   };
   const handleCloturer = (dataIndex) => {
@@ -268,28 +275,58 @@ const Ticket = () => {
           </div>
         </div>
       )}
-      <div className="flex justify-center  items-center">
-        <div className=" px-7 bg-[#323C4D]   rounded-lg flex  justify-center items-center mt-5  gap-48">
-          <div className="text-orange-400 ">
-            En cours{" "}
-            <span className="bg-white rounded-md text-blue-800 font-bold px-3 ">
-              13
-            </span>
-          </div>
-          <div className="text-red-600">
-            Expiré{" "}
-            <span className="bg-white rounded-md text-blue-800 font-bold px-3 ">
-              4
-            </span>
-          </div>
-          <div className="text-green-500">
-            Terminé{" "}
-            <span className="bg-white rounded-md text-blue-800 font-bold px-3 ">
-              22
-            </span>
-          </div>
-        </div>
-      </div>
+      <Box display="flex" justifyContent="center" alignItems="center">
+        <Paper
+          elevation={3}
+          sx={{
+            px: 7,
+            py: ["2px"],
+            bgcolor: "#323C4D",
+            borderRadius: 2,
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            mt: 5,
+            gap: 6,
+          }}
+        >
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="body1" color="orange">
+              En cours{" "}
+              <Box
+                component="span"
+                sx={{
+                  bgcolor: "white",
+                  color: "blue",
+                  fontWeight: "bold",
+                  px: 1.5,
+                  borderRadius: 1,
+                }}
+              >
+                13
+              </Box>
+            </Typography>
+          </Box>
+
+          <Box display="flex" alignItems="center" gap={1}>
+            <Typography variant="body1" color="green">
+              Terminé{" "}
+              <Box
+                component="span"
+                sx={{
+                  bgcolor: "white",
+                  color: "blue",
+                  fontWeight: "bold",
+                  px: 1.5,
+                  borderRadius: 1,
+                }}
+              >
+                22
+              </Box>
+            </Typography>
+          </Box>
+        </Paper>
+      </Box>
 
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>

@@ -170,8 +170,8 @@ const MttrCard = () => {
   const uniqueYears = Array.from(new Set(rows.map((row) => row.annee))).sort(); // Sorting for better UX
 
   return (
-    <Card className="bg-gray-700 text-white w-full">
-      <div className="flex justify-between">
+    <Card className="  text-white w-full">
+      <div className="flex justify-between ">
         <FormControl
           variant="outlined"
           size="small"

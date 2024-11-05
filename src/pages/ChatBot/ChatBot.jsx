@@ -38,9 +38,9 @@ const ChatBot = () => {
       <div>
         <Location />
       </div>
-      <div className="flex flex-col md:flex-row p-4">
+      <div className="flex flex-col md:flex-row gap-x-4 p-4">
         {/* Colonne de gauche avec les boutons de questions prédéfinies */}
-        <div className="w-full md:w-1/3 bg-gray-100 p-4 rounded-lg shadow-md mb-4 md:mb-0">
+        <div className="w-full md:w-1/3 bg-gray-800 p-4 rounded-lg shadow-md mb-4 md:mb-0">
           <div className="text-lg font-semibold mb-4">Questions suggérées</div>
           <div className="flex flex-col space-y-2">
             {predefinedQuestions.map((question, index) => (
@@ -56,12 +56,12 @@ const ChatBot = () => {
         </div>
 
         {/* Colonne de droite avec le chat */}
-        <div className="w-full md:w-2/3 bg-gray-100 p-4 rounded-lg shadow-md">
+        <div className="w-full md:w-2/3 bg-gray-800 p-4 rounded-lg shadow-md">
           <Location />
-          <div className="text-xl font-semibold mb-4">ChatBot</div>
+          <div className="text-xl font-semibold mb-4">Chat v1</div>
 
           {/* Affichage des messages */}
-          <div className="h-64  overflow-y-auto bg-white p-2 rounded-md mb-4">
+          <div className="h-64  overflow-y-auto bg-gray-300 p-2 rounded-md mb-4">
             {messages.map((message, index) => (
               <div
                 key={index}

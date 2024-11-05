@@ -1,31 +1,82 @@
-import React from "react";
-import jsPDF from "jspdf";
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper,
+} from "@mui/material";
 
 const Test = () => {
-  const mapboxStaticMapURL = `https://api.mapbox.com/styles/v1/mapbox/streets-v11/static/pin-s+555555(-7.589843,33.57311)/-7.589843,33.57311,13/600x400?access_token=YOUR_MAPBOX_ACCESS_TOKEN`;
+  const [unites, setUnites] = useState([]);
+  const [error, setError] = useState(null);
 
-  const generatePDF = () => {
-    const doc = new jsPDF();
-
-    const image = new Image();
-    image.src = mapboxStaticMapURL;
-    image.onload = function () {
-      doc.text("Carte statique - Casablanca", 10, 10);
-      doc.addImage(image, "JPEG", 10, 20, 180, 150);
-      doc.save("map.pdf");
+  useEffect(() => {
+    const fetchUnites = async () => {
+      try {
+        const response = await axios.get("http://localhost:3000/api/v1/unite");
+        // Vérifiez que nous avons bien le tableau sous la clé `data.unites`
+        if (Array.isArray(response.data.data.unites)) {
+          setUnites(response.data.data.unites);
+        } else {
+          setError("La réponse de l'API n'est pas un tableau.");
+        }
+      } catch (err) {
+        setError("Erreur lors de la récupération des données.");
+      }
     };
-  };
+
+    fetchUnites();
+  }, []);
+
+  if (error) {
+    return <div>{error}</div>;
+  }
 
   return (
-    <div>
-      <h2>Carte statique de Casablanca</h2>
-      <img
-        src={mapboxStaticMapURL}
-        alt="Static Map"
-        style={{ width: "100%", height: "400px" }}
-      />
-      <button onClick={generatePDF}>Générer le PDF</button>
-    </div>
+    <TableContainer component={Paper}>
+      <Table>
+        <TableHead>
+          <TableRow>
+            <TableCell>ID</TableCell>
+            <TableCell>État</TableCell>
+            <TableCell>Nom</TableCell>
+            <TableCell>Région</TableCell>
+            <TableCell>Province</TableCell>
+            <TableCell>Coordinateur</TableCell>
+            <TableCell>Charge de Suivi</TableCell>
+            <TableCell>Technicien</TableCell>
+            <TableCell>Docteur</TableCell>
+            <TableCell>Email</TableCell>
+            <TableCell>Téléphone</TableCell>
+            <TableCell>Latitude</TableCell>
+            <TableCell>Longitude</TableCell>
+          </TableRow>
+        </TableHead>
+        <TableBody>
+          {unites.map((unite) => (
+            <TableRow key={unite._id}>
+              <TableCell>{unite._id}</TableCell>
+              <TableCell>{unite.etat ? "Actif" : "Inactif"}</TableCell>
+              <TableCell>{unite.name}</TableCell>
+              <TableCell>{unite.region}</TableCell>
+              <TableCell>{unite.province}</TableCell>
+              <TableCell>{unite.coordinateur}</TableCell>
+              <TableCell>{unite.chargeSuivi}</TableCell>
+              <TableCell>{unite.technicien}</TableCell>
+              <TableCell>{unite.docteur}</TableCell>
+              <TableCell>{unite.mail}</TableCell>
+              <TableCell>{unite.num}</TableCell>
+              <TableCell>{unite.lat}</TableCell>
+              <TableCell>{unite.long}</TableCell>
+            </TableRow>
+          ))}
+        </TableBody>
+      </Table>
+    </TableContainer>
   );
 };
 

@@ -1,9 +1,13 @@
 import React from "react";
+import backgroundImage from "./1.jpg";
 
 const Login = () => {
   return (
-    <div className="flex justify-center items-center h-screen  text-white">
-      <section className="bg-orange-100 dark:bg-gray-900 w-full">
+    <div
+      className="flex justify-center items-center h-screen  text-white"
+      style={{ backgroundImage: `url(${backgroundImage})` }}
+    >
+      <section className=" dark:bg-gray-900 w-full">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <a
             href="#"
@@ -14,7 +18,12 @@ const Login = () => {
               src="https://cdn-icons-png.flaticon.com/512/5759/5759665.png"
               alt="logo"
             />
-            Maintenance des unites mobiles
+            Gestion intelligente de la maintenance pour les unités mobiles
+            <img
+              className="w-8 h-8 mr-2 "
+              src="https://cdn-icons-png.flaticon.com/512/5759/5759665.png"
+              alt="logo"
+            />
           </a>
           <div className="w-full bg-white rounded-lg shadow dark:border md:mt-0 sm:max-w-md xl:p-0 dark:bg-gray-800 dark:border-gray-700">
             <div className="p-6 space-y-4 md:space-y-6 sm:p-8">
