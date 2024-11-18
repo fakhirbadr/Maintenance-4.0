@@ -7,27 +7,27 @@ import {
   MenuItem,
   FormControl,
   InputLabel,
-} from "@mui/material"; // Import Select and other necessary components
-import "./MttrCard.css"; // Import CSS file
-import { rows } from "./dataMttr"; // Import repair data
+  useTheme,
+} from "@mui/material";
+import "./MttrCard.css";
+import { rows } from "./dataMttr";
 
 const MttrCard = () => {
-  const [selectedUnit, setSelectedUnit] = useState(""); // State for the selected unit
-  const [selectedMonth, setSelectedMonth] = useState(""); // State for the selected month
-  const [selectedYear, setSelectedYear] = useState(""); // State for the selected year
-  const [filteredRows, setFilteredRows] = useState(rows); // State for filtered rows
+  const [selectedUnit, setSelectedUnit] = useState("");
+  const [selectedMonth, setSelectedMonth] = useState("");
+  const [selectedYear, setSelectedYear] = useState("");
+  const [filteredRows, setFilteredRows] = useState(rows);
 
-  // Function to convert "X heures" to a number (parseFloat)
+  const theme = useTheme();
+
+  // Fonction pour convertir "X heures" en nombre (parseFloat)
   const convertMttr = (mttrString) => parseFloat(mttrString.split(" ")[0]);
 
-  // UseEffect to update filteredRows based on the selected unit, month, and year
   useEffect(() => {
     let filtered = rows;
-
     if (selectedUnit) {
       filtered = filtered.filter((row) => row.nomUnite === selectedUnit);
     }
-
     if (selectedMonth) {
       filtered = filtered.filter((row) => {
         const month = new Date(row.dateReparation).toLocaleString("default", {
@@ -36,21 +36,16 @@ const MttrCard = () => {
         return month === selectedMonth;
       });
     }
-
     if (selectedYear) {
       filtered = filtered.filter(
         (row) => row.annee.toString() === selectedYear
-      ); // Filter by year using the annee property
+      );
     }
-
     setFilteredRows(filtered);
   }, [selectedUnit, selectedMonth, selectedYear]);
 
-  // Extract MTTR and repair dates from filteredRows
   const mttrData = filteredRows.map((row) => convertMttr(row.mttr));
   const datesReparation = filteredRows.map((row) => row.dateReparation);
-
-  // Calculate average MTTR
   const averageMttr =
     mttrData.reduce((acc, curr) => acc + curr, 0) / mttrData.length || 0;
 
@@ -75,7 +70,6 @@ const MttrCard = () => {
         categories: datesReparation,
         labels: {
           style: {
-            colors: "#FFFFFF",
             fontSize: "12px",
           },
         },
@@ -83,7 +77,6 @@ const MttrCard = () => {
       yaxis: {
         labels: {
           style: {
-            colors: "#FFFFFF",
             fontSize: "12px",
           },
         },
@@ -127,35 +120,43 @@ const MttrCard = () => {
     },
   });
 
-  // Update chart data whenever filteredRows change
   useEffect(() => {
-    setChartData({
-      series: [
-        {
-          name: "MTTR (heures)",
-          data: mttrData,
-        },
-      ],
+    setChartData((prevData) => ({
+      ...prevData,
       options: {
-        ...chartData.options,
+        ...prevData.options,
         xaxis: {
-          ...chartData.options.xaxis,
-          categories: datesReparation,
+          ...prevData.options.xaxis,
+          labels: {
+            style: {
+              colors: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000",
+              fontSize: "12px",
+            },
+          },
+        },
+        yaxis: {
+          labels: {
+            style: {
+              colors: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000",
+              fontSize: "12px",
+            },
+          },
         },
         title: {
-          ...chartData.options.title,
+          ...prevData.options.title,
           text: `Temps moyen de réparation (MTTR): ${averageMttr.toFixed(
             2
           )} heures`,
+          style: {
+            fontSize: "19px",
+            colors: theme.palette.mode === "dark" ? "#FFFFFF" : "#000000",
+          },
         },
       },
-    });
-  }, [filteredRows, mttrData, datesReparation, averageMttr]);
+    }));
+  }, [filteredRows, theme.palette.mode]);
 
-  // Create a unique list of unit names
   const uniqueUnits = Array.from(new Set(rows.map((row) => row.nomUnite)));
-
-  // Create a unique list of months from dateReparation
   const uniqueMonths = Array.from(
     new Set(
       rows.map((row) =>
@@ -165,12 +166,17 @@ const MttrCard = () => {
       )
     )
   );
-
-  // Create a unique list of years from the annee property
-  const uniqueYears = Array.from(new Set(rows.map((row) => row.annee))).sort(); // Sorting for better UX
+  const uniqueYears = Array.from(new Set(rows.map((row) => row.annee))).sort();
 
   return (
-    <Card className="  text-white w-full">
+    <Card
+      sx={{
+        backgroundColor: theme.palette.mode === "dark" ? "" : "#b6d9fc",
+        width: "100% ",
+        borderRadius: "12px",
+      }}
+      className="  text-white w-full"
+    >
       <div className="flex justify-between ">
         <FormControl
           variant="outlined"
@@ -180,11 +186,11 @@ const MttrCard = () => {
           <InputLabel>Filtrer par nom d'unité</InputLabel>
           <Select
             value={selectedUnit}
-            onChange={(e) => setSelectedUnit(e.target.value)} // Update selected unit on change
+            onChange={(e) => setSelectedUnit(e.target.value)} // Mettre à jour l'unité sélectionnée en cas de changement
             label="Filtrer par nom d'unité"
           >
             <MenuItem value="">Tous les unités</MenuItem>{" "}
-            {/* Option to show all units */}
+            {/* Option pour montrer toutes les unités */}
             {uniqueUnits.map((unit) => (
               <MenuItem key={unit} value={unit}>
                 {unit}
@@ -201,11 +207,11 @@ const MttrCard = () => {
           <InputLabel>Filtrer par mois</InputLabel>
           <Select
             value={selectedMonth}
-            onChange={(e) => setSelectedMonth(e.target.value)} // Update selected month on change
+            onChange={(e) => setSelectedMonth(e.target.value)} // Mettre à jour le mois sélectionné en cas de changement
             label="Filtrer par mois"
           >
             <MenuItem value="">Tous les mois</MenuItem>{" "}
-            {/* Option to show all months */}
+            {/* Option pour montrer tous les mois */}
             {uniqueMonths.map((month) => (
               <MenuItem key={month} value={month}>
                 {month}
@@ -224,12 +230,12 @@ const MttrCard = () => {
             value={selectedYear}
             onChange={(e) => {
               setSelectedYear(e.target.value);
-              console.log("Selected Year:", e.target.value); // Log the selected year
-            }} // Update selected year on change
+              console.log("Année sélectionnée :", e.target.value); // Afficher l'année sélectionnée
+            }} // Mettre à jour l'année sélectionnée en cas de changement
             label="Filtrer par année"
           >
             <MenuItem value="">Toutes les années</MenuItem>{" "}
-            {/* Option to show all years */}
+            {/* Option pour montrer toutes les années */}
             {uniqueYears.map((year) => (
               <MenuItem key={year} value={year}>
                 {year}

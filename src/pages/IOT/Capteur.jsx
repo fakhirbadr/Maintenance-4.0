@@ -11,6 +11,8 @@ import {
 import { useState } from "react";
 import AlerteDown from "./AlerteDown";
 import OffLines from "./OffLines";
+import WhatshotIcon from "@mui/icons-material/Whatshot";
+import { Height } from "@mui/icons-material";
 
 const Capteur = () => {
   const [selectedTable, setSelectedTable] = useState("table1");
@@ -21,9 +23,10 @@ const Capteur = () => {
 
   return (
     <div>
-      <div>
-        <Location />
-      </div>
+      <h3 className="mb-4 text-3xl font-extrabold leading-none tracking-tight md:text-4xl uppercase text-orange-500">
+        Hausse de température
+        <WhatshotIcon style={{ fontSize: "2rem", margin: "0 0.5rem" }} />
+      </h3>
       <div className=" ">
         <div className="flex gap-4 w-full justify-center items-center ">
           <FormControl>

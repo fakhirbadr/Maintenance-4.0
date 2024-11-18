@@ -18,7 +18,7 @@ import slide_image_5 from "../../../public/images/IOT/swipper/5.jpeg";
 const SwiperImage = () => {
   return (
     <div className="max-w-5xl mx-auto p-4 text-center">
-      <h1 className="text-4xl mb-4 uppercase">à propos</h1>
+      
       <Swiper
         effect={"coverflow"}
         grabCursor={true}

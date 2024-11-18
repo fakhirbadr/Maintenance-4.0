@@ -18,6 +18,7 @@ import {
 } from "@mui/icons-material";
 import ModelAdd from "./ModelAdd";
 import ModelUpdate from "./ModelUpdate";
+import AddModal from "./AddModal";
 
 const Ticket = () => {
   const [closedRows, setClosedRows] = useState([]); // État pour stocker les lignes clôturées
@@ -261,7 +262,7 @@ const Ticket = () => {
       {modelAddIsOpen && (
         <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-75">
           <div className="bg-blue-500 p-4 rounded-md shadow-lg">
-            <ModelAdd setModelAddIsOpen={setModelAddIsOpen} />
+            <AddModal setModelAddIsOpen={setModelAddIsOpen} />
           </div>
         </div>
       )}

@@ -4,11 +4,11 @@ import mongoose from "mongoose";
 const uniteSchema = new mongoose.Schema({
   etat: {
     type: Boolean,
-    required: [true, "Unité must have a state"],
+    required: [false, "Unité must have a state"],
   },
   name: {
     type: String,
-    required: [true, "Unité must have a name"],
+    required: [false, "Unité must have a name"],
     unique: true,
   },
   region: {

@@ -1,63 +1,50 @@
 // Importation des composants et des bibliothèques nécessaires
 import Location from "../../components/Location";
 import Model from "./Modal";
-import { Box, IconButton, useTheme } from "@mui/material"; // Importez useTheme
-import { createTheme } from "@mui/material/styles"; // Pour personnaliser le thème MUI
+import { Box, IconButton, useTheme } from "@mui/material"; // Utilisation de useTheme pour le mode sombre
+import { createTheme } from "@mui/material/styles"; // Personnalisation du thème MUI
 import { useEffect, useState } from "react";
-import MapIcon from "@mui/icons-material/Map"; // Icône pour afficher une carte
-import EditIcon from "@mui/icons-material/Edit"; // Icône pour modifier une ligne
-import DeleteIcon from "@mui/icons-material/Delete"; // Icône pour supprimer une ligne
-import Ajout from "../../components/Ajout"; // Composant personnalisé pour les boutons
+import MapIcon from "@mui/icons-material/Map"; // Icône de carte
+import EditIcon from "@mui/icons-material/Edit"; // Icône d'édition
+import DeleteIcon from "@mui/icons-material/Delete"; // Icône de suppression
+import Ajout from "../../components/Ajout"; // Bouton d'ajout personnalisé
 import ReusableTable from "../../components/Table"; // Table personnalisée
 import ReusableDialog from "../../components/ReusableDialog"; // Boîte de dialogue réutilisable
-import UpdateData from "./UpdateData"; // Composant pour mettre à jour les données
-import ExcelExporter from "../../components/ExcelExporter";
+import UpdateData from "./UpdateData"; // Composant de mise à jour des données
+import ExcelExporter from "../../components/ExcelExporter"; // Exportateur Excel
 import axios from "axios";
-import MapModal from "./mapModal";
+import MapModal from "./mapModal"; // Modale pour la carte
+import ImageModal from "./ImageModal"; // Modale pour afficher l'image sélectionnée
+import UpdateDataModal from "./UpdateDataModal";
 
-// Configuration des options du tableau (MUIDataTable)
-const options = {
-  filterType: "", // Pas de filtres supplémentaires
-  selectableRows: false, // Désactiver la sélection des lignes
-  rowsPerPage: 10, // Nombre de lignes par page
-  rowsPerPageOptions: [30, 50, 70, 100], // Options de pagination
-  search: true, // Activer la recherche
-  download: true, // Activer le téléchargement CSV
-  downloadOptions: {
-    filename: "UMM & ULC", // Nom du fichier exporté
-    separator: ",", // Séparateur CSV
-    responsive: "true",
-  },
-};
-
-// Fonction pour personnaliser le thème MUI
+// Fonction pour personnaliser le thème MUI en fonction du mode (clair ou sombre)
 const getMuiTheme = (mode) => {
   return createTheme({
     typography: {
-      fontFamily: "serif", // Police utilisée
+      fontFamily: "serif",
     },
     palette: {
       background: {
-        paper: mode === "dark" ? "#1e293b" : "#7cb7f2", // Couleur de fond pour les éléments
-        default: mode === "dark" ? "#0f172a" : "#f0f0f0", // Couleur de fond globale
+        paper: mode === "dark" ? "#1e293b" : "#7cb7f2",
+        default: mode === "dark" ? "#0f172a" : "#f0f0f0",
       },
-      mode: mode, // Inclure le mode
+      mode: mode,
       text: {
-        primary: mode === "dark" ? "#ffffff" : "#000000", // Couleur du texte principale
-        secondary: mode === "dark" ? "#e0e0e0" : "#333333", // Couleur du texte secondaire
+        primary: mode === "dark" ? "#ffffff" : "#000000",
+        secondary: mode === "dark" ? "#e0e0e0" : "#333333",
       },
     },
     components: {
       MuiTableCell: {
         styleOverrides: {
           head: {
-            padding: "10px 4px", // Marges pour les cellules d'en-tête
+            padding: "10px 4px",
             color: mode === "dark" ? "#ffffff" : "#000000",
-            background: mode === "light" ? "#66a7e8" : "", // Couleur du texte d'en-tête
+            background: mode === "light" ? "#66a7e8" : "",
           },
           body: {
-            padding: "7px 15px", // Marges pour les cellules de contenu
-            color: mode === "dark" ? "#e2e8f0" : "#000000", // Couleur du texte
+            padding: "7px 15px",
+            color: mode === "dark" ? "#e2e8f0" : "#000000",
           },
         },
       },
@@ -67,24 +54,47 @@ const getMuiTheme = (mode) => {
 
 // Composant principal Actifs
 const Actifs = () => {
-  // Utilisation du thème
-  const theme = useTheme();
-
-  // État pour ouvrir et fermer les modales
-  const [mapModalIsOpen, setMapModalIsOpen] = useState(false);
-  const [selectedPosition, setSelectedPosition] = useState(null); // Position sélectionnée pour la carte
-  const [selectedRowData, setSelectedRowData] = useState(null); // Données de la ligne sélectionnée
-  const [rows, setRows] = useState([]);
+  const theme = useTheme(); // Récupération du thème
+  const [mapModalIsOpen, setMapModalIsOpen] = useState(false); // État pour la carte
+  const [selectedPosition, setSelectedPosition] = useState(null); // Position sélectionnée
+  const [rows, setRows] = useState([]); // Données du tableau
   const [unites, setUnites] = useState([]);
   const [error, setError] = useState(null);
+  const [selectedImage, setSelectedImage] = useState(null); // Image sélectionnée de la ligne du tableau
+  const [imageModalOpen, setImageModalOpen] = useState(false); // Modale d'image ouverte uniquement lors du clic sur une ligne
+  const [openUpdateDataModal, setOpenUpdateDataModal] = useState(false); // etat pour contorller l'ouverture du modal
+  const [selectedRowData, setSelectedRowData] = useState(null); // Données de la ligne sélectionnée
 
+  const handleDelete = async (rowData) => {
+    try {
+      // Make a delete request to the backend API
+      await axios.delete(`http://localhost:3000/api/v1/unite/${rowData._id}`);
+
+      // After successful deletion, update the rows state to remove the deleted row
+      setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
+
+      // Optionally, show a success message (like a toast)
+      alert("L'unité a été supprimée avec succès.");
+    } catch (error) {
+      // Handle error if the deletion fails
+      alert("Une erreur est survenue lors de la suppression.");
+    }
+  };
+
+  const handleCloseUpdate = () => {
+    setOpenUpdateDataModal(false); // ouvrire le modal
+  };
+
+  // Chargement des données depuis l'API
   useEffect(() => {
     const fetchUnites = async () => {
       try {
         const response = await axios.get("http://localhost:3000/api/v1/unite");
         if (Array.isArray(response.data.data.unites)) {
+          console.log("Données reçues de l'API:", response.data.data.unites); // Affiche les données dans la console
+
           setUnites(response.data.data.unites);
-          setRows(response.data.data.unites); // Mettez à jour les rows ici
+          setRows(response.data.data.unites); // Mise à jour des lignes du tableau
         } else {
           setError("La réponse de l'API n'est pas un tableau.");
         }
@@ -95,12 +105,57 @@ const Actifs = () => {
 
     fetchUnites();
   }, []);
-  if (error) {
-    return <div>{error}</div>;
-  }
+
+  if (error) return <div>{error}</div>;
+
+  // Gérer le clic sur une ligne du tableau
+  const handleRowClick = (rowData) => {
+    setSelectedRowData(rowData);
+    setSelectedImage("https://via.placeholder.com/300"); // Remplacez par l'URL de l'image si disponible
+    setImageModalOpen(true); // Ouvre la modale de l'image
+  };
+
+  // Soumission des données mises à jour
+  const handleUpdate = (updatedData) => {
+    // Ajoutez ici la logique pour envoyer les données mises à jour à l'API
+    axios.patch(
+      `http://localhost:3000/api/v1/unite/${updatedData._id}`,
+      updatedData
+    );
+    // .then(response => { ... })
+
+    // Met à jour les données dans le tableau après la mise à jour
+    setRows((prevRows) =>
+      prevRows.map((row) => (row._id === updatedData._id ? updatedData : row))
+    );
+  };
+
+  // Options de configuration du tableau (MUIDataTable)
+  const options = {
+    filterType: "",
+    selectableRows: true,
+    rowsPerPage: 10,
+    rowsPerPageOptions: [30, 50, 70, 100],
+    search: true,
+    download: true,
+    downloadOptions: {
+      filename: "UMM & ULC",
+      separator: ",",
+      responsive: "true",
+    },
+    onRowClick: (rowData) => handleRowClick(rowData), // Définit la fonction de clic de ligne
+  };
+  const handleOpenUpdateModal = (rowData) => {
+    setModelUpdateOpen(true);
+    setSelectedRowData(rowData); // Définit les données de la ligne sélectionnée
+  };
 
   // Définition des colonnes pour le tableau
   const columns = [
+    {
+      name: "_id", // L'ID restera dans les données mais ne sera pas affiché
+      options: { display: "excluded" },
+    },
     {
       name: "etat",
       label: "État",
@@ -112,41 +167,46 @@ const Actifs = () => {
                 width: "10px",
                 height: "10px",
                 borderRadius: "50%",
-                backgroundColor: value ? "green" : "red", // Utilisez la valeur booléenne directement
+                backgroundColor: value ? "green" : "red",
                 marginRight: "8px",
               }}
             ></span>
-            {value ? "actif" : "inactif"} {/* Affiche "actif" ou "inactif" */}
+            {value ? "actif" : "inactif"}
           </div>
         ),
       },
     },
+
     { name: "name", label: "Nom" },
-    { name: "region", label: "Région" }, // Ensure this matches the data structure
-    { name: "province", label: "Province" }, // Ensure this matches the data structure
-    { name: "coordinateur", label: "Coordinateur" }, // Ensure this matches the data structure
-    { name: "chargeSuivi", label: "Chargé de suivi" }, // Ensure this matches the data structure
-    { name: "technicien", label: "Technicien" }, // Ensure this matches the data structure
-    { name: "docteur", label: "Docteur" }, // Ensure this matches the data structure
-    { name: "mail", label: "Email" }, // Use "Email" for clarity
-    { name: "num", label: "Numéro" }, // Use "Numéro" for clarity
+    { name: "region", label: "Région" },
+    { name: "province", label: "Province" },
+    { name: "coordinateur", label: "Coordinateur" },
+    { name: "chargeSuivi", label: "Chargé de suivi" },
+    { name: "technicien", label: "Technicien" },
+    { name: "docteur", label: "Docteur" },
+    { name: "mail", label: "Email" },
+    { name: "num", label: "Numéro" },
     {
       name: "position",
       label: "Position",
       options: {
-        customBodyRender: (value) => (
-          <IconButton
-            onClick={() => {
-              setSelectedPosition(value);
-              setMapModalIsOpen(true);
-            }}
-            aria-label="map"
-          >
-            <MapIcon />
-          </IconButton>
-        ),
+        customBodyRender: (_, tableMeta) => {
+          const rowData = rows[tableMeta.rowIndex];
+          return (
+            <IconButton
+              onClick={() => {
+                setSelectedPosition({ lat: rowData.lat, long: rowData.long });
+                setMapModalIsOpen(true);
+              }}
+              aria-label="map"
+            >
+              <MapIcon />
+            </IconButton>
+          );
+        },
       },
     },
+
     {
       name: "action",
       label: "Actions",
@@ -155,24 +215,14 @@ const Actifs = () => {
         sort: false,
         customBodyRender: (value, tableMeta) => {
           const rowData = rows[tableMeta.rowIndex];
-          function handleDelete(rowData) {
-            throw new Error("Function not implemented.");
-          }
-
           return (
             <div>
-              <IconButton
-                onClick={() => {
-                  setOpenU(true);
-                  setSelectedRowData(rowData);
-                }}
-                color="primary"
-                aria-label="edit"
-              >
+              <IconButton onClick={() => handleOpenUpdateModal(rowData)}>
                 <EditIcon />
               </IconButton>
+
               <IconButton
-                onClick={() => handleDelete(rowData)}
+                onClick={() => handleDelete(rowData)} // Pass rowData to the delete function
                 color="secondary"
                 aria-label="delete"
               >
@@ -185,31 +235,20 @@ const Actifs = () => {
     },
   ];
 
-  // États pour ouvrir et fermer les dialogues
+  // États pour les boîtes de dialogue (ajout, édition)
   const [open, setOpen] = useState(false);
   const handleOpen = () => setOpen(true);
   const handleClose = () => setOpen(false);
-  const handleConfirm = () => {
-    // Logique de confirmation lors de l'ajout
-    setOpen(false);
-  };
+  const handleConfirm = () => setOpen(false); // Confirmation de l'ajout
 
   const [openU, setOpenU] = useState(false);
   const handleOpenU = () => setOpenU(true);
   const handleCloseU = () => setOpenU(false);
-  const handleConfirmU = () => {
-    // Logique de confirmation lors de la modification
-    setOpenU(false);
-  };
-
-  // Retourne l'interface utilisateur du composant
+  const handleConfirmU = () => setOpenU(false); // Confirmation de la modification
+  const [ModelUpdateOpen, setModelUpdateOpen] = useState(false);
   return (
     <>
-      {/* Affichage de la localisation */}
-      <div>
-        <Location />
-      </div>
-
+      <Location />
       {/* Boutons pour ajouter ou télécharger */}
       <Box>
         <div className="flex justify-end gap-4">
@@ -221,7 +260,6 @@ const Actifs = () => {
           />
         </div>
       </Box>
-
       {/* Modale pour afficher la carte */}
       {mapModalIsOpen && (
         <div className="fixed inset-0 bg-black bg-opacity-75 flex justify-center items-center z-50">
@@ -231,7 +269,6 @@ const Actifs = () => {
           />
         </div>
       )}
-
       {/* Dialogue pour ajouter une nouvelle installation */}
       <ReusableDialog
         open={open}
@@ -240,26 +277,34 @@ const Actifs = () => {
         content={<Model />}
         onConfirm={handleConfirm}
       />
-
-      {/* Tableau affichant la liste des unités mobiles */}
+      {/* Tableau principal avec les données */}
       <div className="w-[100%] py-3">
         <ReusableTable
           title="Liste des unités mobiles & logistiques"
           data={rows}
           columns={columns}
           options={options}
-          theme={getMuiTheme(theme.palette.mode)} // Passez le mode actuel du thème
+          theme={getMuiTheme(theme.palette.mode)}
         />
       </div>
+      {/* Dialogue de modification */}
+      {ModelUpdateOpen && (
+        <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-75">
+          <UpdateDataModal
+            setModelUpdateOpen={setModelUpdateOpen}
+            rowData={selectedRowData}
+          />
+        </div>
+      )}
 
-      {/* Dialogue pour modifier une installation existante */}
-      <ReusableDialog
-        open={openU}
-        onClose={handleCloseU}
-        title="Modifier les informations"
-        content={<UpdateData rowData={selectedRowData} />}
-        onConfirm={handleConfirmU}
-      />
+      {/* Modale pour afficher l'image si une ligne est cliquée
+      {imageModalOpen && selectedImage && (
+        <ImageModal
+          open={imageModalOpen}
+          onClose={() => setImageModalOpen(false)}
+          image={selectedImage}
+        />
+      )} */}
     </>
   );
 };

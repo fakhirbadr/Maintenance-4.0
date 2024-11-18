@@ -1,4 +1,16 @@
 import React, { useState, useEffect } from "react";
+import {
+  Box,
+  Button,
+  Container,
+  FormControl,
+  Grid,
+  InputLabel,
+  MenuItem,
+  Select,
+  TextField,
+  Typography,
+} from "@mui/material";
 
 const ModelUpdate = ({ rowData, setModelUpdateOpen }) => {
   const [formData, setFormData] = useState({
@@ -34,183 +46,153 @@ const ModelUpdate = ({ rowData, setModelUpdateOpen }) => {
   };
 
   return (
-    <div>
-      <h2 className="text-4xl font-extrabold dark:text-white pb-4">
+    <Container>
+      <Typography
+        variant="h4"
+        component="h2"
+        gutterBottom
+        sx={{ fontWeight: "bold" }}
+      >
         Modifier un ticket
-      </h2>
+      </Typography>
       <form onSubmit={handleSubmit}>
-        <div className="flex flex-col gap-y-6  ">
-          <div className="flex flex-row gap-x-4">
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="date"
-              >
-                Date
-              </label>
-              <input
-                type="date"
-                name="date"
-                id="date"
-                value={formData.date}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="site"
-              >
-                Site
-              </label>
-              <input
-                type="text"
-                name="site"
-                id="site"
-                value={formData.Site}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </div>
-          </div>
-          <div className="flex flex-row gap-x-4">
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="technicien"
-              >
-                Technicien
-              </label>
-              <input
-                type="text"
-                name="technicien"
-                id="technicien"
-                value={formData.technicien}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="typeIntervention"
-              >
+        <Grid container spacing={2}>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Date"
+              type="date"
+              name="date"
+              id="date"
+              value={formData.date}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Site"
+              type="text"
+              name="site"
+              id="site"
+              value={formData.Site}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Technicien"
+              type="text"
+              name="technicien"
+              id="technicien"
+              value={formData.technicien}
+              onChange={handleChange}
+              required
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <FormControl fullWidth required>
+              <InputLabel id="typeIntervention-label">
                 Type d'intervention
-              </label>
-              <select
+              </InputLabel>
+              <Select
+                labelId="typeIntervention-label"
                 name="typeIntervention"
                 id="typeIntervention"
                 value={formData.typeIntervention}
                 onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
+                label="Type d'intervention"
               >
-                <option value={formData.typeIntervention}>
+                <MenuItem value={formData.typeIntervention}>
                   {formData.typeIntervention}
-                </option>
-                <option value="maintenance">Maintenance</option>
-                <option value="réparation">Réparation</option>
-                <option value="installation">Installation</option>
-                <option value="inspection">Inspection</option>
-                <option value="autre">Autre</option>
-              </select>
-            </div>
-          </div>
-          <div className="flex flex-row gap-x-4">
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="dateDebut"
-              >
-                Date de début
-              </label>
-              <input
-                type="datetime-local"
-                id="dateDebut" // Make sure the id is descriptive
-                name="heureDebut" // Change this to match your formData property
-                value={formData.heureDebut}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </div>
-            <div className="flex-1">
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="dateDebut"
-              >
-                Date de fin
-              </label>
-              <input
-                type="datetime-local"
-                id="datefin"
-                name="heureFin"
-                value={formData.heureFin}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              />
-            </div>
-          </div>
-          <div className="flex flex-row gap-x-4">
-            <div className="flex-1">
-              {" "}
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="description"
-              >
-                Description
-              </label>
-              <textarea
-                name="description"
-                id="description"
-                value={formData.description}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              ></textarea>
-            </div>
-            <div className="flex-1">
-              {" "}
-              <label
-                className="block mb-2 text-sm font-medium text-gray-900 dark:text-white"
-                htmlFor="description"
-              >
-                Commentaire
-              </label>
-              <textarea
-                name="Commentaire"
-                id="Commentaire"
-                value={formData.commentaires}
-                onChange={handleChange}
-                required
-                className="bg-gray-50 border border-gray-300 text-gray-900 text-sm rounded-lg focus:ring-blue-500 focus:border-blue-500 block w-full p-2.5 dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400 dark:text-white dark:focus:ring-blue-500 dark:focus:border-blue-500"
-              ></textarea>
-            </div>
-          </div>
-          {/* Ajoutez d'autres champs ici pour technicien, type d'intervention, etc. */}
-          <div className="flex justify-end gap-x-4 mt-6">
-            <button
-              type="submit"
-              className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded-lg"
-            >
+                </MenuItem>
+                <MenuItem value="maintenance">Maintenance</MenuItem>
+                <MenuItem value="réparation">Réparation</MenuItem>
+                <MenuItem value="installation">Installation</MenuItem>
+                <MenuItem value="inspection">Inspection</MenuItem>
+                <MenuItem value="autre">Autre</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Date de début"
+              type="datetime-local"
+              name="heureDebut"
+              id="dateDebut"
+              value={formData.heureDebut}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Date de fin"
+              type="datetime-local"
+              name="heureFin"
+              id="dateFin"
+              value={formData.heureFin}
+              onChange={handleChange}
+              InputLabelProps={{ shrink: true }}
+              required
+            />
+          </Grid>
+
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Description"
+              name="description"
+              id="description"
+              value={formData.description}
+              onChange={handleChange}
+              multiline
+              rows={4}
+              required
+            />
+          </Grid>
+          <Grid item xs={6}>
+            <TextField
+              fullWidth
+              label="Commentaire"
+              name="commentaires"
+              id="commentaire"
+              value={formData.commentaires}
+              onChange={handleChange}
+              multiline
+              rows={4}
+              required
+            />
+          </Grid>
+
+          <Grid
+            item
+            xs={12}
+            sx={{ display: "flex", justifyContent: "flex-end", gap: 2, mt: 3 }}
+          >
+            <Button variant="contained" color="primary" type="submit">
               Soumettre
-            </button>
-            <button
-              type="button"
+            </Button>
+            <Button
+              variant="contained"
+              color="secondary"
               onClick={() => setModelUpdateOpen(false)}
-              className="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg"
             >
               Annuler
-            </button>
-          </div>
-        </div>
+            </Button>
+          </Grid>
+        </Grid>
       </form>
-    </div>
+    </Container>
   );
 };
 

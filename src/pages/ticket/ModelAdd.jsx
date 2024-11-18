@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const ModelAdd = ({ setModelAddIsOpen }) => {
+const ModelAdd = () => {
   // State to manage form data
   const [selectedRowData, setSelectedRowData] = useState(null);
 

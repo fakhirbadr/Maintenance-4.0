@@ -7,8 +7,6 @@ import {
   Button,
 } from "@mui/material";
 
-
-
 const ReusableDialog = ({ open, onClose, title, content, onConfirm }) => {
   return (
     <Dialog open={open} onClose={onClose}>

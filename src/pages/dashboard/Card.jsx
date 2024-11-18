@@ -93,7 +93,7 @@ const CustomCard = ({ className }) => {
     <Card
       className={`card ${className} `}
       sx={{
-        backgroundColor: theme.palette.mode === "dark" ? "" : "#ebf8ff",
+        backgroundColor: theme.palette.mode === "dark" ? "" : "#b6d9fc",
         width: "100% ",
         borderRadius: "12px",
       }}
@@ -114,7 +114,9 @@ const CustomCard = ({ className }) => {
             value={selectedUnit}
             onChange={handleUnitChange}
             displayEmpty
-            sx={{ color: theme.palette.mode === "dark" ? "white " : "black" }} // Style du composant Select
+            variant="outlined"
+            size="small"
+            style={{ margin: "10px", minWidth: "200px" }}
           >
             <MenuItem value="tous">Tous les unités</MenuItem>
             {units.map((unit, index) => (

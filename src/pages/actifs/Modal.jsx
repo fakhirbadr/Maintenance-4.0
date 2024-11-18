@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import axios from "axios";
 import {
   TextField,
   Select,
@@ -7,6 +8,7 @@ import {
   InputLabel,
   FormControl,
   Grid,
+  FormControlLabel,
   Switch,
 } from "@mui/material";
 
@@ -48,7 +50,6 @@ const regionsProvinces = {
     "Fqih Bensalah",
   ],
   "Drâa-Tafilalet": ["Errachidia", "Ouarzazate", "Zagora", "Midelt", "Tinghir"],
-
   "Tanger-Tetouan-Al Hoceima": [
     "Tanger",
     "Tetouan",
@@ -71,220 +72,237 @@ const regionsProvinces = {
 const Modal = ({ setModelIsOpen }) => {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [provinces, setProvinces] = useState([]);
+  const [formData, setFormData] = useState({
+    name: "",
+    coordinateur: "",
+    region: "",
+    province: "",
+    lat: "",
+    long: "",
+    chargeSuivi: "",
+    technicien: "",
+    docteur: "",
+    mail: "",
+    num: "",
+    etat: true,
+  });
 
   const handleRegionChange = (event) => {
     const region = event.target.value;
     setSelectedRegion(region);
     setProvinces(regionsProvinces[region] || []);
+    setFormData({ ...formData, region });
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+  };
+  const handleSwitchChange = (event) => {
+    setFormData({ ...formData, etat: event.target.checked });
+  };
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/api/v1/unite",
+        formData
+      );
+      console.log("Données envoyées:", response.data);
+      setModelIsOpen(false);
+    } catch (error) {
+      console.error(
+        "Erreur lors de l'envoi des données:",
+        error.response ? error.response.data : error.message
+      );
+    }
   };
 
   return (
-    <form>
-      <Grid container spacing={2} direction="column">
-        {/* Ligne 1 */}
-        <Grid container item spacing={2}>
-          {/* Nom */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              id="Nom"
-              label="Nom"
-              placeholder="UMMC ABC"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-          {/* Coordinateur */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth required>
-              <InputLabel id="coordinateur-label">Coordinateur</InputLabel>
-              <Select
-                labelId="coordinateur-label"
-                id="countries"
-                defaultValue=""
-                label="Coordinateur"
-              >
-                <MenuItem value="" disabled>
-                  Choisissez le coordinateur
-                </MenuItem>
-                <MenuItem value="Oumaima LALLALEN">Oumaima LALLALEN</MenuItem>
-                <MenuItem value="Mohamed RAZIN">Mohamed RAZIN</MenuItem>
-                <MenuItem value="Ismail BELGHITI">Ismail BELGHITI</MenuItem>
-                <MenuItem value="Abderahmen AKRAN">Abderahmen AKRAN</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
+    <form onSubmit={handleSubmit}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="name"
+            label="name"
+            placeholder="UMMC ABC"
+            variant="outlined"
+            fullWidth
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+          />
         </Grid>
-
-        {/* Ligne 2 */}
-        <Grid container item spacing={2}>
-          {/* Région */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth required>
-              <InputLabel id="region-label">Région</InputLabel>
-              <Select
-                labelId="region-label"
-                id="region"
-                value={selectedRegion}
-                onChange={handleRegionChange}
-                label="Région"
-              >
-                <MenuItem value="" disabled>
-                  Choisissez La région
-                </MenuItem>
-                {Object.keys(regionsProvinces).map((region) => (
-                  <MenuItem key={region} value={region}>
-                    {region}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Province */}
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth required disabled={!selectedRegion}>
-              <InputLabel id="province-label">Province</InputLabel>
-              <Select labelId="province-label" id="province" label="Province">
-                <MenuItem value="" disabled>
-                  Choisissez La province
-                </MenuItem>
-                {provinces.map((province) => (
-                  <MenuItem key={province} value={province}>
-                    {province}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          {/* Latitude */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              id="Latitude"
-              label="Latitude"
-              type="number"
-              placeholder="Latitude"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-
-          {/* Longitude */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              id="longitude"
-              label="Longitude"
-              placeholder="Longitude"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-
-        {/* Ligne 3 */}
-        <Grid container item spacing={2}>
-          {/* Chargé de suivi */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              required
-              id="Chargé_de_suivie"
-              label="Chargé de suivi"
-              placeholder="Fakhir Badr"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-
-          {/* Technicien */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              required
-              id="Technicien"
-              label="Technicien"
-              placeholder="Fakhir Badr"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-
-          {/* Docteur */}
-          <Grid item xs={12} md={4}>
-            <TextField
-              required
-              id="Docteur"
-              label="Docteur"
-              placeholder="Fakhir Badr"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-
-        {/* Ligne 4 */}
-        <Grid container item spacing={2}>
-          {/* Adresse mail */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              id="mail"
-              label="Adresse mail"
-              placeholder="mediot@mediot.ma"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-
-          {/* Téléphone */}
-          <Grid item xs={12} md={6}>
-            <TextField
-              required
-              id="Télephone"
-              label="Téléphone"
-              placeholder="123-456-7890"
-              variant="outlined"
-              fullWidth
-            />
-          </Grid>
-        </Grid>
-
-        {/* Ligne 5 - Photo */}
-        <Grid container item justifyContent="center" spacing={2}>
-          <Grid item>
-            <label
-              htmlFor="dropzone-file"
-              className="flex flex-col items-center justify-center w-full h-20 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 dark:hover:bg-gray-800 dark:bg-gray-700 hover:bg-gray-100 dark:border-gray-600 dark:hover:border-gray-500 dark:hover:bg-gray-600"
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required>
+            <InputLabel id="coordinateur-label">Coordinateur</InputLabel>
+            <Select
+              labelId="coordinateur-label"
+              id="coordinateur"
+              name="coordinateur"
+              value={formData.coordinateur}
+              onChange={handleInputChange}
+              label="Coordinateur"
             >
-              <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                <svg
-                  className="w-8 h-8 mb-4 text-gray-500 dark:text-gray-400"
-                  aria-hidden="true"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 20 16"
-                >
-                  <path
-                    stroke="currentColor"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
-                  />
-                </svg>
-                <p className="mb-2 text-sm text-gray-500 dark:text-gray-400">
-                  <span className="font-semibold">Click to upload</span> or drag
-                  and drop
-                </p>
-              </div>
-              <input id="dropzone-file" type="file" className="hidden" />
-            </label>
-          </Grid>
+              {[
+                "Oumaima LALLALEN",
+                "Mohamed RAZIN",
+                "Ismail BELGHITI",
+                "Abderahmen AKRAN",
+              ].map((name) => (
+                <MenuItem key={name} value={name}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required>
+            <InputLabel id="region-label">Région</InputLabel>
+            <Select
+              labelId="region-label"
+              id="region"
+              value={selectedRegion}
+              onChange={handleRegionChange}
+              label="Région"
+            >
+              {Object.keys(regionsProvinces).map((region) => (
+                <MenuItem key={region} value={region}>
+                  {region}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required disabled={!selectedRegion}>
+            <InputLabel id="province-label">Province</InputLabel>
+            <Select
+              labelId="province-label"
+              id="province"
+              name="province"
+              value={formData.province}
+              onChange={handleInputChange}
+              label="Province"
+            >
+              {provinces.map((province) => (
+                <MenuItem key={province} value={province}>
+                  {province}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="lat"
+            label="Latitude"
+            type="number"
+            name="lat"
+            value={formData.lat}
+            onChange={handleInputChange}
+            placeholder="Latitude"
+            variant="outlined"
+            fullWidth
+          />
+          <FormControlLabel
+            control={
+              <Switch
+                checked={formData.etat}
+                onChange={handleSwitchChange}
+                color="primary"
+              />
+            }
+            label={formData.etat ? "Actif" : "Inactif"}
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="long"
+            label="Longitude"
+            name="long"
+            value={formData.long}
+            onChange={handleInputChange}
+            placeholder="Longitude"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            required
+            id="chargeSuivi"
+            label="Chargé de suivi"
+            name="chargeSuivi"
+            value={formData.chargeSuivi}
+            onChange={handleInputChange}
+            placeholder="Fakhir Badr"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            required
+            id="technicien"
+            label="Technicien"
+            name="technicien"
+            value={formData.technicien}
+            onChange={handleInputChange}
+            placeholder="Fakhir Badr"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={4}>
+          <TextField
+            required
+            id="docteur"
+            label="Docteur"
+            name="docteur"
+            value={formData.docteur}
+            onChange={handleInputChange}
+            placeholder="Fakhir Badr"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="mail"
+            label="Adresse mail"
+            name="mail"
+            value={formData.mail}
+            onChange={handleInputChange}
+            placeholder="mediot@mediot.ma"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="num"
+            label="Téléphone"
+            name="num"
+            value={formData.num}
+            onChange={handleInputChange}
+            placeholder="123-456-7890"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} container justifyContent="center" spacing={2}>
+          <Button type="submit" variant="contained" color="primary">
+            Enregistrer
+          </Button>
         </Grid>
       </Grid>
-
-      {/* Buttons */}
     </form>
   );
 };

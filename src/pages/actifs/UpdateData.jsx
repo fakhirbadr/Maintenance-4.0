@@ -1,12 +1,16 @@
 import React, { useState, useEffect } from "react";
+import axios from "axios";
 import {
   TextField,
   Select,
   MenuItem,
-  FormControl,
+  Button,
   InputLabel,
+  FormControl,
   Grid,
-} from "@mui/material"; // Importation des composants Material UI
+  FormControlLabel,
+  Switch,
+} from "@mui/material";
 
 const regionsProvinces = {
   "Grand Casablanca-Settat": [
@@ -62,181 +66,183 @@ const regionsProvinces = {
     "Ouarzazate",
   ],
   Oriental: ["Oujda", "Nador", "Driouch", "Berkane", "Taourirt"],
-  "Laâyoune-Sakia El Hamra": ["Laâyoune", "Boujdour", "Tarfaya", "Smara"],
+  "Laayoune-Sakia El Hamra": ["Laayoune", "Boujdour", "Tarfaya", "Smara"],
 };
 
-const UpdateModal = ({ rowData }) => {
-  const [selectedRegion, setSelectedRegion] = useState(rowData.Région || "");
-  const [provinces, setProvinces] = useState(
-    regionsProvinces[selectedRegion] || []
-  );
+const UpdateData = ({ selectedRowData, setModalIsOpen }) => {
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [provinces, setProvinces] = useState([]);
   const [formData, setFormData] = useState({
-    Nom: rowData.Nom || "",
-    Région: rowData.Région || "",
-    Province: rowData.Province || "",
-    Coordinateur: rowData.Coordinateur || "",
-    Latitude: rowData.Latitude || "",
-    Longitude: rowData.Longitude || "",
-    Chargé_de_suivie: rowData.Chargé_de_suivie || "",
-    Technicien: rowData.Technicien || "",
-    Docteur: rowData.Docteur || "",
-    mail: rowData.Mail || "",
-    Téléphone: rowData.Num || "",
+    id: "",
+    name: "",
+    coordinateur: "",
+    region: "",
+    province: "",
+    lat: "",
+    long: "",
+    chargeSuivi: "",
+    technicien: "",
+    docteur: "",
+    mail: "",
+    num: "",
+    etat: true,
   });
 
   useEffect(() => {
-    setProvinces(regionsProvinces[selectedRegion] || []);
-  }, [selectedRegion]);
-
-  const handleChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
+    if (selectedRowData) {
+      setFormData({ ...selectedRowData });
+      setSelectedRegion(selectedRowData.region);
+      setProvinces(regionsProvinces[selectedRowData.region] || []);
+    }
+  }, [selectedRowData]);
 
   const handleRegionChange = (event) => {
-    setSelectedRegion(event.target.value);
-    setFormData((prev) => ({
-      ...prev,
-      Région: event.target.value,
-      Province: "",
-    }));
+    const region = event.target.value;
+    setSelectedRegion(region);
+    setProvinces(regionsProvinces[region] || []);
+    setFormData({ ...formData, region });
+  };
+
+  const handleInputChange = (event) => {
+    const { name, value } = event.target;
+    setFormData({ ...formData, [name]: value });
+  };
+
+  const handleSwitchChange = (event) => {
+    setFormData({ ...formData, etat: event.target.checked });
+  };
+
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.patch(
+        `http://localhost:3000/api/v1/unite/${formData.id}`,
+        formData
+      );
+      console.log("Données mises à jour:", response.data);
+      setModalIsOpen(false); // Fermer le modal après mise à jour
+    } catch (error) {
+      console.error(
+        "Erreur lors de la mise à jour:",
+        error.response ? error.response.data : error.message
+      );
+    }
   };
 
   return (
-    <div className="p-4">
-      <form>
-        <Grid container spacing={2}>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Nom"
-              variant="outlined"
-              fullWidth
-              required
-              name="Nom"
-              value={formData.Nom}
-              onChange={handleChange}
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Coordinateur</InputLabel>
-              <Select
-                name="Coordinateur"
-                value={formData.Coordinateur}
-                onChange={handleChange}
-                required
-              >
-                <MenuItem value="Oumaima LALLALEN">Oumaima LALLALEN</MenuItem>
-                <MenuItem value="Mohamed RAZIN">Mohamed RAZIN</MenuItem>
-                <MenuItem value="Ismail BELGHITI">Ismail BELGHITI</MenuItem>
-                <MenuItem value="Abderahmen AKRAN">Abderahmen AKRAN</MenuItem>
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Région</InputLabel>
-              <Select
-                name="Région"
-                value={selectedRegion}
-                onChange={handleRegionChange}
-                required
-              >
-                <MenuItem disabled hidden>
-                  Choisissez La région
-                </MenuItem>
-                {Object.keys(regionsProvinces).map((region) => (
-                  <MenuItem key={region} value={region}>
-                    {region}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <FormControl fullWidth>
-              <InputLabel>Province</InputLabel>
-              <Select
-                name="Province"
-                value={formData.Province}
-                onChange={handleChange}
-                disabled={!selectedRegion}
-                required
-              >
-                <MenuItem disabled hidden>
-                  Choisissez La province
-                </MenuItem>
-                {provinces.map((province) => (
-                  <MenuItem key={province} value={province}>
-                    {province}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Latitude"
-              variant="outlined"
-              fullWidth
-              required
-              name="Latitude"
-              type="number"
-              value={formData.Latitude}
-              onChange={handleChange}
-              helperText="Entrez la latitude"
-            />
-          </Grid>
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Longitude"
-              variant="outlined"
-              fullWidth
-              required
-              name="Longitude"
-              type="number"
-              value={formData.Longitude}
-              onChange={handleChange}
-              helperText="Entrez la longitude"
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Chargé de suivi"
-              variant="outlined"
-              fullWidth
-              required
-              name="Chargé_de_suivie"
-              value={formData.Chargé_de_suivie}
-              onChange={handleChange}
-              helperText="Entrez le nom du chargé de suivi"
-            />
-          </Grid>
-
-          <Grid item xs={12} md={6}>
-            <TextField
-              label="Technicien"
-              variant="outlined"
-              fullWidth
-              required
-              name="Technicien"
-              value={formData.Technicien}
-              onChange={handleChange}
-              helperText="Entrez le nom du technicien"
-            />
-          </Grid>
+    <form onSubmit={handleSubmit}>
+      <Grid container spacing={2}>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="name"
+            label="Nom"
+            placeholder="UMMC ABC"
+            variant="outlined"
+            fullWidth
+            name="name"
+            value={formData.name}
+            onChange={handleInputChange}
+          />
         </Grid>
-      </form>
-    </div>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required>
+            <InputLabel id="coordinateur-label">Coordinateur</InputLabel>
+            <Select
+              labelId="coordinateur-label"
+              id="coordinateur"
+              name="coordinateur"
+              value={formData.coordinateur}
+              onChange={handleInputChange}
+              label="Coordinateur"
+            >
+              {[
+                "Oumaima LALLALEN",
+                "Mohamed RAZIN",
+                "Ismail BELGHITI",
+                "Abderahmen AKRAN",
+              ].map((name) => (
+                <MenuItem key={name} value={name}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required>
+            <InputLabel id="region-label">Région</InputLabel>
+            <Select
+              labelId="region-label"
+              id="region"
+              value={selectedRegion}
+              onChange={handleRegionChange}
+              label="Région"
+            >
+              {Object.keys(regionsProvinces).map((region) => (
+                <MenuItem key={region} value={region}>
+                  {region}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <FormControl fullWidth required disabled={!selectedRegion}>
+            <InputLabel id="province-label">Province</InputLabel>
+            <Select
+              labelId="province-label"
+              id="province"
+              name="province"
+              value={formData.province}
+              onChange={handleInputChange}
+              label="Province"
+            >
+              {provinces.map((province) => (
+                <MenuItem key={province} value={province}>
+                  {province}
+                </MenuItem>
+              ))}
+            </Select>
+          </FormControl>
+        </Grid>
+        {/* Les autres champs de formulaire restent les mêmes */}
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="lat"
+            label="Latitude"
+            type="number"
+            name="lat"
+            value={formData.lat}
+            onChange={handleInputChange}
+            placeholder="Latitude"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        <Grid item xs={12} md={6}>
+          <TextField
+            required
+            id="long"
+            label="Longitude"
+            name="long"
+            value={formData.long}
+            onChange={handleInputChange}
+            placeholder="Longitude"
+            variant="outlined"
+            fullWidth
+          />
+        </Grid>
+        {/* Champs supplémentaires */}
+        <Grid item xs={12} container justifyContent="center" spacing={2}>
+          <Button type="submit" variant="contained" color="primary">
+            Mettre à jour
+          </Button>
+        </Grid>
+      </Grid>
+    </form>
   );
 };
 
-export default UpdateModal;
+export default UpdateData;

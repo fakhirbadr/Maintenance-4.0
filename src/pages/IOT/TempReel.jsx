@@ -37,14 +37,14 @@ const TempReel = () => {
         />
       </div>
 
-      <div>
+      <div className="flex mt-10">
         <SwiperImage />
-      </div>
-      <div className="max-w-3xl mx-auto text-center mt-16">
-        <h1 className="text-2xl font-bold text-white leading-tight mb-2 border-t-4 border-b-4 border-purple-600 pt-2">
-          Chaque action que nous supervisons contribue à un avenir plus sain
-          pour notre communauté.
-        </h1>
+        <div className="max-w-3xl mx-auto text-center mt-16 flex justify-center items-center">
+          <h1 className="text-2xl font-bold text-white leading-tight mb-2 border-t-4 border-b-4 border-purple-600 pt-2">
+            Chaque action que nous supervisons contribue à un avenir plus sain
+            pour notre communauté.
+          </h1>
+        </div>
       </div>
     </div>
   );

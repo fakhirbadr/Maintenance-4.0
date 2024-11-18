@@ -142,7 +142,7 @@ const ItemTable = () => {
     <div className="w-[100%] py-3">
       <ThemeProvider theme={getMuiTheme()}>
         <MUIDataTable
-          title={"Liste des actifs"}
+          title={"Stocks"}
           data={rows}
           columns={columns}
           options={options}
