@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Location from "../../components/Location";
 import {
   Box,
@@ -16,13 +16,18 @@ import {
   Check as CheckIcon,
   Delete as DeleteIcon,
 } from "@mui/icons-material";
-import ModelAdd from "./ModelAdd";
 import ModelUpdate from "./ModelUpdate";
 import AddModal from "./AddModal";
+import axios from "axios";
 
 const Ticket = () => {
   const [closedRows, setClosedRows] = useState([]); // État pour stocker les lignes clôturées
-  console.log(closedRows);
+  const [tickets, setTickets] = useState([]);
+  const [error, setError] = useState(null);
+  const [modelAddIsOpen, setModelAddIsOpen] = useState(false);
+  const [ModelUpdateOpen, setModelUpdateOpen] = useState(false);
+  const [selectedRowData, setSelectedRowData] = useState(null);
+  const [rows, setRows] = useState([]); // Données du tableau
 
   const getMuiTheme = () =>
     createTheme({
@@ -66,10 +71,10 @@ const Ticket = () => {
   };
 
   const options = {
-    filterType: "",
-    selectableRows: false,
+    filterType: "checkbox",
+    selectableRows: "none",
     rowsPerPage: 10,
-    rowsPerPageOptions: [30, 50, 70, 100],
+    rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: true,
     downloadOptions: {
@@ -153,7 +158,7 @@ const Ticket = () => {
       },
     },
     {
-      name: "heureDebut",
+      name: "heure_debut",
       label: "Heure Début",
       options: {
         filter: true,
@@ -222,7 +227,7 @@ const Ticket = () => {
                 <CheckIcon style={{ marginRight: 4 }} />
               </button>
               <button
-                onClick={() => handleSupprimer(tableMeta.rowIndex)}
+                onClick={() => handleDelete(rowData)}
                 className="flex items-center text-red-500 hover:bg-red-400 rounded-md"
               >
                 <DeleteIcon style={{ marginRight: 4 }} />
@@ -241,9 +246,38 @@ const Ticket = () => {
     XLSX.writeFile(workbook, "Gestion de TICKETS.xlsx");
   };
 
-  const [modelAddIsOpen, setModelAddIsOpen] = useState(false);
-  const [ModelUpdateOpen, setModelUpdateOpen] = useState(false);
-  const [selectedRowData, setSelectedRowData] = useState(null);
+  // chargement des donnees depuis L'API
+
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3009/api/v1/tickets"
+        );
+        if (Array.isArray(response.data.data.tickets)) {
+          console.log("donnees recues de L'API:", response.data.data.tickets);
+          setTickets(response.data.data.tickets);
+          setRows(response.data.data.tickets); // ici c une mise a jour des ligne du tableau
+        } else {
+          setError("la réponse de l'API n'est pas un tableau");
+        }
+      } catch (err) {
+        setError("Erreur lors de la récupération des donnees");
+      }
+    };
+    fetchTickets();
+  }, []);
+  if (error) return <div>{error}</div>;
+
+  const handleDelete = async (rowData) => {
+    try {
+      await axios.delete(`http://localhost:3009/api/v1/tickets/${rowData._id}`);
+      setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
+      alert("le ticket a été supprimée avec succés");
+    } catch (error) {
+      alert("une erreur est survenue lors de la suppression");
+    }
+  };
 
   return (
     <div>
@@ -267,13 +301,11 @@ const Ticket = () => {
         </div>
       )}
       {ModelUpdateOpen && (
-        <div className="fixed flex inset-0 items-center justify-center bg-black z-50 bg-opacity-75">
-          <div className="bg-blue-500 w-[50%] p-4 rounded-lg shadow-lg">
-            <ModelUpdate
-              setModelUpdateOpen={setModelUpdateOpen}
-              rowData={selectedRowData}
-            />
-          </div>
+        <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-75">
+          <ModelUpdate
+            setModelUpdateOpen={setModelUpdateOpen}
+            rowData={selectedRowData}
+          />
         </div>
       )}
       <Box display="flex" justifyContent="center" alignItems="center">
@@ -304,7 +336,7 @@ const Ticket = () => {
                   borderRadius: 1,
                 }}
               >
-                13
+                {rows.length}
               </Box>
             </Typography>
           </Box>

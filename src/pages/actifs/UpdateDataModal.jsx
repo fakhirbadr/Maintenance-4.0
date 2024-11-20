@@ -93,6 +93,7 @@ const UpdateDataModal = ({ setModelUpdateOpen, rowData }) => {
         formData
       );
       console.log("Données mises à jour avec succès", response.data);
+      setModelUpdateOpen(false);
     } catch (error) {
       console.error("Erreur lors de la mise à jour des données:", error);
     }

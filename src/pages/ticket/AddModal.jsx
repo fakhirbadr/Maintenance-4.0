@@ -31,7 +31,6 @@ const AddModal = ({ setModelAddIsOpen }) => {
     unites: "",
   });
   const [unites, setUnites] = useState([]); // Liste des unités
-
   // Récupérer les unités depuis l'API
   useEffect(() => {
     const fetchUnites = async () => {
@@ -56,9 +55,7 @@ const AddModal = ({ setModelAddIsOpen }) => {
   useEffect(() => {
     // Vérifie si 'unites' contient des données et imprime seulement le nom dans la console
     if (unites.length > 0) {
-      unites.forEach((unite) => {
-        console.log(unite.name); // Imprime seulement le nom de chaque 'unite' dans la console
-      });
+      unites.forEach((unite) => {});
     }
   }, [unites]);
 
@@ -72,9 +69,23 @@ const AddModal = ({ setModelAddIsOpen }) => {
   };
 
   // Submit form function
-  const handleSubmit = () => {
-    console.log("Ticket ajouté :", ticketDetails); // Replace with API call or other logic
-    setModelAddIsOpen(false); // Close modal after adding
+  const handleSubmit = async (event) => {
+    event.preventDefault();
+    try {
+      const response = await axios.post(
+        "http://localhost:3009/api/v1/tickets",
+        ticketDetails
+      );
+
+      setModelAddIsOpen(false);
+    } catch (error) {
+      console.log(
+        "Erreur lors de l'envoi des données",
+        error.error.response ? error.response.data : error.message
+      );
+    }
+    // console.log("Ticket ajouté :", ticketDetails); // Replace with API call or other logic
+    // setModelAddIsOpen(false); // Close modal after adding
   };
 
   return (
@@ -112,8 +123,8 @@ const AddModal = ({ setModelAddIsOpen }) => {
                 onChange={handleChange}
                 label="Site"
               >
-                {unites.map((unite) => (
-                  <MenuItem key={unite.id} value={unite.name}>
+                {unites.map((unite, index) => (
+                  <MenuItem key={unite.id || index} value={unite.name}>
                     {unite.name}
                   </MenuItem>
                 ))}
@@ -122,7 +133,7 @@ const AddModal = ({ setModelAddIsOpen }) => {
           </Grid>
           <Grid item xs={6}>
             <TextField
-              label="Technicien"
+              label="technicien"
               name="technicien"
               value={ticketDetails.technicien}
               onChange={handleChange}

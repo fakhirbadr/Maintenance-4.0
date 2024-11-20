@@ -2,7 +2,6 @@ import express from "express";
 import morgan from "morgan";
 import cors from "cors"; // Ajoutez cette ligne
 import uniteRouter from "./routes/uniteRoutes.js";
-import usersRouter from "./routes/usersRoutes.js";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 
@@ -30,6 +29,5 @@ app.use((req, res, next) => {
 
 // 2) ROUTES
 app.use("/api/v1/unite", uniteRouter);
-app.use("/api/v1/users", usersRouter);
 
 export default app;

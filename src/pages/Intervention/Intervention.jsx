@@ -1,69 +1,93 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Location from "../../components/Location";
 import { Button, ThemeProvider } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import { createTheme } from "@mui/material/styles";
-import { rows, columns } from "./Data";
+import { columns } from "./Data";
 import { LineChart } from "@mui/x-charts/LineChart";
 import Model from "./Model";
+import axios from "axios";
 
 import * as XLSX from "xlsx"; // Importation de la bibliothèque xlsx
-
-const getMuiTheme = () =>
-  createTheme({
-    typography: {
-      fontFamily: "sans-serif",
-    },
-    palette: {
-      background: {
-        paper: "#1e293b",
-        default: "#0f172a",
+const Intervention = () => {
+  const [modelIsOpen, setModelIsOpen] = useState();
+  const [rows, setRows] = useState([]);
+  const [ticket, setTickets] = useState([]);
+  const [error, setError] = useState(null);
+  const getMuiTheme = () =>
+    createTheme({
+      typography: {
+        fontFamily: "sans-serif",
       },
-      mode: "dark",
-    },
-    components: {
-      MuiTableCell: {
-        styleOverrides: {
-          head: {
-            padding: "10px 4px",
-            whiteSpace: "wrap",
-          },
-          body: {
-            padding: "7px 15px",
-            color: "#e2e8f0",
-            whiteSpace: "wrap", // Évite le saut de ligne
-            overflow: "hidden", // Cache le texte qui dépasse
-            textOverflow: "ellipsis", // Ajoute "..." si le texte dépasse
+      palette: {
+        background: {
+          paper: "#1e293b",
+          default: "#0f172a",
+        },
+        mode: "dark",
+      },
+      components: {
+        MuiTableCell: {
+          styleOverrides: {
+            head: {
+              padding: "10px 4px",
+              whiteSpace: "wrap",
+            },
+            body: {
+              padding: "7px 15px",
+              color: "#e2e8f0",
+              whiteSpace: "wrap", // Évite le saut de ligne
+              overflow: "hidden", // Cache le texte qui dépasse
+              textOverflow: "ellipsis", // Ajoute "..." si le texte dépasse
+            },
           },
         },
       },
+    });
+
+  const options = {
+    filterType: "",
+    selectableRows: false,
+    rowsPerPage: 10,
+    rowsPerPageOptions: [30, 50, 70, 100],
+    search: true,
+    download: true, // Active le téléchargement CSV
+    downloadOptions: {
+      filename: "collaborateurs.csv", // Nom du fichier téléchargé
+      separator: ",", // Séparateur utilisé dans le fichier CSV
+      responsive: "true",
     },
-  });
+  };
 
-const options = {
-  filterType: "",
-  selectableRows: false,
-  rowsPerPage: 10,
-  rowsPerPageOptions: [30, 50, 70, 100],
-  search: true,
-  download: true, // Active le téléchargement CSV
-  downloadOptions: {
-    filename: "collaborateurs.csv", // Nom du fichier téléchargé
-    separator: ",", // Séparateur utilisé dans le fichier CSV
-    responsive: "true",
-  },
-};
+  const handleDownloadExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
+    XLSX.writeFile(workbook, "collaborateurs.xlsx");
+  };
 
-const handleDownloadExcel = () => {
-  const worksheet = XLSX.utils.json_to_sheet(rows);
-  const workbook = XLSX.utils.book_new();
-  XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
-  XLSX.writeFile(workbook, "collaborateurs.xlsx");
-};
+  // chargement des donnees depuis L'API
 
-const Intervention = () => {
-  const [modelIsOpen, setModelIsOpen] = useState();
-
+  useEffect(() => {
+    const fetchTickets = async () => {
+      try {
+        const response = await axios.get(
+          "http://localhost:3009/api/v1/tickets"
+        );
+        if (Array.isArray(response.data.data.tickets)) {
+          console.log("donnees recues de L'API:", response.data.data.tickets);
+          setTickets(response.data.data.tickets);
+          setRows(response.data.data.tickets); // ici c une mise a jour des ligne du tableau
+        } else {
+          setError("la réponse de l'API n'est pas un tableau");
+        }
+      } catch (err) {
+        setError("Erreur lors de la récupération des donnees");
+      }
+    };
+    fetchTickets();
+  }, []);
+  if (error) return <div>{error}</div>;
   return (
     <>
       <div>

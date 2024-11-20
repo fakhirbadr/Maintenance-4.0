@@ -132,9 +132,9 @@ const Actifs = () => {
 
   // Options de configuration du tableau (MUIDataTable)
   const options = {
-    filterType: "",
-    selectableRows: true,
-    rowsPerPage: 10,
+    filterType: "dropdown",
+    selectableRows: "none",
+    rowsPerPage: 30,
     rowsPerPageOptions: [30, 50, 70, 100],
     search: true,
     download: true,
