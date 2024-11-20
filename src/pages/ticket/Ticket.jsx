@@ -94,14 +94,6 @@ const Ticket = () => {
   };
   const columns = [
     {
-      name: "id",
-      label: "ID",
-      options: {
-        filter: true,
-        sort: true,
-      },
-    },
-    {
       name: "date",
       label: "Date",
       options: {
@@ -110,7 +102,7 @@ const Ticket = () => {
       },
     },
     {
-      name: "Site",
+      name: "site",
       label: "Site",
       options: {
         filter: true,
@@ -126,7 +118,7 @@ const Ticket = () => {
       },
     },
     {
-      name: "typeIntervention",
+      name: "type_intervention",
       label: "Type d'Intervention",
       options: {
         filter: true,
@@ -142,8 +134,8 @@ const Ticket = () => {
       },
     },
     {
-      name: "lieu",
-      label: "Lieu",
+      name: "province",
+      label: "province",
       options: {
         filter: true,
         sort: true,
@@ -175,7 +167,7 @@ const Ticket = () => {
     },
     {
       name: "priorité",
-      label: "Priorité",
+      label: "priorité",
       options: {
         filter: false,
         sort: false,

@@ -1,6 +1,5 @@
 import mongoose from "mongoose";
 import Unite from "../../../models/unitesModel.js";
-import { DataArray } from "@mui/icons-material";
 
 const ticketsSchema = new mongoose.Schema({
   date: {
@@ -12,6 +11,9 @@ const ticketsSchema = new mongoose.Schema({
       const year = now.getFullYear(); // Correction ici
       return `${day}-${month}-${year}`;
     },
+  },
+  site: {
+    type: String,
   },
 
   technicien: {

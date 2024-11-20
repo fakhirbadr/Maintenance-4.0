@@ -10,11 +10,9 @@ import DeleteIcon from "@mui/icons-material/Delete"; // Icône de suppression
 import Ajout from "../../components/Ajout"; // Bouton d'ajout personnalisé
 import ReusableTable from "../../components/Table"; // Table personnalisée
 import ReusableDialog from "../../components/ReusableDialog"; // Boîte de dialogue réutilisable
-import UpdateData from "./UpdateData"; // Composant de mise à jour des données
 import ExcelExporter from "../../components/ExcelExporter"; // Exportateur Excel
 import axios from "axios";
 import MapModal from "./mapModal"; // Modale pour la carte
-import ImageModal from "./ImageModal"; // Modale pour afficher l'image sélectionnée
 import UpdateDataModal from "./UpdateDataModal";
 
 // Fonction pour personnaliser le thème MUI en fonction du mode (clair ou sombre)

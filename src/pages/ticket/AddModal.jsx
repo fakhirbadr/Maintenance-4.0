@@ -21,13 +21,13 @@ const AddModal = ({ setModelAddIsOpen }) => {
     date: "",
     site: "",
     technicien: "",
-    typeIntervention: "",
+    type_intervention: "",
     statut: "",
-    lieu: "",
+    province: "",
     description: "",
     heureDebut: "",
     heureFin: "",
-    priorite: "",
+    priorité: "",
     unites: "",
   });
   const [unites, setUnites] = useState([]); // Liste des unités
@@ -67,6 +67,19 @@ const AddModal = ({ setModelAddIsOpen }) => {
       [name]: value,
     }));
   };
+  useEffect(() => {
+    // Trouve l'unité sélectionnée en fonction du "site" (nom)
+    const selectedUnite = unites.find(
+      (unite) => unite.name === ticketDetails.site
+    );
+
+    if (selectedUnite) {
+      setTicketDetails((prevState) => ({
+        ...prevState,
+        province: selectedUnite.province, // Met à jour "lieu" avec la province
+      }));
+    }
+  }, [ticketDetails.site, unites]); // Dépend de "site" et de "unites"
 
   // Submit form function
   const handleSubmit = async (event) => {
@@ -143,20 +156,18 @@ const AddModal = ({ setModelAddIsOpen }) => {
           </Grid>
           <Grid item xs={6}>
             <FormControl fullWidth margin="normal">
-              <InputLabel id="type-intervention-label">
-                Type intervention
-              </InputLabel>
+              <InputLabel id="type_intervention">Type intervention</InputLabel>
               <Select
-                labelId="type-intervention-label"
-                id="type-intervention"
-                name="type-intervention"
-                value={ticketDetails.typeIntervention}
+                labelId="type_intervention"
+                id="type_intervention"
+                name="type_intervention"
+                value={ticketDetails.type_intervention}
                 onChange={handleChange}
-                label="type-intervention"
+                label="Type intervention"
               >
-                <MenuItem value="Basse">En cours</MenuItem>
-                <MenuItem value="Moyenne">Escaladé</MenuItem>
-                <MenuItem value="Haute">Clôturer</MenuItem>
+                <MenuItem value="En cours">En cours</MenuItem>
+                <MenuItem value="Escaladé">Escaladé</MenuItem>
+                <MenuItem value="Clôturé">Clôturé</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -179,12 +190,13 @@ const AddModal = ({ setModelAddIsOpen }) => {
           </Grid>
           <Grid item xs={6}>
             <TextField
-              label="Lieu"
-              name="lieu"
-              value={ticketDetails.lieu}
+              label="Province"
+              name="province"
+              value={ticketDetails.province}
               onChange={handleChange}
               fullWidth
               margin="normal"
+              disabled // Rendre ce champ non modifiable
             />
           </Grid>
           <Grid item xs={6}>
@@ -199,12 +211,12 @@ const AddModal = ({ setModelAddIsOpen }) => {
           </Grid>
           <Grid item xs={6}>
             <FormControl fullWidth margin="normal">
-              <InputLabel id="priorite-label">Priorité</InputLabel>
+              <InputLabel id="priorité-label">Priorité</InputLabel>
               <Select
-                labelId="priorite-label"
-                id="priorite"
-                name="priorite"
-                value={ticketDetails.priorite}
+                labelId="priorité-label"
+                id="priorité"
+                name="priorité"
+                value={ticketDetails.priorité}
                 onChange={handleChange}
                 label="Priorité"
               >
