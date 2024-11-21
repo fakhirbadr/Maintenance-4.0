@@ -14,7 +14,7 @@ const getMuiTheme = () =>
     },
     palette: {
       background: {
-        paper: "#1e293b",
+        paper: "#1E1E1E",
         default: "#0f172a",
       },
       mode: "dark",

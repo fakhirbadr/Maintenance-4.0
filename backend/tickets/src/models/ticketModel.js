@@ -36,12 +36,6 @@ const ticketsSchema = new mongoose.Schema({
   },
   heure_debut: {
     type: String,
-    default: () => {
-      const now = new Date();
-      const hours = String(now.getHours()).padStart(2, "0"); // Heure
-      const minutes = String(now.getMinutes()).padStart(2, "0"); // Minutes
-      return `${hours}:${minutes}`; // Format HH:mm
-    },
   },
   heure_fin: {
     type: String,

@@ -14,12 +14,7 @@ const ReusableDialog = ({ open, onClose, title, content, onConfirm }) => {
         {title}
       </DialogTitle>
       <DialogContent>{content}</DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Annuler</Button>
-        <Button onClick={onConfirm} color="primary">
-          Confirmer
-        </Button>
-      </DialogActions>
+      <DialogActions></DialogActions>
     </Dialog>
   );
 };

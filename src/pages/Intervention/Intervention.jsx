@@ -21,7 +21,7 @@ const Intervention = () => {
       },
       palette: {
         background: {
-          paper: "#1e293b",
+          paper: "#1E1E1E",
           default: "#0f172a",
         },
         mode: "dark",
@@ -30,10 +30,12 @@ const Intervention = () => {
         MuiTableCell: {
           styleOverrides: {
             head: {
+              justifyItems: "center",
               padding: "10px 4px",
               whiteSpace: "wrap",
             },
             body: {
+              justifyItems: "center",
               padding: "7px 15px",
               color: "#e2e8f0",
               whiteSpace: "wrap", // Évite le saut de ligne

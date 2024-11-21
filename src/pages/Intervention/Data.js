@@ -1,13 +1,5 @@
 export const columns = [
   {
-    name: "id",
-    label: "ID",
-    options: {
-      filter: true,
-      sort: true,
-    },
-  },
-  {
     name: "date",
     label: "Date",
     options: {
@@ -16,7 +8,7 @@ export const columns = [
     },
   },
   {
-    name: "Site",
+    name: "site",
     label: "Site",
     options: {
       filter: true,
@@ -32,7 +24,7 @@ export const columns = [
     },
   },
   {
-    name: "typeIntervention",
+    name: "type_intervention",
     label: "Type d'Intervention",
     options: {
       filter: true,
@@ -48,7 +40,7 @@ export const columns = [
     },
   },
   {
-    name: "lieu",
+    name: "province",
     label: "Lieu",
     options: {
       filter: true,
@@ -64,7 +56,7 @@ export const columns = [
     },
   },
   {
-    name: "heureDebut",
+    name: "heure_debut",
     label: "Heure Début",
     options: {
       filter: true,
@@ -72,7 +64,7 @@ export const columns = [
     },
   },
   {
-    name: "heureFin",
+    name: "heure_fin",
     label: "Heure Fin",
     options: {
       filter: true,

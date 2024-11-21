@@ -26,7 +26,7 @@ const AddModal = ({ setModelAddIsOpen }) => {
     province: "",
     description: "",
     heureDebut: "",
-    heureFin: "",
+    heure_fin: "",
     priorité: "",
     unites: "",
   });
@@ -182,9 +182,9 @@ const AddModal = ({ setModelAddIsOpen }) => {
                 onChange={handleChange}
                 label="Statut"
               >
-                <MenuItem value="Basse">En cours</MenuItem>
-                <MenuItem value="Moyenne">Escaladé</MenuItem>
-                <MenuItem value="Haute">Clôturer</MenuItem>
+                <MenuItem value="En cours">En cours</MenuItem>
+                <MenuItem value="Escaladé">Escaladé</MenuItem>
+                <MenuItem value="Clôturer">Clôturer</MenuItem>
               </Select>
             </FormControl>
           </Grid>
@@ -243,9 +243,9 @@ const AddModal = ({ setModelAddIsOpen }) => {
           <Grid item xs={6}>
             <TextField
               label="Heure Fin"
-              name="heureFin"
+              name="heure_fin"
               type="time"
-              value={ticketDetails.heureFin}
+              value={ticketDetails.heure_fin}
               onChange={handleChange}
               fullWidth
               margin="normal"

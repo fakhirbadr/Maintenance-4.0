@@ -4,6 +4,7 @@ import cors from "cors"; // Ajoutez cette ligne
 import uniteRouter from "./routes/uniteRoutes.js";
 import OpenAI from "openai";
 import dotenv from "dotenv";
+import stocksRouter from "../backend/stocks/routes/stocksRoute.js";
 
 dotenv.config();
 
@@ -29,5 +30,6 @@ app.use((req, res, next) => {
 
 // 2) ROUTES
 app.use("/api/v1/unite", uniteRouter);
+app.use("/api/v1/stocks", stocksRouter);
 
 export default app;

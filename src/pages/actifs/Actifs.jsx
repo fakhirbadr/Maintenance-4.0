@@ -14,6 +14,7 @@ import ExcelExporter from "../../components/ExcelExporter"; // Exportateur Excel
 import axios from "axios";
 import MapModal from "./mapModal"; // Modale pour la carte
 import UpdateDataModal from "./UpdateDataModal";
+import { MapPin } from "lucide-react";
 
 // Fonction pour personnaliser le thème MUI en fonction du mode (clair ou sombre)
 const getMuiTheme = (mode) => {
@@ -23,7 +24,7 @@ const getMuiTheme = (mode) => {
     },
     palette: {
       background: {
-        paper: mode === "dark" ? "#1e293b" : "#7cb7f2",
+        paper: mode === "dark" ? "#1E1E1E" : "#7cb7f2",
         default: mode === "dark" ? "#0f172a" : "#f0f0f0",
       },
       mode: mode,
@@ -36,12 +37,14 @@ const getMuiTheme = (mode) => {
       MuiTableCell: {
         styleOverrides: {
           head: {
+            justifyItems: "center",
             padding: "10px 4px",
             color: mode === "dark" ? "#ffffff" : "#000000",
             background: mode === "light" ? "#66a7e8" : "",
           },
           body: {
-            padding: "7px 15px",
+            justifyItems: "center",
+            padding: "7px 15px ",
             color: mode === "dark" ? "#e2e8f0" : "#000000",
           },
         },
@@ -62,6 +65,7 @@ const Actifs = () => {
   const [imageModalOpen, setImageModalOpen] = useState(false); // Modale d'image ouverte uniquement lors du clic sur une ligne
   const [openUpdateDataModal, setOpenUpdateDataModal] = useState(false); // etat pour contorller l'ouverture du modal
   const [selectedRowData, setSelectedRowData] = useState(null); // Données de la ligne sélectionnée
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async (rowData) => {
     try {
@@ -87,10 +91,11 @@ const Actifs = () => {
   useEffect(() => {
     const fetchUnites = async () => {
       try {
+        setIsLoading(true);
         const response = await axios.get("http://localhost:3000/api/v1/unite");
         if (Array.isArray(response.data.data.unites)) {
           console.log("Données reçues de l'API:", response.data.data.unites); // Affiche les données dans la console
-
+          setIsLoading(false);
           setUnites(response.data.data.unites);
           setRows(response.data.data.unites); // Mise à jour des lignes du tableau
         } else {
@@ -198,7 +203,7 @@ const Actifs = () => {
               }}
               aria-label="map"
             >
-              <MapIcon />
+              <MapPin />
             </IconButton>
           );
         },
@@ -277,6 +282,7 @@ const Actifs = () => {
       />
       {/* Tableau principal avec les données */}
       <div className="w-[100%] py-3">
+        
         <ReusableTable
           title="Liste des unités mobiles & logistiques"
           data={rows}

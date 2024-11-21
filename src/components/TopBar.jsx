@@ -284,6 +284,7 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
         <Stack direction={"row"}>
           {theme.palette.mode === "light" ? (
             <IconButton
+              style={{ display: "none" }}
               onClick={() => {
                 localStorage.setItem(
                   "currentMode",
@@ -300,6 +301,7 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             </IconButton>
           ) : (
             <IconButton
+              style={{ display: "none" }}
               onClick={() => {
                 localStorage.setItem(
                   "currentMode",

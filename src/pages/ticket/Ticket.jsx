@@ -36,7 +36,7 @@ const Ticket = () => {
       },
       palette: {
         background: {
-          paper: "#1e293b",
+          paper: "#1E1E1E",
           default: "#0f172a",
         },
         mode: "dark",
@@ -45,10 +45,12 @@ const Ticket = () => {
         MuiTableCell: {
           styleOverrides: {
             head: {
+              justifyItems: "center",
               padding: "10px 4px",
               whiteSpace: "wrap",
             },
             body: {
+              justifyItems: "center",
               padding: "7px 15px",
               color: "#e2e8f0",
               whiteSpace: "wrap",
@@ -63,7 +65,7 @@ const Ticket = () => {
     Critique: "black",
     élevée: "red", // High priority
     moyenne: "orange", // Medium priority
-    basse: "green", // Low priority
+    Basse: "green", // Low priority
   };
   const handleCloturer = (dataIndex) => {
     console.log("Clôturer:", dataIndex);
@@ -158,7 +160,7 @@ const Ticket = () => {
       },
     },
     {
-      name: "heureFin",
+      name: "heure_fin",
       label: "Heure Fin",
       options: {
         filter: true,
@@ -306,7 +308,7 @@ const Ticket = () => {
           sx={{
             px: 7,
             py: ["2px"],
-            bgcolor: "#323C4D",
+            bgcolor: "#1E1E1E",
             borderRadius: 2,
             display: "flex",
             justifyContent: "center",
