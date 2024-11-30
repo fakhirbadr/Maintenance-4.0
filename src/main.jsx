@@ -17,6 +17,7 @@ import Test from "./pages/Teste/Test";
 import Stocks from "./pages/Stocks/Stocks";
 import Login from "./pages/Login/Login";
 import Ticket from "./pages/ticket/Ticket";
+import Tickets from "./pages/demande_ticket/Ticket";
 import TempReel from "./pages/IOT/TempReel";
 import Capteur from "./pages/IOT/Capteur";
 import HomePageCapteur from "./pages/IOT/HomePageCapteur";
@@ -41,15 +42,16 @@ const router = createBrowserRouter(
     <>
       <Route path="/" element={<App />}>
         <Route index element={<Dashboard />} />
-        <Route path="dashboard" element={<Dashboard />} />
+        {/* <Route path="dashboard" element={<Dashboard />} /> */}
         <Route path="actifs" element={<Actifs />} />
         <Route path="Intervention" element={<Intervention />} />
-        <Route path="Calendrier" element={<Calandar />} />
-        <Route path="Profils" element={<Profils />} />
-        <Route path="Stocks" element={<Stocks />} />
-        <Route path="test" element={<Test />} />
+        {/* <Route path="Calendrier" element={<Calandar />} /> */}
+        {/* <Route path="Profils" element={<Profils />} /> */}
+        {/* <Route path="Stocks" element={<Stocks />} />
+        <Route path="test" element={<Test />} /> */}
         <Route path="ticket" element={<Ticket />} />
-        <Route path="Suivi" element={<TempReel />} />
+        <Route path="tickets" element={<Tickets />} />
+        {/* <Route path="Suivi" element={<TempReel />} />
         <Route path="Capteur" element={<Capteur />} />
         <Route path="HomePageCapteur" element={<HomePageCapteur />} />
         <Route path="Livraison" element={<Livraison />} />
@@ -58,7 +60,7 @@ const router = createBrowserRouter(
         <Route path="/ChatBot" element={<ChatBot />} />
         <Route path="/Rapports" element={<Rapports />} />
         <Route path="/RapportIntervention" element={<RapportIntervention />} />
-        <Route path="/Info" element={<Info />} />
+        <Route path="/Info" element={<Info />} /> */}
 
         {/* <Route path="interventions" element={<Interventions />} />
       <Route path="Calendrier" element={<Calendrier />} />

@@ -53,6 +53,7 @@ export const createStocks = async (req, res) => {
       },
     });
   } catch (err) {
+    console.error("Erreur lors de la création :", err.message);
     res.status(400).json({
       status: "fail",
       message: err.message,
@@ -62,7 +63,34 @@ export const createStocks = async (req, res) => {
 
 export const updateStock = async (req, res) => {
   try {
-  } catch {}
+    const updateStock = await Stocks.findByIdAndUpdate(
+      req.params.id,
+      req.body, // Ajout de la virgule ici
+      {
+        new: true,
+        runValidators: true,
+      }
+    );
+
+    if (!updateStock) {
+      return res.status(404).json({
+        status: "fail",
+        message: "Stock not found",
+      });
+    }
+
+    res.status(200).json({
+      status: "success",
+      data: {
+        stock: updateStock,
+      },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: "fail",
+      message: err.message,
+    });
+  }
 };
 
 export const deleteStocks = async (req, res) => {

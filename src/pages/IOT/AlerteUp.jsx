@@ -1,136 +1,173 @@
-import React, { useState, useEffect } from "react";
-import { DataGrid } from "@mui/x-data-grid";
-import { faker } from "@faker-js/faker";
-import { Button, Menu, MenuItem } from "@mui/material"; // Importation de MUI pour le Menu
+import { Button, createTheme, ThemeProvider } from "@mui/material";
+import axios from "axios";
+import MUIDataTable from "mui-datatables";
+import React, { useEffect, useState } from "react";
 
-function AlerteUp() {
-  const [data, setData] = useState([]);
-  const [anchorEl, setAnchorEl] = useState(null);
-  const [selectedRowId, setSelectedRowId] = useState(null);
+const AlerteUp = () => {
+  const [error, setError] = useState(null);
+  const [rows, setRows] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      const newData = {
-        id: faker.string.uuid(),
-        dateheure: new Date().toLocaleString(),
-        Serial: faker.word.noun(),
-        temperature: faker.number.int({ min: 15, max: 100 }),
-        reference: faker.string.alphanumeric(10), // Référence aléatoire
-        nom: faker.person.fullName(), // Nom complet aléatoire
-        marque: faker.company.name(), // Nom de marque aléatoire
-        province: faker.location.city(), // Province aléatoire
-        gravite: faker.helpers.arrayElement(["Basse", "Moyenne", "Haute"]), // Gravité aléatoire
-      };
-
-      setData((prevData) => [...prevData, newData]);
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  // Fonction pour ouvrir le menu déroulant
-  const handleMenuClick = (event, id) => {
-    setAnchorEl(event.currentTarget);
-    setSelectedRowId(id); // Stocker l'ID de la ligne sélectionnée
-  };
-
-  // Fonction pour gérer la sélection dans la liste déroulante
-  const handleMenuItemClick = (action) => {
-    const actionTimestamp = new Date().toLocaleString(); // Capturer la date et l'heure de l'action
-    console.log(
-      `Action sélectionnée pour la ligne ${selectedRowId}: ${action} à ${actionTimestamp}`
-    );
-    handleDelete(selectedRowId); // Supprimer la ligne après sélection
-    handleClose(); // Fermer le menu
-  };
-
-  // Fonction pour fermer le menu
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-
-  // Fonction pour supprimer une ligne par son ID
-  const handleDelete = (id) => {
-    setData((prevData) => prevData.filter((row) => row.id !== id));
-  };
-
-  // Filtrer les données pour n'afficher que celles avec température entre 50 et 100
-  const filteredData = data.filter(
-    (row) => row.temperature >= 50 && row.temperature <= 100
-  );
-
-  // Définition des colonnes
-  const columns = [
-    { field: "id", headerName: "ID", flex: 1, minWidth: 100 }, // Utiliser flex pour s'adapter à l'écran
-    { field: "dateheure", headerName: "date/heure", flex: 1, minWidth: 180 },
-    { field: "Serial", headerName: "Serial", flex: 1, minWidth: 130 },
-    {
-      field: "temperature",
-      headerName: "Température (°C)",
-      flex: 1,
-      minWidth: 150,
+  const options = {
+    filterType: "checkbox",
+    selectableRows: "none",
+    rowsPerPage: 10,
+    rowsPerPageOptions: [10, 50, 70, 100],
+    search: true,
+    download: true,
+    downloadOptions: {
+      filename: "alerts.csv",
+      separator: ",",
     },
-    { field: "reference", headerName: "Référence", flex: 1, minWidth: 150 },
-    { field: "nom", headerName: "Nom", flex: 1, minWidth: 150 },
-    { field: "marque", headerName: "Marque", flex: 1, minWidth: 150 },
-    { field: "province", headerName: "Province", flex: 1, minWidth: 130 },
-    { field: "gravite", headerName: "Gravité", flex: 1, minWidth: 130 },
+  };
+
+  const getMuiTheme = () =>
+    createTheme({
+      typography: {
+        fontFamily: "sans-serif",
+      },
+      palette: {
+        background: {
+          paper: "#1E1E1E",
+          default: "#0f172a",
+        },
+        mode: "dark",
+      },
+      components: {
+        MuiTableCell: {
+          styleOverrides: {
+            head: {
+              padding: "10px 4px",
+              whiteSpace: "wrap",
+            },
+            body: {
+              padding: "7px 15px",
+              color: "#e2e8f0",
+              whiteSpace: "wrap",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+            },
+          },
+        },
+      },
+    });
+
+  const columns = [
     {
-      field: "action", // Colonne "Action"
-      headerName: "Action",
-      flex: 1,
-      minWidth: 150,
-      renderCell: (params) => (
-        <>
-          <Button
-            variant="contained"
-            color="secondary"
-            onClick={(event) => handleMenuClick(event, params.row.id)} // Appel pour ouvrir le menu
-          >
-            Clôturer
-          </Button>
-        </>
-      ),
+      name: "date",
+      label: "Date / Heure",
+      options: { filter: true, sort: true },
+    },
+    { name: "serial", label: "Serial", options: { filter: true, sort: true } },
+    {
+      name: "reference",
+      label: "Reference",
+      options: { filter: true, sort: true },
+    },
+    { name: "name", label: "Nom", options: { filter: true, sort: true } },
+    { name: "region", label: "Région", options: { filter: true, sort: true } },
+    {
+      name: "province",
+      label: "Province",
+      options: { filter: true, sort: true },
+    },
+    { name: "state", label: "Etat", options: { filter: false, sort: false } },
+    {
+      name: "stockType",
+      label: "Type de stock",
+      options: { filter: true, sort: true },
+    },
+    { name: "type", label: "Type", options: { filter: true, sort: true } },
+    {
+      name: "alertLevel",
+      label: "Niveau d'alert",
+      options: { filter: true, sort: true },
+    },
+    { name: "value", label: "Valeur", options: { filter: true, sort: true } },
+    {
+      name: "action",
+      label: "Action",
+      options: { filter: false, sort: false },
     },
   ];
 
-  return (
-    <div
-      className="pt-8"
-      style={{
-        display: "flex",
-        justifyContent: "center", // Centrer horizontalement
-        alignItems: "center", // Centrer verticalement
-        width: "100%", // Prendre 100% de la largeur
-      }}
-    >
-      <div style={{ height: "100vh", width: "100%" }}>
-        {" "}
-        {/* Prend toute la hauteur et largeur */}
-        <DataGrid
-          rows={filteredData} // Affiche uniquement les lignes filtrées
-          columns={columns}
-          pageSize={5}
-          rowsPerPageOptions={[5]}
-          checkboxSelection
-          autoHeight // Permet de s'adapter automatiquement à la hauteur
-        />
-      </div>
+  const fetchAlerte = async () => {
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await axios.get(
+        "https://api.portail.nextrack.io/v1/logs?populate=region,province,user,action,operation,cause,state&page=1&limit=10&sortBy=createdAt:desc",
+        {
+          headers: {
+            Authorization:
+              "Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiI2M2M2OGRjMzYzZjgwYTAwMmUzNTY1ZWIiLCJpYXQiOjE3MzI2OTQ1MTQsImV4cCI6MTczMjY5NjMxNCwidHlwZSI6ImFjY2VzcyJ9.k4zyHUSJz0hmVFMwbK9KkBFFrZKBc0WL8XJsz2tMdxc",
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (Array.isArray(response.data.data.alerts)) {
+        setRows(response.data.data.alerts);
+      } else {
+        throw new Error("Les données reçues ne sont pas au format attendu.");
+      }
+    } catch (err) {
+      if (err.response) {
+        // Afficher une erreur en fonction du statut HTTP
+        switch (err.response.status) {
+          case 404:
+            setError("Endpoint introuvable : vérifiez l'URL.");
+            break;
+          case 401:
+            setError("Accès refusé : Token invalide ou expiré.");
+            break;
+          default:
+            setError(
+              `Erreur serveur (${err.response.status}): ${
+                err.response.data.message || "Erreur inconnue."
+              }`
+            );
+        }
+      } else if (err.request) {
+        setError("Aucune réponse du serveur. Vérifiez votre connexion réseau.");
+      } else {
+        setError(`Erreur: ${err.message}`);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      {/* Menu déroulant pour l'action de clôture */}
-      <Menu anchorEl={anchorEl} open={Boolean(anchorEl)} onClose={handleClose}>
-        <MenuItem onClick={() => handleMenuItemClick("Ouverture de porte")}>
-          Ouverture de porte
-        </MenuItem>
-        <MenuItem onClick={() => handleMenuItemClick("Dégivrage")}>
-          Dégivrage
-        </MenuItem>
-        <MenuItem onClick={() => handleMenuItemClick("Coupure d'électricité")}>
-          Coupure d'électricité
-        </MenuItem>
-      </Menu>
+  useEffect(() => {
+    fetchAlerte();
+  }, []);
+
+  return (
+    <div>
+      <div className="flex justify-between gap-4">
+        <Button variant="outlined" onClick={fetchAlerte} disabled={loading}>
+          Rafraîchir
+        </Button>
+        <Button variant="outlined">Télécharger Excel</Button>
+      </div>
+      <div className="w-[100%] py-3">
+        <ThemeProvider theme={getMuiTheme()}>
+          {loading ? (
+            <div className="text-center text-white">
+              Chargement des données...
+            </div>
+          ) : (
+            <MUIDataTable
+              title={"Gestion de tickets"}
+              data={rows}
+              columns={columns}
+              options={options}
+            />
+          )}
+        </ThemeProvider>
+      </div>
+      {error && <div className="text-red-500 mt-4">{error}</div>}
     </div>
   );
-}
+};
 
 export default AlerteUp;

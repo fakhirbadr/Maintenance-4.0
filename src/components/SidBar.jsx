@@ -78,16 +78,21 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const Array1 = [
-  { text: "Tableau de Bord", icon: <HomeOutlinedIcon />, path: "/DASHBOARD" },
+  // { text: "Tableau de Bord", icon: <HomeOutlinedIcon />, path: "/DASHBOARD" },
   {
     text: "Actifs",
     icon: <HomeRepairServiceOutlinedIcon />,
     path: "/ACTIFS",
   },
+  // {
+  //   text: "Test",
+  //   icon: <BugReportIcon />,
+  //   path: "/test",
+  // },
   {
-    text: "Test",
-    icon: <BugReportIcon />,
-    path: "/test",
+    text: "Ticket",
+    icon: <BookOnlineOutlinedIcon />,
+    path: "/Tickets",
   },
   {
     text: "Tickets",
@@ -100,56 +105,56 @@ const Array1 = [
     path: "/Intervention",
   },
 
-  {
-    text: "Temps Réel",
-    icon: <CloudOutlinedIcon />,
-    path: "/Suivi",
-  },
+  // {
+  //   text: "Temps Réel",
+  //   icon: <CloudOutlinedIcon />,
+  //   path: "/Suivi",
+  // },
 ];
-const Array2 = [
-  {
-    text: "Stocks",
-    icon: <Inventory2OutlinedIcon />,
-    path: "/Stocks",
-  },
-  {
-    text: "Calendrier ",
-    icon: <CalendarMonthOutlinedIcon />,
-    path: "/Calendrier",
-  },
-  {
-    text: "Profils",
-    icon: <ManageAccountsOutlinedIcon />,
-    path: "/Profils",
-  },
-  {
-    text: "Rapports",
-    icon: <CandlestickChartOutlinedIcon />,
-    path: "/Rapports",
-  },
-];
-const Array3 = [
-  {
-    text: "Notifications",
-    icon: <NotificationsActiveOutlinedIcon />,
-    path: "/Alertes",
-  },
-  {
-    text: "information",
-    icon: <AlternateEmailOutlinedIcon />,
-    path: "/Info",
-  },
-  {
-    text: "ChatBot",
-    icon: <SmartToyOutlinedIcon />,
-    path: "/ChatBot",
-  },
-  {
-    text: "Formations",
-    icon: <MenuBookOutlinedIcon />,
-    path: "/Formations",
-  },
-];
+// const Array2 = [
+//   {
+//     text: "Stocks",
+//     icon: <Inventory2OutlinedIcon />,
+//     path: "/Stocks",
+//   },
+//   {
+//     text: "Calendrier ",
+//     icon: <CalendarMonthOutlinedIcon />,
+//     path: "/Calendrier",
+//   },
+//   {
+//     text: "Profils",
+//     icon: <ManageAccountsOutlinedIcon />,
+//     path: "/Profils",
+//   },
+//   {
+//     text: "Rapports",
+//     icon: <CandlestickChartOutlinedIcon />,
+//     path: "/Rapports",
+//   },
+// ];
+// const Array3 = [
+//   {
+//     text: "Notifications",
+//     icon: <NotificationsActiveOutlinedIcon />,
+//     path: "/Alertes",
+//   },
+//   {
+//     text: "information",
+//     icon: <AlternateEmailOutlinedIcon />,
+//     path: "/Info",
+//   },
+//   {
+//     text: "ChatBot",
+//     icon: <SmartToyOutlinedIcon />,
+//     path: "/ChatBot",
+//   },
+//   {
+//     text: "Formations",
+//     icon: <MenuBookOutlinedIcon />,
+//     path: "/Formations",
+//   },
+// ];
 
 // eslint-disable-next-line react/prop-types
 export default function SidBar({ open, handleDrawerClose }) {
@@ -251,7 +256,7 @@ export default function SidBar({ open, handleDrawerClose }) {
 
       <Divider />
 
-      <List>
+      {/* <List>
         {Array2.map((item) => (
           <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
             <ListItemButton
@@ -325,7 +330,7 @@ export default function SidBar({ open, handleDrawerClose }) {
             </ListItemButton>
           </ListItem>
         ))}
-      </List>
+      </List> */}
     </Drawer>
   );
 }

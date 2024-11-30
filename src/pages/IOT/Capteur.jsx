@@ -37,7 +37,11 @@ const Capteur = () => {
               name="row-radio-buttons-group"
               onChange={handleTableChange}
             >
-              <FormControlLabel value="table1" control={<Radio />} label="UP" />
+              <FormControlLabel
+                value="table1"
+                control={<Radio />}
+                label={`UP `}
+              />
               <FormControlLabel
                 value="table2"
                 control={<Radio />}
@@ -50,10 +54,6 @@ const Capteur = () => {
               />
             </RadioGroup>
           </FormControl>
-        </div>
-
-        <div className="flex justify-end gap-4">
-          <Button variant="outlined">Télécharger Excel</Button>
         </div>
 
         {selectedTable === "table1" && (

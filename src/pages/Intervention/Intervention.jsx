@@ -3,7 +3,6 @@ import Location from "../../components/Location";
 import { Button, ThemeProvider } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import { createTheme } from "@mui/material/styles";
-import { columns } from "./Data";
 import { LineChart } from "@mui/x-charts/LineChart";
 import Model from "./Model";
 import axios from "axios";
@@ -46,6 +45,88 @@ const Intervention = () => {
         },
       },
     });
+  const columns = [
+    {
+      name: "date",
+      label: "Date",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "site",
+      label: "Site",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "technicien",
+      label: "Technicien",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "type_intervention",
+      label: "Type d'Intervention",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "statut",
+      label: "Statut",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "province",
+      label: "Lieu",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "description",
+      label: "Description",
+      options: {
+        filter: false,
+        sort: false,
+      },
+    },
+    {
+      name: "heure_debut",
+      label: "Heure Début",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "heure_fin",
+      label: "Heure Fin",
+      options: {
+        filter: true,
+        sort: true,
+      },
+    },
+    {
+      name: "commentaires",
+      label: "Commentaires",
+      options: {
+        filter: false,
+        sort: false,
+      },
+    },
+  ];
 
   const options = {
     filterType: "",
@@ -67,6 +148,7 @@ const Intervention = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
     XLSX.writeFile(workbook, "collaborateurs.xlsx");
   };
+  const hundleCloture = () => {};
 
   // chargement des donnees depuis L'API
 

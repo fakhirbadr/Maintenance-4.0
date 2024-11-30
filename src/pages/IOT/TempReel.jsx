@@ -10,7 +10,7 @@ const TempReel = () => {
         <Location />
       </div>
 
-      <div className="flex gap-28 justify-center ">
+      <div className="md:flex-row sm:flex-col h-full flex gap-28 justify-center items-center ">
         <Card
           image="/images/IOT/Card/1.jpg"
           title="Capteur de température"
@@ -35,16 +35,6 @@ const TempReel = () => {
           description="suivi des capteur de température"
           path="/"
         />
-      </div>
-
-      <div className="flex mt-10">
-        <SwiperImage />
-        <div className="max-w-3xl mx-auto text-center mt-16 flex justify-center items-center">
-          <h1 className="text-2xl font-bold text-white leading-tight mb-2 border-t-4 border-b-4 border-purple-600 pt-2">
-            Chaque action que nous supervisons contribue à un avenir plus sain
-            pour notre communauté.
-          </h1>
-        </div>
       </div>
     </div>
   );

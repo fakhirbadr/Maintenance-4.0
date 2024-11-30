@@ -174,7 +174,7 @@ const Actifs = () => {
                 marginRight: "8px",
               }}
             ></span>
-            {value ? "actif" : "inactif"}
+            {value ? "Actif" : "Inactif"}
           </div>
         ),
       },
@@ -282,7 +282,6 @@ const Actifs = () => {
       />
       {/* Tableau principal avec les données */}
       <div className="w-[100%] py-3">
-        
         <ReusableTable
           title="Liste des unités mobiles & logistiques"
           data={rows}

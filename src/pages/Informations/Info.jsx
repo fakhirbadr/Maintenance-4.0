@@ -165,7 +165,7 @@ const Info = () => {
                       onClick={() => handleMarkerClick(unit.Image)} // Utilisez la fonction correctement ici
                       variant="contained"
                     >
-                      Voir l'image
+                      Consulter l'unité
                     </Button>
                   </div>
                 </Popup>

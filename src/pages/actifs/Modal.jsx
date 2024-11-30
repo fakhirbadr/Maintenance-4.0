@@ -69,7 +69,7 @@ const regionsProvinces = {
   "Laayoune-Sakia El Hamra": ["Laayoune", "Boujdour", "Tarfaya", "Smara"],
 };
 
-const Modal = ({ setModelIsOpen }) => {
+const Modal = ({ setModelIsOpen, setOpen, onClose, handleClose }) => {
   const [selectedRegion, setSelectedRegion] = useState("");
   const [provinces, setProvinces] = useState([]);
   const [formData, setFormData] = useState({
@@ -297,11 +297,26 @@ const Modal = ({ setModelIsOpen }) => {
             fullWidth
           />
         </Grid>
-        <Grid item xs={12} container justifyContent="center" spacing={2}>
-          <Button type="submit" variant="contained" color="primary">
-            Enregistrer
-          </Button>
-        </Grid>
+      </Grid>
+
+      <Grid
+        className="pt-10 gap-x-4" // pt-6 = padding-top: 1.5rem
+        item
+        xs={12}
+        container
+        justifyContent="end"
+        spacing={2}
+      >
+        <Button type="submit" variant="contained" color="primary">
+          Enregistrer
+        </Button>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => onClose} // Appelle une fonction pour fermer le modal
+        >
+          Annuler
+        </Button>
       </Grid>
     </form>
   );

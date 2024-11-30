@@ -8,6 +8,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControl,
+  InputLabel,
+  MenuItem,
+  Select,
   TextField,
 } from "@mui/material";
 import { rows } from "./Data.js";
@@ -341,15 +345,21 @@ const Vehicule = () => {
             value={formData.annee}
             onChange={handleChange}
           />
-          <TextField
-            margin="dense"
-            label="Statut"
-            name="statut"
-            type="text"
-            fullWidth
-            value={formData.statut}
-            onChange={handleChange}
-          />
+          <FormControl fullWidth margin="dense">
+            <InputLabel id="statut-label">Statut</InputLabel>
+            <Select
+              labelId="statut-label"
+              id="statut"
+              name="statut"
+              value={formData.statut}
+              onChange={handleChange}
+              fullWidth
+            >
+              <MenuItem value="actif">Actif</MenuItem>
+              <MenuItem value="inactif">Inactif</MenuItem>
+              <MenuItem value="livraison">Livraison</MenuItem>
+            </Select>
+          </FormControl>
           <TextField
             margin="dense"
             label="Localisation"

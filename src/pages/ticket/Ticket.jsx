@@ -19,8 +19,10 @@ import {
 import ModelUpdate from "./ModelUpdate";
 import AddModal from "./AddModal";
 import axios from "axios";
+import AddModel from "./AddModel";
 
 const Ticket = () => {
+  const [addOpen, setAddOpen] = useState(false);
   const [closedRows, setClosedRows] = useState([]); // État pour stocker les lignes clôturées
   const [tickets, setTickets] = useState([]);
   const [error, setError] = useState(null);
@@ -28,6 +30,19 @@ const Ticket = () => {
   const [ModelUpdateOpen, setModelUpdateOpen] = useState(false);
   const [selectedRowData, setSelectedRowData] = useState(null);
   const [rows, setRows] = useState([]); // Données du tableau
+
+  const handleAddModelOpen = () => {
+    setAddOpen(true);
+  };
+
+  const handleAddModelClose = () => {
+    setAddOpen(false);
+  };
+
+  const handleAddModelSubmit = (data) => {
+    console.log("Données soumises :", data);
+    setAddOpen(false);
+  };
 
   const getMuiTheme = () =>
     createTheme({
@@ -286,6 +301,9 @@ const Ticket = () => {
         <Button variant="outlined" onClick={() => setModelAddIsOpen(true)}>
           Ajouter
         </Button>
+        <Button variant="outlined" onClick={() => handleAddModelOpen()}>
+          Add
+        </Button>
       </div>
       {modelAddIsOpen && (
         <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-75">
@@ -294,6 +312,11 @@ const Ticket = () => {
           </div>
         </div>
       )}
+      <AddModel
+        open={addOpen}
+        onClose={handleAddModelClose}
+        onSubmit={handleAddModelSubmit}
+      />
       {ModelUpdateOpen && (
         <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-75">
           <ModelUpdate

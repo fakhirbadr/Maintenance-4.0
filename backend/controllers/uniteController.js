@@ -1,5 +1,4 @@
 // controllers/uniteController.js
-import { Tour } from "@mui/icons-material";
 import Unite from "../models/unitesModel.js";
 // find all unites
 export const getAllUnite = async (req, res) => {

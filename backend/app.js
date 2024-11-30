@@ -5,7 +5,10 @@ import uniteRouter from "./routes/uniteRoutes.js";
 import OpenAI from "openai";
 import dotenv from "dotenv";
 import stocksRouter from "../backend/stocks/routes/stocksRoute.js";
-
+import calendarRoute from "../backend/calendar/routes/calendarRoute.js";
+import alerteRoute from "../backend/rapportAlerte/routes/alerteRoute.js";
+import ticketMaintenanceRoutes from "../backend/ticket_maintenance/routes/ticketMaintenanceRoutes.js";
+import fournitureRoutes from "../backend/ticket_fourniture/routes/ticketFournitureRoutes.js";
 dotenv.config();
 
 const app = express();
@@ -31,5 +34,9 @@ app.use((req, res, next) => {
 // 2) ROUTES
 app.use("/api/v1/unite", uniteRouter);
 app.use("/api/v1/stocks", stocksRouter);
+app.use("/api/v1/calendar", calendarRoute);
+app.use("/api/v1/alert", alerteRoute);
+app.use("/api/v1/ticketMaintenance", ticketMaintenanceRoutes);
+app.use("/api/v1/fournitureRoutes", fournitureRoutes);
 
 export default app;
