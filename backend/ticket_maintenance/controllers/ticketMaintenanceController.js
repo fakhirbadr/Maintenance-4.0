@@ -3,7 +3,18 @@ import TicketMaintenance from "../models/TicketMaintenancemodel.js";
 // Get all tickets
 export const getAllTickets = async (req, res) => {
   try {
-    const tickets = await TicketMaintenance.find();
+    // Vérifie si le filtre "isClosed" est présent dans la requête
+    const { isClosed } = req.query;
+
+    // Crée une condition de filtre si "isClosed" est fourni
+    const filter = {};
+    if (isClosed !== undefined) {
+      filter.isClosed = isClosed === "true"; // Convertit "true"/"false" en boolean
+    }
+
+    // Récupère les tickets en fonction du filtre
+    const tickets = await TicketMaintenance.find(filter);
+
     res.status(200).json(tickets);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -25,7 +36,18 @@ export const getTicketById = async (req, res) => {
 
 // Create a new ticket
 export const createTicket = async (req, res) => {
-  const { name, site, province, technicien, categorie, description } = req.body;
+  const {
+    name,
+    site,
+    province,
+    technicien,
+    equipement_deficitaire,
+    categorie,
+    description,
+    urgence,
+    isClosed,
+    dateCloture,
+  } = req.body;
 
   try {
     // Créez un nouveau ticket avec les nouveaux champs
@@ -36,6 +58,10 @@ export const createTicket = async (req, res) => {
       technicien,
       categorie,
       description,
+      equipement_deficitaire, // Ajout du champ "equipement_deficitaire"
+      urgence, // Ajout du champ "urgence"
+      isClosed,
+      dateCloture,
     });
 
     await newTicket.save();
@@ -47,11 +73,35 @@ export const createTicket = async (req, res) => {
 
 // Update a ticket by ID
 export const updateTicket = async (req, res) => {
-  const { name } = req.body;
+  const {
+    name,
+    site,
+    province,
+    technicien,
+    equipement_deficitaire,
+    categorie,
+    description,
+    urgence,
+    isClosed,
+    dateCloture,
+  } = req.body;
+
   try {
+    // Mise à jour du ticket avec tous les champs passés dans la requête
     const updatedTicket = await TicketMaintenance.findByIdAndUpdate(
       req.params.id,
-      { name },
+      {
+        name,
+        site,
+        province,
+        technicien,
+        equipement_deficitaire,
+        categorie,
+        description,
+        urgence,
+        isClosed,
+        dateCloture,
+      },
       { new: true }
     );
 

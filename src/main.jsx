@@ -16,7 +16,7 @@ import Profils from "./pages/Profil/Profils";
 import Test from "./pages/Teste/Test";
 import Stocks from "./pages/Stocks/Stocks";
 import Login from "./pages/Login/Login";
-import Ticket from "./pages/ticket/Ticket";
+import Ticket from "./pages/ticket_maitenance/ticketMaintenance";
 import Tickets from "./pages/demande_ticket/Ticket";
 import TempReel from "./pages/IOT/TempReel";
 import Capteur from "./pages/IOT/Capteur";

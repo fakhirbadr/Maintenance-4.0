@@ -164,8 +164,8 @@ const ModelMaintenance = ({ open, onClose }) => {
             technicien,
             categorie,
             description,
-            equipement_deficitaire,
-            urgence,
+            equipement_deficitaire, // Ensure this is added
+            urgence, // Ensure this is added
             photos,
           }),
         }
@@ -183,8 +183,8 @@ const ModelMaintenance = ({ open, onClose }) => {
         setTechnicien("");
         setCategorie("");
         setDescription("");
-        setEquipementDeficitaire("");
-        setUrgence("");
+        setEquipementDeficitaire(""); // Reset defective equipment field
+        setUrgence(""); // Reset urgency field
         setPhotos("");
       } else {
         setError(data.message || "Erreur lors de la soumission");
@@ -317,9 +317,9 @@ const ModelMaintenance = ({ open, onClose }) => {
               onChange={(e) => setUrgence(e.target.value)}
               label="Urgence"
             >
-              <MenuItem value="faible">Faible</MenuItem>
-              <MenuItem value="moyenne">Moyenne</MenuItem>
-              <MenuItem value="élevée">Élevée</MenuItem>
+              <MenuItem value="faible">faible</MenuItem>
+              <MenuItem value="moyenne">moyenne</MenuItem>
+              <MenuItem value="élevée">élevée</MenuItem>
             </Select>
           </FormControl>
           {/* New field for photos */}

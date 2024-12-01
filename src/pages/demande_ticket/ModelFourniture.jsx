@@ -8,27 +8,27 @@ import TextField from "@mui/material/TextField";
 import Alert from "@mui/material/Alert";
 import axios from "axios";
 import { FormControl, InputLabel, MenuItem, Select } from "@mui/material";
-import Autocomplete from "@mui/material/Autocomplete";
 
 const ModelFourniture = ({ open, onClose }) => {
   const [formData, setFormData] = useState({
     name: "",
-    categorie: null,
-    besoin: null,
+    categorie: "",
+    besoin: "",
     quantite: "",
-    technicien: "", // Nouveau champ pour le technicien
+    technicien: "",
+    customCategorie: "", // Pour le champ personnalisé catégorie
+    customBesoin: "", // Pour le champ personnalisé besoin
   });
 
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Categories list
   const categories = [
     "Structure Bâtiment",
     "Dispositif Médicaux",
     "Matériel Informatique",
   ];
-  // Besoin list
+
   const besoins = [
     "CAMERA SURVILLANCE",
     "CLIMATISATION",
@@ -76,7 +76,6 @@ const ModelFourniture = ({ open, onClose }) => {
     "RÉFRIGÉRATEUR",
   ];
 
-  // Handle input change
   const handleChange = (e) => {
     const { name, value } = e.target;
     setFormData((prevData) => ({
@@ -85,12 +84,30 @@ const ModelFourniture = ({ open, onClose }) => {
     }));
   };
 
-  // Handle form submission
   const handleSubmit = async () => {
-    const { name, categorie, besoin, quantite, technicien } = formData;
+    const {
+      name,
+      categorie,
+      besoin,
+      quantite,
+      technicien,
+      customCategorie,
+      customBesoin,
+    } = formData;
 
-    // Validation: Check if all fields are filled
-    if (!name || !categorie || !besoin || !quantite || !technicien) {
+    // Si "Autre" est sélectionné pour catégorie ou besoin, utiliser la valeur personnalisée
+    const selectedCategorie =
+      categorie === "Autre" ? customCategorie : categorie;
+    const selectedBesoin = besoin === "Autre" ? customBesoin : besoin;
+
+    // Validation
+    if (
+      !name ||
+      !selectedCategorie ||
+      !selectedBesoin ||
+      !quantite ||
+      !technicien
+    ) {
       setError("Tous les champs sont obligatoires.");
       return;
     }
@@ -105,7 +122,7 @@ const ModelFourniture = ({ open, onClose }) => {
     try {
       const response = await axios.post(
         "http://localhost:3000/api/v1/fournitureRoutes",
-        formData
+        { ...formData, categorie: selectedCategorie, besoin: selectedBesoin }
       );
 
       setSuccess("Ticket créé avec succès !");
@@ -116,7 +133,9 @@ const ModelFourniture = ({ open, onClose }) => {
         categorie: "",
         besoin: "",
         quantite: "",
-        technicien: "", // Réinitialisation du champ technicien
+        technicien: "",
+        customCategorie: "",
+        customBesoin: "",
       });
 
       setTimeout(() => {
@@ -136,7 +155,6 @@ const ModelFourniture = ({ open, onClose }) => {
         {error && <Alert severity="error">{error}</Alert>}
         {success && <Alert severity="success">{success}</Alert>}
 
-        {/* Site (remplacement du champ Technicien) */}
         <FormControl fullWidth margin="normal">
           <InputLabel>Site</InputLabel>
           <Select
@@ -145,79 +163,7 @@ const ModelFourniture = ({ open, onClose }) => {
             label="Site"
             name="name"
           >
-            {/* Replace with your list of sites */}
-            {[
-              "UM ABEDLGHAYA SOUAHEL",
-              "UM AIT BOUALI",
-              "UM ADASSIL",
-              "UM AIT MAJDEN",
-              "UM AGHBALA",
-              "UM AIT M'HAMED",
-              "UM AGUELMAM AZEGZA",
-              "UM AGHBALA",
-              "UM AIT AYACH",
-              "UM BOUTFARDA",
-              "UM AIT HANI",
-              "UM AGALMAM AZAGZA",
-              "UM AIT MAJDEN",
-              "UM EL KBAB",
-              "UM AIT MHAMED",
-              "UM SIDI HSAIN",
-              "UM AL KAITOUNE",
-              "UM M'GARTO",
-              "UM ALLOUGOUM",
-              "UM Ouled Hmida Tmassine",
-              "UM ALMIS GUIGOU",
-              "UM KHMISS KSSIBA",
-              "UM AMELLAGOU",
-              "UM AMELLAGOU",
-              "UM AMIZMIZ",
-              "UM MELLAB",
-              "UM ARBAA BENI FTAH",
-              "UM AIT AYACH",
-              "UM ASNI",
-              "UM GUIR",
-              "UM ASSEBBAB",
-              "UM IMI NOULAOUNE",
-              "UM BAB BERRED",
-              "UM KSAR TOUROUG",
-              "UM AIT HANI",
-              "UM BNI OUAL",
-              "UM HSSIA",
-              "UM BOUCHAOUNE",
-              "UM IGHIL N'OUMGOUN",
-              "UM BOUTIJOUTE",
-              "UM FAZOUATA",
-              "UM EZZAOUITE",
-              "UM TAGHBALT",
-              "UM IGHEZREN",
-              "UM ALMIS GUIGOU",
-              "UM IGHIL NOUMGOUN",
-              "UM OUTAT EL HAJ",
-              "UM IMI NOULAOUEN",
-              "UM SERGHINA",
-              "UM OULAD MIMOUN",
-              "UM KHMIS KSIBA",
-              "UM IGHEZREN",
-              "UM MEGARTO",
-              "UM TAGHBALT",
-              "UM GHAFSSAY",
-              "UM MZOUDA",
-              "UM RAS EL OUED",
-              "UM NZALA AIT IZDEG",
-              "UM SIDI YAHYA BNI ZEROUAL",
-              "UM OUIRGANE",
-              "UM BNI FRASSEN",
-              "UM BNI FTAH",
-              "UM OULAD GHZYEL",
-              "UM BNI BOUFRAH",
-              "UM BAB BERRED",
-              "UM HAD BNI CHIKER",
-              "UM BOUDINAR",
-              "UM EL KHERFAN",
-              "UM OULED HMIDA TAMASSINE",
-              "UM SIDI REDOUANE",
-            ].map((site, index) => (
+            {["Site 1", "Site 2", "Site 3"].map((site, index) => (
               <MenuItem key={index} value={site}>
                 {site}
               </MenuItem>
@@ -225,49 +171,63 @@ const ModelFourniture = ({ open, onClose }) => {
           </Select>
         </FormControl>
 
-        {/* Catégorie: Autocomplete for typing and selecting options */}
-        <Autocomplete
-          value={formData.categorie}
-          onChange={(event, newValue) => {
-            setFormData((prevData) => ({
-              ...prevData,
-              categorie: newValue,
-            }));
-          }}
-          options={categories}
-          isOptionEqualToValue={(option, value) => option === value} // Personnalisation de la comparaison
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Catégorie"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-            />
-          )}
-        />
+        {/* Catégorie */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Catégorie</InputLabel>
+          <Select
+            value={formData.categorie}
+            onChange={handleChange}
+            label="Catégorie"
+            name="categorie"
+          >
+            {categories.map((category, index) => (
+              <MenuItem key={index} value={category}>
+                {category}
+              </MenuItem>
+            ))}
+            <MenuItem value="Autre">Autre</MenuItem>
+          </Select>
+        </FormControl>
+        {formData.categorie === "Autre" && (
+          <TextField
+            fullWidth
+            label="Nouvelle Catégorie"
+            variant="outlined"
+            name="customCategorie"
+            value={formData.customCategorie}
+            onChange={handleChange}
+            margin="normal"
+          />
+        )}
 
-        {/* Besoin: Autocomplete for typing and selecting options */}
-        <Autocomplete
-          value={formData.besoin}
-          onChange={(event, newValue) => {
-            setFormData((prevData) => ({
-              ...prevData,
-              besoin: newValue,
-            }));
-          }}
-          options={besoins}
-          isOptionEqualToValue={(option, value) => option === value} // Personnalisation de la comparaison
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Besoin"
-              variant="outlined"
-              fullWidth
-              margin="normal"
-            />
-          )}
-        />
+        {/* Besoin */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Besoin</InputLabel>
+          <Select
+            value={formData.besoin}
+            onChange={handleChange}
+            label="Besoin"
+            name="besoin"
+          >
+            {besoins.map((need, index) => (
+              <MenuItem key={index} value={need}>
+                {need}
+              </MenuItem>
+            ))}
+            <MenuItem value="Autre">Autre</MenuItem>
+          </Select>
+        </FormControl>
+        {formData.besoin === "Autre" && (
+          <TextField
+            fullWidth
+            label="Nouveau Besoin"
+            variant="outlined"
+            name="customBesoin"
+            value={formData.customBesoin}
+            onChange={handleChange}
+            margin="normal"
+          />
+        )}
 
         {/* Quantité */}
         <TextField
