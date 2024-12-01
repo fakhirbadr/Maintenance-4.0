@@ -3,9 +3,9 @@ import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import L, { divIcon } from "leaflet";
 import Location from "../../components/Location";
-import Morroco from "../../../public/images/Infromations/Morroco.png";
-import FondationM6 from "../../../public/images/Infromations/images.png";
-import SCX from "../../../public/images/Rapport/aba-galaxy.png";
+// import Morroco from "../../../public/images/Infromations/morroco.png";
+// import FondationM6 from "../../../public/images/Infromations/images.png";
+// import SCX from "../../../public/images/Rapport/aba-galaxy.png";
 import { rows } from "../actifs/Data";
 import {
   FormControl,
@@ -87,7 +87,7 @@ const Info = () => {
   return (
     <>
       <Location />
-      <div className="flex justify-evenly items-center mt-4">
+      {/* <div className="flex justify-evenly items-center mt-4">
         <img src={Morroco} alt="Morroco" className="w-24 h-24 object-contain" />
         <img src={SCX} alt="SCX" className="w-24 h-24 object-contain" />
         <img
@@ -95,7 +95,7 @@ const Info = () => {
           alt="FondationM6"
           className="w-24 h-24 object-contain"
         />
-      </div>
+      </div> */}
 
       <div className="flex justify-center items-center gap-x-6 mt-4">
         {/* Sélection pour UMMC */}
