@@ -3,7 +3,6 @@ import { Tabs, Tab, Box, Typography } from "@mui/material";
 import Location from "../../../components/Location";
 import Vehicule from "./vehicule/Vehicule";
 import Config from "./configuration/Config";
-import Maps from "./maps/maps";
 import Historique from "./historique/Historique";
 import Stats from "./State/Stats";
 
