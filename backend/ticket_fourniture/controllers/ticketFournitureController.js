@@ -1,9 +1,22 @@
 import Fourniture from "../models/ticketFournitureModel.js";
 
 // Get all Fournitures
+// Get all Fournitures
 export const getAllFournitures = async (req, res) => {
   try {
-    const fournitures = await Fourniture.find();
+    // Vérifie si le filtre "isClosed" est présent dans la requête
+    const { isClosed } = req.query;
+
+    // Crée une condition de filtre si "isClosed" est fourni
+    const filter = {};
+    if (isClosed !== undefined) {
+      // Convertit "true"/"false" en boolean pour la comparaison
+      filter.isClosed = isClosed === "true";
+    }
+
+    // Récupère les fournitures en fonction du filtre
+    const fournitures = await Fourniture.find(filter);
+
     res.status(200).json(fournitures);
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -25,7 +38,7 @@ export const getFournitureById = async (req, res) => {
 
 // Create a new Fourniture
 export const createFourniture = async (req, res) => {
-  const { name, categorie, besoin, quantite, technicien } = req.body;
+  const { name, categorie, besoin, quantite, technicien, isClosed } = req.body;
 
   try {
     // Create a new Fourniture with the provided fields
@@ -35,6 +48,7 @@ export const createFourniture = async (req, res) => {
       besoin,
       quantite,
       technicien,
+      isClosed,
     });
 
     await newFourniture.save();
@@ -46,13 +60,13 @@ export const createFourniture = async (req, res) => {
 
 // Update a Fourniture by ID
 export const updateFourniture = async (req, res) => {
-  const { name, categorie, besoin, quantite } = req.body;
+  const { name, categorie, besoin, quantite, isClosed } = req.body;
 
   try {
     // Update the Fourniture with the provided fields
     const updatedFourniture = await Fourniture.findByIdAndUpdate(
       req.params.id,
-      { name, categorie, besoin, quantite },
+      { name, categorie, besoin, quantite, isClosed },
       { new: true }
     );
 

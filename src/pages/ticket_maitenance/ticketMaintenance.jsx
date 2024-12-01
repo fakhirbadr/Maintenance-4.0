@@ -21,8 +21,15 @@ import axios from "axios";
 import moment from "moment";
 import DataDetails from "./dataDetails";
 import UpdateModel from "./updateModel";
+import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 
 const TicketMaintenance = () => {
+  const handleDownloadExcel = () => {
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
+    XLSX.writeFile(workbook, "Ticket_Maintenance.xlsx");
+  };
   const [rows, setRows] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
@@ -90,11 +97,11 @@ const TicketMaintenance = () => {
 
   const handleCloseTicket = async (rowData) => {
     try {
-      const currentDate = new Date();
-      currentDate.setHours(currentDate.getHours() + 1);
+      const currentDate = new Date(); // Récupère l'heure actuelle
+      currentDate.setHours(currentDate.getHours()); // Ajoute 1 heure si nécessaire (pour ajuster selon le fuseau horaire)
       const response = await axios.patch(
         `http://localhost:3000/api/v1/ticketMaintenance/${rowData._id}`,
-        { isClosed: true, dateCloture: currentDate.toISOString() }
+        { isClosed: true, dateCloture: currentDate.toISOString() } // Mise à jour du ticket avec la date de clôture
       );
       if (response.status === 200) {
         setRows((prevRows) =>
@@ -103,7 +110,7 @@ const TicketMaintenance = () => {
               ? {
                   ...row,
                   isClosed: true,
-                  dateCloture: currentDate.toISOString(),
+                  dateCloture: currentDate.toISOString(), // Mise à jour de la date de clôture dans l'état
                 }
               : row
           )
@@ -219,42 +226,49 @@ const TicketMaintenance = () => {
   };
 
   return (
-    <div className="w-[100%] py-3">
-      <ThemeProvider theme={getMuiTheme()}>
-        <MUIDataTable
-          title={"Gestion de tickets"}
-          data={rows}
-          columns={columns}
-          options={options}
+    <>
+      <div className="flex justify-end gap-4">
+        <Button onClick={handleDownloadExcel} variant="outlined">
+          Télécharger Excel
+        </Button>
+      </div>
+      <div className="w-[100%] py-3">
+        <ThemeProvider theme={getMuiTheme()}>
+          <MUIDataTable
+            title={"Gestion de tickets"}
+            data={rows}
+            columns={columns}
+            options={options}
+          />
+        </ThemeProvider>
+
+        <Dialog
+          open={openModal}
+          onClose={handleCloseModal}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle>Détails du Ticket</DialogTitle>
+          <DialogContent>
+            <DataDetails ticket={selectedTicket} />
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseModal} color="primary">
+              Fermer
+            </Button>
+          </DialogActions>
+        </Dialog>
+
+        {/* Composant UpdateModel */}
+        <UpdateModel
+          open={openUpdateModal}
+          onClose={handleCloseUpdateModal}
+          ticket={updatedTicket}
+          onFieldChange={handleFieldChange}
+          onSubmit={handleSubmitUpdate}
         />
-      </ThemeProvider>
-
-      <Dialog
-        open={openModal}
-        onClose={handleCloseModal}
-        maxWidth="md"
-        fullWidth
-      >
-        <DialogTitle>Détails du Ticket</DialogTitle>
-        <DialogContent>
-          <DataDetails ticket={selectedTicket} />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseModal} color="primary">
-            Fermer
-          </Button>
-        </DialogActions>
-      </Dialog>
-
-      {/* Composant UpdateModel */}
-      <UpdateModel
-        open={openUpdateModal}
-        onClose={handleCloseUpdateModal}
-        ticket={updatedTicket}
-        onFieldChange={handleFieldChange}
-        onSubmit={handleSubmitUpdate}
-      />
-    </div>
+      </div>
+    </>
   );
 };
 

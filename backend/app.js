@@ -9,6 +9,7 @@ import calendarRoute from "../backend/calendar/routes/calendarRoute.js";
 import alerteRoute from "../backend/rapportAlerte/routes/alerteRoute.js";
 import ticketMaintenanceRoutes from "../backend/ticket_maintenance/routes/ticketMaintenanceRoutes.js";
 import fournitureRoutes from "../backend/ticket_fourniture/routes/ticketFournitureRoutes.js";
+import userRoutes from "../backend/user/routes/userRoute.js";
 dotenv.config();
 
 const app = express();
@@ -38,5 +39,6 @@ app.use("/api/v1/calendar", calendarRoute);
 app.use("/api/v1/alert", alerteRoute);
 app.use("/api/v1/ticketMaintenance", ticketMaintenanceRoutes);
 app.use("/api/v1/fournitureRoutes", fournitureRoutes);
+app.use("/api/v1/users", userRoutes);
 
 export default app;

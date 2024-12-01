@@ -10,11 +10,6 @@ const ticketMaintenanceSchema = new mongoose.Schema(
     categorie: {
       type: String,
       required: false,
-      enum: [
-        "structure batiment",
-        "dispositif médical",
-        "matériel informatique",
-      ],
     },
     description: { type: String, required: false },
     equipement_deficitaire: { type: String, required: false },

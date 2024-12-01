@@ -7,6 +7,7 @@ const FournitureSchema = new mongoose.Schema({
   quantite: { type: Number, required: true },
   technicien: { type: String, required: true }, // Nouveau champ pour le technicien
   dateCreation: { type: Date, default: Date.now }, // Auto-generate the creation date
+  isClosed: { type: Boolean, default: false }, // Valeur par défaut à false
 });
 
 const TicketFourniture = mongoose.model("TicketFourniture", FournitureSchema);

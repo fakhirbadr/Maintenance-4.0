@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -143,6 +143,17 @@ const ModelMaintenance = ({ open, onClose }) => {
     "Télérupteur",
     "RÉFRIGÉRATEUR",
   ];
+  const categories = [
+    "structure batiment",
+    "dispositif médical",
+    "matériel informatique",
+  ];
+  useEffect(() => {
+    const technicienEmail = localStorage.getItem("userEmail");
+    if (technicienEmail) {
+      setTechnicien(technicienEmail); // Set the fetched email as the initial value
+    }
+  }, []);
 
   // Handle form submission
   const handleSubmit = async () => {
@@ -266,24 +277,27 @@ const ModelMaintenance = ({ open, onClose }) => {
             variant="outlined"
             fullWidth
             value={technicien}
-            onChange={(e) => setTechnicien(e.target.value)}
+            onChange={(e) => setTechnicien(e.target.value)} // Allow user to change it if needed
             margin="normal"
             required
+            disabled // Disable the field to prevent changing the email manually
           />
-          <FormControl fullWidth margin="normal" required>
-            <InputLabel>Catégorie</InputLabel>
-            <Select
-              value={categorie}
-              onChange={(e) => setCategorie(e.target.value)}
-              label="Catégorie"
-            >
-              <MenuItem value="structure batiment">Structure Bâtiment</MenuItem>
-              <MenuItem value="dispositif médical">Dispositif médical</MenuItem>
-              <MenuItem value="matériel informatique">
-                Matériel informatique
-              </MenuItem>
-            </Select>
-          </FormControl>
+          {/* Category field with autocomplete */}
+          <Autocomplete
+            freeSolo
+            options={categories}
+            value={categorie}
+            onInputChange={(e, newValue) => setCategorie(newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Catégorie"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+              />
+            )}
+          />
           <TextField
             label="Description"
             variant="outlined"

@@ -15,6 +15,8 @@ import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
 import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
 import CandlestickChartOutlinedIcon from "@mui/icons-material/CandlestickChartOutlined";
 import BookOnlineOutlinedIcon from "@mui/icons-material/BookOnlineOutlined";
+import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
+
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
@@ -26,6 +28,8 @@ import BugReportIcon from "@mui/icons-material/BugReport";
 import { Avatar, List, styled, Typography, useTheme } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { grey } from "@mui/material/colors";
+import { HistoryIcon } from "lucide-react";
+import ListAltIcon from "@mui/icons-material/ListAlt";
 
 const drawerWidth = 240;
 
@@ -96,14 +100,42 @@ const Array1 = [
   },
   {
     text: "Tickets",
-    icon: <BookOnlineOutlinedIcon />,
+    icon: <ConstructionOutlinedIcon />,
     path: "/Ticket",
   },
   {
-    text: "Intervention",
-    icon: <ConstructionOutlinedIcon />,
-    path: "/Intervention",
+    text: "Besoin",
+    icon: <ListAltIcon />,
+    path: "/Besoin",
   },
+  {
+    text: "Historique Intervention", // Nom combiné
+    icon: (
+      <>
+        <ConstructionOutlinedIcon />
+        <HistoryIcon />{" "}
+        {/* Vous pouvez afficher les deux icônes ensemble si souhaité */}
+      </>
+    ),
+    path: "/HistoriqueIntervention", // Chemin de navigation pour cette page
+  },
+  {
+    text: "Historique Besoin", // Nom combiné
+    icon: (
+      <>
+        <ListAltIcon />
+        <HistoryIcon />
+        {/* Vous pouvez afficher les deux icônes ensemble si souhaité */}
+      </>
+    ),
+    path: "/HistoriqueBesoin", // Chemin de navigation pour cette page
+  },
+
+  // {
+  //   text: "Intervention",
+  //   icon: <ConstructionOutlinedIcon />,
+  //   path: "/Intervention",
+  // },
 
   // {
   //   text: "Temps Réel",
