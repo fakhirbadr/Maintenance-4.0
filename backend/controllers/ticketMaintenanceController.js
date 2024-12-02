@@ -1,4 +1,4 @@
-import TicketMaintenance from "../models/TicketMaintenancemodel.js";
+import TicketMaintenance from "../models/ticketMaintenancemodel.js";
 
 // Get all tickets
 export const getAllTickets = async (req, res) => {

@@ -16,11 +16,14 @@ const Login = () => {
     const token = localStorage.getItem("authToken"); // ou sessionStorage
 
     axios
-      .get("http://localhost:3000/api/v1/users/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`, // Ajouter le token au header
-        },
-      })
+      .get(
+        "https://maintenance-4-0-backend-14.onrender.com/api/v1/users/profile",
+        {
+          headers: {
+            Authorization: `Bearer ${token}`, // Ajouter le token au header
+          },
+        }
+      )
       .then((response) => {
         setAccounts(response.data);
       })
@@ -33,7 +36,10 @@ const Login = () => {
     e.preventDefault();
 
     axios
-      .post("http://localhost:3000/api/v1/users/login", { email, password })
+      .post(
+        "https://maintenance-4-0-backend-14.onrender.com/api/v1/users/login",
+        { email, password }
+      )
       .then((response) => {
         // Si la connexion est réussie, stocke le token et redirige
         localStorage.setItem("authToken", response.data.token);

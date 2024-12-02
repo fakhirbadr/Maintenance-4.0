@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from "bcrypt";
+import bcrypt from "bcryptjs"; // Ajout de bcryptjs pour hacher et vérifier les mots de passe
 
 // Définition du schéma utilisateur
 const userSchema = new mongoose.Schema(

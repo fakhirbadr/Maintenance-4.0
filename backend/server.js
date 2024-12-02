@@ -13,10 +13,7 @@ const DB = process.env.DATABASE.replace(
 
 // Connexion à MongoDB avec gestion des erreurs
 mongoose
-  .connect(DB, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-  })
+  .connect(DB)
   .then(() => console.log("Connexion à MongoDB réussie !"))
   .catch((err) => console.log("Erreur de connexion :", err));
 
