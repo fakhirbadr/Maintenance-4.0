@@ -11,7 +11,8 @@ dotenv.config();
 const app = express();
 
 // Utilisation de CORS pour autoriser les requêtes cross-origin
-app.use(cors({ origin: "http://localhost:8080" })); // Autorise seulement les requêtes depuis http://localhost:8080
+app.use(cors({ origin: "https://aquamarine-bunny-4922e0.netlify.app" }));
+// Autorise seulement les requêtes depuis http://localhost:8080
 
 // 1) MIDDLEWARE
 app.use(morgan("dev"));
