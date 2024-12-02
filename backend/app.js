@@ -14,12 +14,10 @@ const app = express();
 app.use(
   cors({
     origin: [
-      "https://aquamarine-bunny-4922e0.netlify.app", // Votre application déployée
-      "http://localhost:8080", // Votre environnement de développement
+      "https://scxassetmanagement.netlify.app", // Votre application déployée
     ],
-    credentials: true, // Si vous gérez des cookies ou des sessions
   })
-); // Autorise seulement les requêtes depuis http://localhost:8080
+);
 
 // 1) MIDDLEWARE
 app.use(morgan("dev"));

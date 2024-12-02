@@ -101,7 +101,7 @@ const Array1 = [
   {
     text: "Tickets",
     icon: <ConstructionOutlinedIcon />,
-    path: "/Ticket",
+    path: "/ticket",
   },
   {
     text: "Besoins",
