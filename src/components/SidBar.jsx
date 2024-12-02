@@ -99,7 +99,7 @@ const Array1 = [
     path: "/Tickets",
   },
   {
-    text: "Tickets",
+    text: "tickets",
     icon: <ConstructionOutlinedIcon />,
     path: "/ticket",
   },
