@@ -94,7 +94,7 @@ const Array1 = [
   //   path: "/test",
   // },
   {
-    text: "Ticket",
+    text: "Création ticket ",
     icon: <BookOnlineOutlinedIcon />,
     path: "/Tickets",
   },
@@ -104,7 +104,7 @@ const Array1 = [
     path: "/Ticket",
   },
   {
-    text: "Besoin",
+    text: "Besoins",
     icon: <ListAltIcon />,
     path: "/Besoin",
   },
@@ -226,13 +226,13 @@ export default function SidBar({ open, handleDrawerClose }) {
           border: "2px solid grey",
         }}
         alt="avatar"
-        src="../NextronicLogo.png"
       />
       <Typography
+        className="  text-orange-500"
         align="center"
-        sx={{ fontSize: open ? 20 : 0, transition: "0.5s" }}
+        sx={{ fontSize: open ? 15 : 0, transition: "0.5s" }}
       >
-        FAKHIR Badr
+        SCX Asset Management
       </Typography>
       <Typography
         align="center"
@@ -270,7 +270,7 @@ export default function SidBar({ open, handleDrawerClose }) {
               <ListItemIcon
                 sx={{
                   minWidth: 0,
-                  mr: open ? 3 : "auto",
+                  mr: open ? 2 : "auto",
                   justifyContent: "center",
                 }}
               >

@@ -19,7 +19,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
       };
       // Faites un appel PATCH pour mettre à jour le ticket sur le serveur
       const response = await axios.patch(
-        `https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
+        `http://localhost:3000/api/v1/ticketMaintenance/${ticket._id}`,
         updatedTicketData
       );
 

@@ -70,7 +70,9 @@ const Actifs = () => {
   const handleDelete = async (rowData) => {
     try {
       // Make a delete request to the backend API
-      await axios.delete(`http://localhost:3000/api/v1/unite/${rowData._id}`);
+      await axios.delete(
+        `https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite/${rowData._id}`
+      );
 
       // After successful deletion, update the rows state to remove the deleted row
       setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
@@ -92,7 +94,9 @@ const Actifs = () => {
     const fetchUnites = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get("http://localhost:3000/api/v1/unite");
+        const response = await axios.get(
+          "https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite"
+        );
         if (Array.isArray(response.data.data.unites)) {
           console.log("Données reçues de l'API:", response.data.data.unites); // Affiche les données dans la console
           setIsLoading(false);
@@ -122,7 +126,7 @@ const Actifs = () => {
   const handleUpdate = (updatedData) => {
     // Ajoutez ici la logique pour envoyer les données mises à jour à l'API
     axios.patch(
-      `http://localhost:3000/api/v1/unite/${updatedData._id}`,
+      `https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite/${updatedData._id}`,
       updatedData
     );
     // .then(response => { ... })
@@ -251,7 +255,6 @@ const Actifs = () => {
   const [ModelUpdateOpen, setModelUpdateOpen] = useState(false);
   return (
     <>
-      <Location />
       {/* Boutons pour ajouter ou télécharger */}
       <Box>
         <div className="flex justify-end gap-4">

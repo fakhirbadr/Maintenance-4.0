@@ -121,7 +121,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
     try {
       const response = await axios.post(
-        "https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes",
+        "http://localhost:3000/api/v1/fournitureRoutes",
         { ...formData, categorie: selectedCategorie, besoin: selectedBesoin }
       );
 
