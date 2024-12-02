@@ -73,7 +73,7 @@ const HistoriqueIntervention = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/ticketMaintenance?isClosed=true"
+          "https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance?isClosed=true"
         );
         setRows(response.data); // Mettre à jour les lignes du tableau
         setLoading(false); // Arrêter l'état de chargement

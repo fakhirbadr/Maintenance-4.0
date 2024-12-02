@@ -39,7 +39,7 @@ const ListeBesoin = () => {
   const fetchFournitures = async () => {
     try {
       const response = await axios.get(
-        "https://aquamarine-bunny-4922e0.netlify.app/api/v1/fournitureRoutes?isClosed=false"
+        "https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes?isClosed=false"
       );
       setRows(response.data); // Assurez-vous que la structure des données de l'API correspond
       setLoading(false);
@@ -91,7 +91,7 @@ const ListeBesoin = () => {
   const handleUpdateFourniture = async () => {
     try {
       await axios.patch(
-        `https://aquamarine-bunny-4922e0.netlify.app/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
         {
           name: updatedName,
           categorie: updatedCategorie,
@@ -130,7 +130,7 @@ const ListeBesoin = () => {
     try {
       // Send a PATCH request to the backend to update the isClosed field
       await axios.patch(
-        `https://aquamarine-bunny-4922e0.netlify.app/api/v1/fournitureRoutes/${rowData._id}`,
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
         { isClosed: true }
       );
 
@@ -159,7 +159,7 @@ const ListeBesoin = () => {
       try {
         // Send a DELETE request to the backend
         await axios.delete(
-          `https://aquamarine-bunny-4922e0.netlify.app/api/v1/fournitureRoutes/${rowData._id}`
+          `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
         );
 
         // Remove the item from the local state after successful deletion

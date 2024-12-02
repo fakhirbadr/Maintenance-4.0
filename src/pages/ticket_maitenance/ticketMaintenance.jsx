@@ -41,7 +41,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/ticketMaintenance?isClosed=false"
+          "https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance?isClosed=false"
         );
         setRows(response.data);
       } catch (error) {
@@ -79,7 +79,7 @@ const TicketMaintenance = () => {
   const handleSubmitUpdate = async () => {
     try {
       const response = await axios.patch(
-        `http://localhost:3000/api/v1/ticketMaintenance/${updatedTicket._id}`,
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
         updatedTicket
       );
       if (response.status === 200) {
@@ -100,7 +100,7 @@ const TicketMaintenance = () => {
       const currentDate = new Date(); // Récupère l'heure actuelle
       currentDate.setHours(currentDate.getHours()); // Ajoute 1 heure si nécessaire (pour ajuster selon le fuseau horaire)
       const response = await axios.patch(
-        `http://localhost:3000/api/v1/ticketMaintenance/${rowData._id}`,
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
         { isClosed: true, dateCloture: currentDate.toISOString() } // Mise à jour du ticket avec la date de clôture
       );
       if (response.status === 200) {
@@ -124,7 +124,7 @@ const TicketMaintenance = () => {
   const handleDelete = async (rowData) => {
     try {
       await axios.delete(
-        `http://localhost:3000/api/v1/ticketMaintenance/${rowData._id}`
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance/${rowData._id}`
       );
       setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
     } catch (error) {

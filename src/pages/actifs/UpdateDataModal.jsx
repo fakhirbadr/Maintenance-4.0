@@ -89,7 +89,7 @@ const UpdateDataModal = ({ setModelUpdateOpen, rowData }) => {
 
     try {
       const response = await axios.patch(
-        `https://aquamarine-bunny-4922e0.netlify.app/v1/unite/${formData.id}`,
+        `https://maintenance-4-0-backend-14.onrender.com/v1/unite/${formData.id}`,
         formData
       );
       console.log("Données mises à jour avec succès", response.data);

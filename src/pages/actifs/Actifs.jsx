@@ -71,7 +71,7 @@ const Actifs = () => {
     try {
       // Make a delete request to the backend API
       await axios.delete(
-        `https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite/${rowData._id}`
+        `https://maintenance-4-0-backend-14.onrender.com/api/v1/unite/${rowData._id}`
       );
 
       // After successful deletion, update the rows state to remove the deleted row
@@ -95,7 +95,7 @@ const Actifs = () => {
       try {
         setIsLoading(true);
         const response = await axios.get(
-          "https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite"
+          "https://maintenance-4-0-backend-14.onrender.com/api/v1/unite"
         );
         if (Array.isArray(response.data.data.unites)) {
           console.log("Données reçues de l'API:", response.data.data.unites); // Affiche les données dans la console
@@ -126,7 +126,7 @@ const Actifs = () => {
   const handleUpdate = (updatedData) => {
     // Ajoutez ici la logique pour envoyer les données mises à jour à l'API
     axios.patch(
-      `https://aquamarine-bunny-4922e0.netlify.app/api/v1/unite/${updatedData._id}`,
+      `https://maintenance-4-0-backend-14.onrender.com/api/v1/unite/${updatedData._id}`,
       updatedData
     );
     // .then(response => { ... })
