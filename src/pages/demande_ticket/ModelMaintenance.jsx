@@ -228,7 +228,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       "STYLO",
       "TENUE INFIRMIER",
     ],
-    "Materiel Informatique": [
+    "matériel informatique": [
       "ADAPTATEUR DISPLAY/HDMI",
       "CABLE 3.0 10 M",
       "CÂBLE HDMI 10M",
@@ -271,7 +271,7 @@ const ModelMaintenance = ({ open, onClose }) => {
     "matériel informatique",
     "équipement généreaux",
     "Fourniture",
-    "",
+    ,
   ];
   useEffect(() => {
     // Retrieve the full name from localStorage
