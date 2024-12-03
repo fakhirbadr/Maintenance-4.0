@@ -27,6 +27,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { grey } from "@mui/material/colors";
 import { HistoryIcon } from "lucide-react";
 import ListAltIcon from "@mui/icons-material/ListAlt";
+import avatarImage from "../../public/logo.png";
 
 const drawerWidth = 240;
 
@@ -164,6 +165,7 @@ export default function SidBar({ open, handleDrawerClose }) {
           border: "2px solid grey",
         }}
         alt="avatar"
+        src={avatarImage}
       />
       <Typography
         className="text-orange-500"
