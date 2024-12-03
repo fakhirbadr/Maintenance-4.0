@@ -70,7 +70,9 @@ const Actifs = () => {
   const handleDelete = async (rowData) => {
     try {
       // Make a delete request to the backend API
-      await axios.delete(`https://maintenance-4-0-backend-9.onrender.com/api/v1/unite/${rowData._id}`);
+      await axios.delete(
+        `https://maintenance-4-0-backend-9.onrender.com/api/v1/unite/${rowData._id}`
+      );
 
       // After successful deletion, update the rows state to remove the deleted row
       setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));

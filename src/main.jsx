@@ -44,14 +44,15 @@ const router = createBrowserRouter(
         <Route path="login" element={<Login />} />
 
         {/* Routes protégées */}
-        <Route
+        {/* <Route
           path="actifs"
           element={<ProtectedRoute element={<Actifs />} />}
-        />
+        /> */}
         <Route
           path="Intervention"
           element={<ProtectedRoute element={<Intervention />} />}
         />
+
         <Route
           path="ticket"
           element={<ProtectedRoute element={<Ticket />} />}

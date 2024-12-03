@@ -79,12 +79,12 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 
 const Array1 = [
-  {
-    text: "Actifs",
-    icon: <HomeRepairServiceOutlinedIcon />,
-    path: "/ACTIFS",
-    roleRequired: "admin", // Rôle nécessaire pour voir cet élément
-  },
+  // {
+  //   text: "Actifs",
+  //   icon: <HomeRepairServiceOutlinedIcon />,
+  //   path: "/ACTIFS",
+  //   roleRequired: "admin", // Rôle nécessaire pour voir cet élément
+  // },
   {
     text: "Création ticket",
     icon: <BookOnlineOutlinedIcon />,
