@@ -9,7 +9,7 @@ const generateToken = (id, role) => {
 
 // Contrôleur pour enregistrer un utilisateur
 export const registerUser = async (req, res) => {
-  const { email, password, role } = req.body;
+  const { email, password, role, province, site, nomComplet } = req.body;
 
   try {
     // Vérifier si l'utilisateur existe déjà
@@ -27,6 +27,9 @@ export const registerUser = async (req, res) => {
       email,
       password: hashedPassword, // Sauvegarder le mot de passe haché
       role,
+      province,
+      site,
+      nomComplet,
     });
 
     res.status(201).json({
@@ -35,6 +38,9 @@ export const registerUser = async (req, res) => {
         id: newUser._id,
         email: newUser.email,
         role: newUser.role,
+        province: newUser.province,
+        site: newUser.site,
+        nomComplet: newUser.nomComplet,
       },
       token: generateToken(newUser._id, newUser.role),
     });
@@ -54,8 +60,14 @@ export const loginUser = async (req, res) => {
       return res.status(404).json({ message: "Utilisateur introuvable." });
     }
 
+    console.log("User found:", user.email);
+    console.log("Password from request:", password); // Afficher le mot de passe en clair
+
     // Vérifier le mot de passe
-    const isPasswordValid = await bcrypt.compare(password, user.password); // Comparer le mot de passe
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    console.log(password, user.password);
+    console.log("Password comparison result:", isPasswordValid); // Afficher le résultat de la comparaison
+
     if (!isPasswordValid) {
       return res.status(401).json({ message: "Mot de passe incorrect." });
     }
@@ -69,10 +81,14 @@ export const loginUser = async (req, res) => {
         id: user._id,
         email: user.email,
         role: user.role,
+        province: user.province,
+        site: user.site,
+        nomComplet: user.nomComplet,
       },
       token,
     });
   } catch (error) {
+    console.error("Error during login:", error);
     res.status(500).json({ message: "Erreur serveur.", error });
   }
 };

@@ -4,6 +4,7 @@ import MUIDataTable from "mui-datatables";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import dayjs from "dayjs";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
+import useStore from "../../store/useUserStore.js"; // Importer le store Zustand
 
 import duration from "dayjs/plugin/duration"; // Pour calculer la durée
 import Button from "@mui/material/Button";
@@ -16,6 +17,8 @@ const HistoriqueIntervention = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
     XLSX.writeFile(workbook, "Historique_Intervention.xlsx");
   };
+  const { email, role } = useStore(); // Récupérer l'email et le rôle du store
+
   const [rows, setRows] = useState([]); // Stocker les données
   const [loading, setLoading] = useState(true); // Gérer l'état de chargement
 
@@ -26,8 +29,9 @@ const HistoriqueIntervention = () => {
     { name: "province", label: "Province" },
     { name: "technicien", label: "Technicien" },
     { name: "categorie", label: "Catégorie" },
-    { name: "description", label: "Description" },
     { name: "equipement_deficitaire", label: "Équipement Déficitaire" },
+    { name: "description", label: "Description" },
+    { name: "commentaire", label: "Commentaire responsable" },
     { name: "urgence", label: "Urgence" },
     {
       name: "createdAt",
@@ -73,7 +77,7 @@ const HistoriqueIntervention = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://maintenance-4-0-backend-14.onrender.com/api/v1/ticketMaintenance?isClosed=true"
+          "https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance?isClosed=true"
         );
         setRows(response.data); // Mettre à jour les lignes du tableau
         setLoading(false); // Arrêter l'état de chargement

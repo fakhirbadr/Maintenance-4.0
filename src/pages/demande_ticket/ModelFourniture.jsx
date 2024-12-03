@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
@@ -17,7 +17,9 @@ const ModelFourniture = ({ open, onClose }) => {
     quantite: "",
     technicien: "",
     customCategorie: "", // Pour le champ personnalisé catégorie
-    customBesoin: "", // Pour le champ personnalisé besoin
+    customBesoin: "",
+    status: "", // Pour le champ personnalisé besoin
+    province: "",
   });
 
   const [error, setError] = useState("");
@@ -29,52 +31,38 @@ const ModelFourniture = ({ open, onClose }) => {
     "Matériel Informatique",
   ];
 
-  const besoins = [
-    "CAMERA SURVILLANCE",
-    "CLIMATISATION",
-    "RENDEZ-VOUS",
-    "CONNEXION",
-    "STETHOSCOPE",
-    "CABLE HDMI",
-    "CÂBLE RÉSEAU",
-    "ORDINATEUR",
-    "ÉCRAN",
-    "ECG",
-    "MIC JABRA",
-    "GROUPE ÉLECTROGÈNE",
-    "VISIONSTATION",
-    "APK ECG",
-    "TACTILE",
-    "CAMERA WEB",
-    "CAMERA MOBILE",
-    "NVR",
-    "APK ECHOGRAPHIE",
-    "BOITIER TELE MEDECINE",
-    "HUB",
-    "PARTAGER PERIPHERIQUE",
-    "SONDE ECHOGRAPHIE",
-    "OTOSCOPE",
-    "IRISCOPE",
-    "DERMATOSCOPE",
-    "SANITAIRE",
-    "REFRIGERATEUR",
-    "SATELLITE",
-    "TABLET",
-    "DOCLICK",
-    "TERMOMETRE",
-    "CABLE",
-    "OXEMETRE",
-    "BOITE ALIMENTATION",
-    "NAVIGATEUR",
-    "ELECTRICITE",
-    "HAUT-PARLEUR JABRA",
-    "INVERSEUR",
-    "TENSIOMETRE",
-    "SATURATION",
-    "CLAVIER",
-    "Télérupteur",
-    "RÉFRIGÉRATEUR",
-  ];
+  // Define the needs for each category
+  const categoryNeeds = {
+    "Structure Bâtiment": [
+      "CAMERA SURVILLANCE",
+      "CLIMATISATION",
+      "GROUPE ÉLECTROGÈNE",
+    ],
+    "Dispositif Médicaux": [
+      "STETHOSCOPE",
+      "CABLE HDMI",
+      "CÂBLE RÉSEAU",
+      "REFRIGERATEUR",
+    ],
+    "Matériel Informatique": ["ORDINATEUR", "ÉCRAN", "CLAVIER", "CÂBLE"],
+  };
+
+  const [besoins, setBesoins] = useState([]);
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
+      if (userInfo.province) {
+        setFormData((prevData) => ({
+          ...prevData,
+          province: userInfo.province,
+          site: userInfo.site,
+          technicien: userInfo.nomComplet,
+        }));
+      }
+    }
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -82,6 +70,9 @@ const ModelFourniture = ({ open, onClose }) => {
       ...prevData,
       [name]: value,
     }));
+    if (name === "categorie") {
+      setBesoins(categoryNeeds[value] || []); // Update needs based on selected category
+    }
   };
 
   const handleSubmit = async () => {
@@ -93,14 +84,13 @@ const ModelFourniture = ({ open, onClose }) => {
       technicien,
       customCategorie,
       customBesoin,
+      status,
     } = formData;
 
-    // Si "Autre" est sélectionné pour catégorie ou besoin, utiliser la valeur personnalisée
     const selectedCategorie =
       categorie === "Autre" ? customCategorie : categorie;
     const selectedBesoin = besoin === "Autre" ? customBesoin : besoin;
 
-    // Validation
     if (
       !name ||
       !selectedCategorie ||
@@ -121,7 +111,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
     try {
       const response = await axios.post(
-        "http://localhost:3000/api/v1/fournitureRoutes",
+        "https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes",
         { ...formData, categorie: selectedCategorie, besoin: selectedBesoin }
       );
 
@@ -136,6 +126,7 @@ const ModelFourniture = ({ open, onClose }) => {
         technicien: "",
         customCategorie: "",
         customBesoin: "",
+        status,
       });
 
       setTimeout(() => {
@@ -230,6 +221,7 @@ const ModelFourniture = ({ open, onClose }) => {
         )}
 
         {/* Quantité */}
+
         <TextField
           fullWidth
           label="Quantité"
@@ -239,6 +231,17 @@ const ModelFourniture = ({ open, onClose }) => {
           onChange={handleChange}
           margin="normal"
           type="number"
+        />
+        {/* Province */}
+        <TextField
+          fullWidth
+          label="Province"
+          variant="outlined"
+          name="province"
+          value={formData.province}
+          onChange={handleChange}
+          margin="normal"
+          disabled // Lecture seule
         />
 
         {/* Technicien */}
@@ -250,7 +253,25 @@ const ModelFourniture = ({ open, onClose }) => {
           value={formData.technicien}
           onChange={handleChange}
           margin="normal"
+          disabled
         />
+        {/* Status */}
+        <FormControl fullWidth margin="normal">
+          <InputLabel>Status</InputLabel>
+          <Select
+            value={formData.status}
+            onChange={handleChange}
+            label="Status"
+            name="status"
+          >
+            {["pending", "in-progress", "completed"].map((status, index) => (
+              <MenuItem key={index} value={status}>
+                {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
+                {/* Capitalize first letter */}
+              </MenuItem>
+            ))}
+          </Select>
+        </FormControl>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">

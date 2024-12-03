@@ -20,6 +20,7 @@ const UpdateDialog = ({
     besoin: "",
     quantite: "",
     technicien: "",
+    commentaire: "",
     dateCreation: "",
   });
 
@@ -31,6 +32,7 @@ const UpdateDialog = ({
         besoin: currentFourniture.besoin,
         quantite: currentFourniture.quantite,
         technicien: currentFourniture.technicien,
+        commentaire: currentFourniture.commentaire,
         dateCreation: currentFourniture.dateCreation,
       });
     }
@@ -93,6 +95,15 @@ const UpdateDialog = ({
           variant="standard"
           name="technicien"
           value={formData.technicien}
+          onChange={handleChange}
+        />
+        <TextField
+          label="commentaire responsable"
+          fullWidth
+          margin="dense"
+          variant="standard"
+          name="commentaire"
+          value={formData.commentaire}
           onChange={handleChange}
         />
         <TextField

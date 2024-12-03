@@ -70,9 +70,7 @@ const Actifs = () => {
   const handleDelete = async (rowData) => {
     try {
       // Make a delete request to the backend API
-      await axios.delete(
-        `https://maintenance-4-0-backend-14.onrender.com/api/v1/unite/${rowData._id}`
-      );
+      await axios.delete(`http://localhost:3000/api/v1/unite/${rowData._id}`);
 
       // After successful deletion, update the rows state to remove the deleted row
       setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
@@ -94,9 +92,7 @@ const Actifs = () => {
     const fetchUnites = async () => {
       try {
         setIsLoading(true);
-        const response = await axios.get(
-          "https://maintenance-4-0-backend-14.onrender.com/api/v1/unite"
-        );
+        const response = await axios.get("http://localhost:3000/api/v1/unite");
         if (Array.isArray(response.data.data.unites)) {
           console.log("Données reçues de l'API:", response.data.data.unites); // Affiche les données dans la console
           setIsLoading(false);
@@ -126,7 +122,7 @@ const Actifs = () => {
   const handleUpdate = (updatedData) => {
     // Ajoutez ici la logique pour envoyer les données mises à jour à l'API
     axios.patch(
-      `https://maintenance-4-0-backend-14.onrender.com/api/v1/unite/${updatedData._id}`,
+      `http://localhost:3000/api/v1/unite/${updatedData._id}`,
       updatedData
     );
     // .then(response => { ... })

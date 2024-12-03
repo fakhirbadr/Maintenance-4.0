@@ -3,6 +3,7 @@ import axios from "axios";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import MUIDataTable from "mui-datatables";
 import UpdateDialog from "./updateBesoin"; // Import du composant UpdateDialog
+import moment from "moment";
 
 import { CheckCircle, Edit, Eye, Delete } from "lucide-react"; // Icônes Lucide React
 import {
@@ -14,6 +15,10 @@ import {
   TextField,
   Button,
   Typography,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 
@@ -33,13 +38,16 @@ const ListeBesoin = () => {
   const [updatedCategorie, setUpdatedCategorie] = useState(""); // Valeur modifiable de la catégorie
   const [updatedBesoin, setUpdatedBesoin] = useState(""); // Valeur modifiable du besoin
   const [updatedQuantite, setUpdatedQuantite] = useState(""); // Valeur modifiable de la quantité
+  const [updatedCommentaire, setUpdatedCommentaire] = useState(""); // Valeur modifiable de la commentaire
+
   const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
+  const [updatedStatus, setUpdatedStatus] = useState("");
   const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
 
   const fetchFournitures = async () => {
     try {
       const response = await axios.get(
-        "https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes?isClosed=false"
+        "https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes?isClosed=false"
       );
       setRows(response.data); // Assurez-vous que la structure des données de l'API correspond
       setLoading(false);
@@ -83,20 +91,28 @@ const ListeBesoin = () => {
     setUpdatedCategorie(rowData.categorie);
     setUpdatedBesoin(rowData.besoin);
     setUpdatedQuantite(rowData.quantite);
+    setUpdatedStatus(rowData.status);
+    setUpdatedCommentaire(rowData.commentaire);
+
     setOpenDialog(true); // Ouvrir le dialogue pour modification
   };
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
+  const handleChange = (event) => {
+    setUpdatedStatus(event.target.value);
+  };
   const handleUpdateFourniture = async () => {
     try {
       await axios.patch(
-        `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+        `https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
         {
           name: updatedName,
           categorie: updatedCategorie,
           besoin: updatedBesoin,
           quantite: updatedQuantite,
+          status: updatedStatus,
+          commentaire: updatedCommentaire,
         }
       );
 
@@ -110,6 +126,8 @@ const ListeBesoin = () => {
                 categorie: updatedCategorie,
                 besoin: updatedBesoin,
                 quantite: updatedQuantite,
+                status: updatedStatus,
+                commentaire: updatedCommentaire,
               }
             : row
         )
@@ -124,30 +142,49 @@ const ListeBesoin = () => {
   };
 
   const handleClose = async (rowIndex) => {
-    const rowData = rows[rowIndex];
+    const rowData = rows[rowIndex]; // Get the selected row data
     console.log("Clôturer :", rowData);
 
     try {
-      // Send a PATCH request to the backend to update the isClosed field
-      await axios.patch(
-        `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
-        { isClosed: true }
+      const currentDate = new Date(); // Get the current date and time
+      currentDate.setHours(currentDate.getHours()); // Ajoute 1 heure si nécessaire (pour ajuster selon le fuseau horaire)
+
+      // Send a PATCH request to update `isClosed` and `dateCloture`
+      const response = await axios.patch(
+        `https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
+        {
+          isClosed: true,
+          dateCloture: currentDate.toISOString(), // Format ISO for the date
+        }
       );
 
-      // Update the closed row state locally
-      setRows((prevRows) => {
-        const updatedRows = [...prevRows];
-        updatedRows[rowIndex] = { ...updatedRows[rowIndex], isClosed: true };
-        return updatedRows;
-      });
-
-      // Optionally, update the closed rows state to track the closed rows
-      setClosedRows((prev) => new Set(prev).add(rowIndex));
-
-      alert("Fourniture clôturée avec succès");
+      // Check if the request was successful
+      if (response.status === 200) {
+        // Update the state locally after successful request
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            row._id === rowData._id
+              ? {
+                  ...row,
+                  isClosed: true,
+                  dateCloture: currentDate.toISOString(),
+                }
+              : row
+          )
+        );
+        alert("Fourniture clôturée avec succès");
+      } else {
+        console.error(
+          "Erreur lors de la mise à jour sur le serveur :",
+          response
+        );
+        alert("Impossible de clôturer la fourniture. Veuillez réessayer.");
+      }
     } catch (error) {
-      console.error("Erreur lors de la clôture de l'élément :", error);
-      alert("Erreur lors de la clôture de l'élément");
+      console.error("Erreur lors de la clôture de l'élément :", error.message);
+      alert(
+        "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer."
+      );
     }
   };
 
@@ -159,7 +196,7 @@ const ListeBesoin = () => {
       try {
         // Send a DELETE request to the backend
         await axios.delete(
-          `https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
+          `https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
         );
 
         // Remove the item from the local state after successful deletion
@@ -192,6 +229,17 @@ const ListeBesoin = () => {
     {
       name: "technicien",
       label: "Technicien",
+      options: { filter: true, sort: true },
+    },
+
+    {
+      name: "status",
+      label: "Status",
+      options: { filter: true, sort: true },
+    },
+    {
+      name: "commentaire",
+      label: "commentaire responsable",
       options: { filter: true, sort: true },
     },
     {
@@ -341,6 +389,16 @@ const ListeBesoin = () => {
             />
             <TextField
               margin="dense"
+              label="Commentaire responsable"
+              type="text"
+              fullWidth
+              variant="standard"
+              value={updatedCommentaire}
+              onChange={(e) => setUpdatedCommentaire(e.target.value)}
+            />
+
+            <TextField
+              margin="dense"
               label="Date de création"
               type="text"
               fullWidth
@@ -350,19 +408,37 @@ const ListeBesoin = () => {
                   ? new Date(selectedFourniture.dateCreation).toLocaleString(
                       "fr-FR",
                       {
-                        weekday: "long", // Optionnel, si vous souhaitez afficher le jour de la semaine
+                        weekday: "long",
                         year: "numeric",
                         month: "long",
                         day: "numeric",
                         hour: "2-digit",
                         minute: "2-digit",
-                        second: "2-digit", // Si vous voulez aussi inclure les secondes
+                        second: "2-digit",
                       }
                     )
                   : ""
               }
               disabled
             />
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Status</InputLabel>
+              <Select
+                value={updatedStatus}
+                onChange={handleChange}
+                label="Status"
+                name="status"
+              >
+                {["pending", "in-progress", "completed"].map(
+                  (status, index) => (
+                    <MenuItem key={index} value={status}>
+                      {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
+                      {/* Capitalize first letter */}
+                    </MenuItem>
+                  )
+                )}
+              </Select>
+            </FormControl>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseDialog} color="primary">
@@ -413,6 +489,24 @@ const ListeBesoin = () => {
                   fullWidth
                   variant="standard"
                   value={selectedFourniture?.technicien || ""}
+                  disabled
+                />{" "}
+                <TextField
+                  margin="dense"
+                  label="Status"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  value={selectedFourniture?.status || ""}
+                  disabled
+                />
+                <TextField
+                  margin="dense"
+                  label="Commentaire responsable"
+                  type="text"
+                  fullWidth
+                  variant="standard"
+                  value={selectedFourniture?.commentaire || ""}
                   disabled
                 />
                 <TextField

@@ -6,6 +6,10 @@ import {
   DialogActions,
   Button,
   TextField,
+  FormControl,
+  InputLabel,
+  Select,
+  MenuItem,
 } from "@mui/material";
 import axios from "axios"; // Assurez-vous d'importer axios
 
@@ -19,7 +23,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
       };
       // Faites un appel PATCH pour mettre à jour le ticket sur le serveur
       const response = await axios.patch(
-        `http://localhost:3000/api/v1/ticketMaintenance/${ticket._id}`,
+        `https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
         updatedTicketData
       );
 
@@ -31,6 +35,9 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
     } catch (error) {
       console.error("Erreur lors de la mise à jour du ticket :", error);
     }
+  };
+  const handleChange = (event) => {
+    onFieldChange("urgence", event.target.value);
   };
 
   return (
@@ -80,6 +87,13 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           onChange={(e) => onFieldChange("description", e.target.value)}
         />
         <TextField
+          label="Commentaire"
+          fullWidth
+          margin="normal"
+          value={ticket?.commentaire || ""}
+          onChange={(e) => onFieldChange("commentaire", e.target.value)}
+        />
+        <TextField
           label="Équipement défectueux"
           fullWidth
           margin="normal"
@@ -88,13 +102,19 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
             onFieldChange("equipement_deficitaire", e.target.value)
           }
         />
-        <TextField
-          label="Urgence"
-          fullWidth
-          margin="normal"
-          value={ticket?.urgence || ""}
-          onChange={(e) => onFieldChange("urgence", e.target.value)}
-        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="urgence-label">Urgence</InputLabel>
+          <Select
+            labelId="urgence-label"
+            value={ticket?.urgence || ""}
+            label="Urgence"
+            onChange={handleChange}
+          >
+            <MenuItem value="élevée">Élevée</MenuItem>
+            <MenuItem value="moyenne">Moyenne</MenuItem>
+            <MenuItem value="faible">Faible</MenuItem>
+          </Select>
+        </FormControl>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="secondary">

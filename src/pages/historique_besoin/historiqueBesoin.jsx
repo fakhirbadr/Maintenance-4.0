@@ -5,6 +5,7 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import { Box } from "lucide-react";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 import Button from "@mui/material/Button";
+import dayjs from "dayjs";
 
 // Define ExcelExporter outside of the component
 
@@ -38,6 +39,11 @@ const HistoriqueBesoin = () => {
       options: { filter: true, sort: true },
     },
     {
+      name: "commentaire",
+      label: "commentaire responsable",
+      options: { filter: true, sort: true },
+    },
+    {
       name: "dateCreation",
       label: "Date de Création",
       options: {
@@ -54,12 +60,44 @@ const HistoriqueBesoin = () => {
       },
     },
     {
+      name: "dateCloture",
+      label: "Date de Clôture",
+      options: {
+        customBodyRender: (value) =>
+          value ? dayjs(value).format("DD/MM/YY HH:mm") : "N/A", // Affiche "N/A" si dateCloture est null
+      },
+    },
+    {
       name: "isClosed",
       label: "Statut",
       options: {
         filter: true,
         sort: true,
         customBodyRender: (value) => (value ? "Fermé" : "Ouvert"),
+      },
+    },
+    {
+      name: "tempsreponse",
+      label: "Temps de reponse",
+      options: {
+        customBodyRender: (_, rowData) => {
+          const createdAt =
+            rowData.rowData[
+              columns.findIndex((c) => c.name === "dateCreation")
+            ];
+          const dateCloture =
+            rowData.rowData[columns.findIndex((c) => c.name === "dateCloture")];
+
+          if (!createdAt || !dateCloture) return "N/A";
+
+          const duration = dayjs.duration(
+            dayjs(dateCloture).diff(dayjs(createdAt))
+          );
+          const hours = Math.floor(duration.asHours());
+          const minutes = duration.minutes();
+
+          return `${hours}h ${minutes}m`;
+        },
       },
     },
   ];
@@ -69,7 +107,7 @@ const HistoriqueBesoin = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://maintenance-4-0-backend-14.onrender.com/api/v1/fournitureRoutes?isClosed=true"
+          "https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes?isClosed=true"
         );
         setRows(response.data); // Update table rows
         setLoading(false); // Stop loading

@@ -13,23 +13,29 @@ const Login = () => {
 
   // Récupérer les comptes depuis l'API
   useEffect(() => {
-    const token = localStorage.getItem("authToken"); // ou sessionStorage
+    const token = localStorage.getItem("authToken");
 
-    axios
-      .get(
-        "https://maintenance-4-0-backend-14.onrender.com/api/v1/users/profile",
-        {
-          headers: {
-            Authorization: `Bearer ${token}`, // Ajouter le token au header
-          },
-        }
-      )
-      .then((response) => {
-        setAccounts(response.data);
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la récupération des comptes:", error);
-      });
+    if (token) {
+      axios
+        .get(
+          "https://maintenance-4-0-backend-9.onrender.com/api/v1/users/profile",
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+        .then((response) => {
+          setAccounts(response.data); // Met à jour les comptes avec les données renvoyées
+        })
+        .catch((error) => {
+          console.error("Erreur lors de la récupération des comptes:", error);
+          setErrorMessage(
+            "Token expiré ou invalide. Veuillez vous reconnecter."
+          );
+          localStorage.removeItem("authToken"); // Supprimer un token invalide
+        });
+    }
   }, []);
 
   const handleLogin = (e) => {
@@ -37,16 +43,43 @@ const Login = () => {
 
     axios
       .post(
-        "https://maintenance-4-0-backend-14.onrender.com/api/v1/users/login",
+        "https://maintenance-4-0-backend-9.onrender.com/api/v1/users/login",
         { email, password }
       )
       .then((response) => {
-        // Si la connexion est réussie, stocke le token et redirige
-        localStorage.setItem("authToken", response.data.token);
-        navigate("/tickets");
+        // Si la connexion est réussie, stocke le token et les données utilisateur
+        const { token, user } = response.data;
+        if (token && user) {
+          localStorage.setItem("authToken", token);
+          localStorage.setItem(
+            "userInfo",
+            JSON.stringify({
+              email: user.email,
+              role: user.role,
+              site: user.site,
+              province: user.province,
+              nomComplet: user.nomComplet,
+            })
+          );
+          navigate("/tickets"); // Redirige vers la page tickets après la connexion
+        }
+        // Redirige vers la page suivante
       })
       .catch((error) => {
-        setErrorMessage("Erreur de connexion. Vérifiez vos identifiants.");
+        if (error.response) {
+          // Le serveur a renvoyé une réponse mais avec un code d'erreur (par exemple 401)
+          setErrorMessage(
+            error.response.data.message || "Erreur de connexion."
+          );
+        } else if (error.request) {
+          // Aucune réponse du serveur
+          setErrorMessage(
+            "Pas de réponse du serveur. Vérifiez votre connexion."
+          );
+        } else {
+          // Autre erreur
+          setErrorMessage("Une erreur est survenue lors de la connexion.");
+        }
         console.error("Erreur lors de la connexion:", error);
       });
   };

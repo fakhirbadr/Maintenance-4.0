@@ -18,10 +18,13 @@ const ticketMaintenanceSchema = new mongoose.Schema(
       required: false,
       enum: ["faible", "moyenne", "élevée"],
     },
+    commentaire: { type: String, required: false },
+
     photos: [{ type: String }],
     isClosed: { type: Boolean, default: false }, // Valeur par défaut à false
     dateCloture: { type: Date, default: null }, // Date de clôture, initialisée à null
   },
+
   { timestamps: true }
 );
 

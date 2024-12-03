@@ -9,7 +9,6 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "deploy": "gh-pages -d build"
-
   },
   "dependencies": {
     "@babel/preset-react": "^7.25.9",
@@ -53,7 +52,8 @@
     "recharts": "^2.12.7",
     "styled-components": "^6.1.12",
     "swiper": "^11.1.14",
-    "xlsx": "^0.18.5"
+    "xlsx": "^0.18.5",
+    "zustand": "^5.0.1"
   },
   "devDependencies": {
     "@eslint/js": "^9.9.0",

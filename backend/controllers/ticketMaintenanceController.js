@@ -47,6 +47,7 @@ export const createTicket = async (req, res) => {
     urgence,
     isClosed,
     dateCloture,
+    commentaire,
   } = req.body;
 
   try {
@@ -62,6 +63,7 @@ export const createTicket = async (req, res) => {
       urgence, // Ajout du champ "urgence"
       isClosed,
       dateCloture,
+      commentaire,
     });
 
     await newTicket.save();
@@ -84,6 +86,7 @@ export const updateTicket = async (req, res) => {
     urgence,
     isClosed,
     dateCloture,
+    commentaire,
   } = req.body;
 
   try {
@@ -101,6 +104,7 @@ export const updateTicket = async (req, res) => {
         urgence,
         isClosed,
         dateCloture,
+        commentaire,
       },
       { new: true }
     );

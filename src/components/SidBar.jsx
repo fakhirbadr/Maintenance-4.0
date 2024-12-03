@@ -1,13 +1,11 @@
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
-
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
 import ChevronRightIcon from "@mui/icons-material/ChevronRight";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-
 import MuiDrawer from "@mui/material/Drawer";
 import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import HomeRepairServiceOutlinedIcon from "@mui/icons-material/HomeRepairServiceOutlined";
@@ -16,7 +14,6 @@ import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined
 import CandlestickChartOutlinedIcon from "@mui/icons-material/CandlestickChartOutlined";
 import BookOnlineOutlinedIcon from "@mui/icons-material/BookOnlineOutlined";
 import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-
 import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
 import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
@@ -77,122 +74,63 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   alignItems: "center",
   justifyContent: "flex-end",
   padding: theme.spacing(0, 1),
-  // necessary for content to be below app bar
   ...theme.mixins.toolbar,
 }));
 
 const Array1 = [
-  // { text: "Tableau de Bord", icon: <HomeOutlinedIcon />, path: "/DASHBOARD" },
   {
     text: "Actifs",
     icon: <HomeRepairServiceOutlinedIcon />,
     path: "/ACTIFS",
+    roleRequired: "admin", // Rôle nécessaire pour voir cet élément
   },
-  // {
-  //   text: "Test",
-  //   icon: <BugReportIcon />,
-  //   path: "/test",
-  // },
   {
-    text: "Création ticket ",
+    text: "Création ticket",
     icon: <BookOnlineOutlinedIcon />,
     path: "/Tickets",
   },
   {
-    text: "tickets",
+    text: "Tickets",
     icon: <ConstructionOutlinedIcon />,
     path: "/ticket",
+    roleRequired: "admin",
   },
   {
     text: "Besoins",
     icon: <ListAltIcon />,
     path: "/Besoin",
+    roleRequired: "admin",
   },
   {
-    text: "Historique Intervention", // Nom combiné
+    text: "Historique Intervention",
     icon: (
       <>
         <ConstructionOutlinedIcon />
-        <HistoryIcon />{" "}
-        {/* Vous pouvez afficher les deux icônes ensemble si souhaité */}
+        <HistoryIcon />
       </>
     ),
-    path: "/HistoriqueIntervention", // Chemin de navigation pour cette page
+    path: "/HistoriqueIntervention",
   },
   {
-    text: "Historique Besoin", // Nom combiné
+    text: "Historique Besoin",
     icon: (
       <>
         <ListAltIcon />
         <HistoryIcon />
-        {/* Vous pouvez afficher les deux icônes ensemble si souhaité */}
       </>
     ),
-    path: "/HistoriqueBesoin", // Chemin de navigation pour cette page
+    path: "/HistoriqueBesoin",
   },
-
-  // {
-  //   text: "Intervention",
-  //   icon: <ConstructionOutlinedIcon />,
-  //   path: "/Intervention",
-  // },
-
-  // {
-  //   text: "Temps Réel",
-  //   icon: <CloudOutlinedIcon />,
-  //   path: "/Suivi",
-  // },
 ];
-// const Array2 = [
-//   {
-//     text: "Stocks",
-//     icon: <Inventory2OutlinedIcon />,
-//     path: "/Stocks",
-//   },
-//   {
-//     text: "Calendrier ",
-//     icon: <CalendarMonthOutlinedIcon />,
-//     path: "/Calendrier",
-//   },
-//   {
-//     text: "Profils",
-//     icon: <ManageAccountsOutlinedIcon />,
-//     path: "/Profils",
-//   },
-//   {
-//     text: "Rapports",
-//     icon: <CandlestickChartOutlinedIcon />,
-//     path: "/Rapports",
-//   },
-// ];
-// const Array3 = [
-//   {
-//     text: "Notifications",
-//     icon: <NotificationsActiveOutlinedIcon />,
-//     path: "/Alertes",
-//   },
-//   {
-//     text: "information",
-//     icon: <AlternateEmailOutlinedIcon />,
-//     path: "/Info",
-//   },
-//   {
-//     text: "ChatBot",
-//     icon: <SmartToyOutlinedIcon />,
-//     path: "/ChatBot",
-//   },
-//   {
-//     text: "Formations",
-//     icon: <MenuBookOutlinedIcon />,
-//     path: "/Formations",
-//   },
-// ];
 
-// eslint-disable-next-line react/prop-types
 export default function SidBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
   let location = useLocation();
+
+  // Récupérer le rôle de l'utilisateur depuis le localStorage
+  const userInfo = JSON.parse(localStorage.getItem("userInfo")); // Parse l'objet JSON
+  const role = userInfo ? userInfo.role : null; // Si userInfo existe, on récupère le rôle,
 
   return (
     <Drawer
@@ -228,7 +166,7 @@ export default function SidBar({ open, handleDrawerClose }) {
         alt="avatar"
       />
       <Typography
-        className="  text-orange-500"
+        className="text-orange-500"
         align="center"
         sx={{ fontSize: open ? 15 : 0, transition: "0.5s" }}
       >
@@ -237,81 +175,35 @@ export default function SidBar({ open, handleDrawerClose }) {
       <Typography
         align="center"
         sx={{
-          fontSize: open ? 16 : 0,
+          fontSize: open ? 19 : 0,
           transition: "0.5s",
           color: theme.palette.info.main,
           fontFamily: "fantasy",
         }}
       >
-        ADMIN
+        mr {userInfo ? userInfo.nomComplet : "Nom Complet"}{" "}
+        {/* Affiche le nom complet ou une valeur par défaut */}
       </Typography>
 
       <Divider />
 
       <List>
-        {Array1.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={{
-                minHeight: 10,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                bgcolor:
-                  location.pathname === item.path
-                    ? theme.palette.mode === "dark"
-                      ? grey[800]
-                      : grey[300]
-                    : null,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 2 : "auto",
-                  justifyContent: "center",
+        {Array1.map((item) => {
+          // Vérifier si l'élément nécessite un rôle spécifique
+          if (item.roleRequired && role !== item.roleRequired) {
+            return null; // Si l'utilisateur n'a pas le bon rôle, on ne l'affiche pas
+          }
+
+          return (
+            <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
+              <ListItemButton
+                onClick={() => {
+                  navigate(item.path);
                 }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primaryTypographyProps={{ fontSize: "16px" }}
-                primary={item.text}
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List>
-
-      <Divider />
-
-      {/* <List>
-        {Array2.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-                bgcolor:
-                  location.pathname === item.path
-                    ? theme.palette.mode === "dark"
-                      ? grey[800]
-                      : grey[300]
-                    : null,
-              }}
-            >
-              <ListItemIcon
                 sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
+                  minHeight: 10,
+                  justifyContent: open ? "initial" : "center",
+                  px: 2.5,
                   bgcolor:
                     location.pathname === item.path
                       ? theme.palette.mode === "dark"
@@ -320,49 +212,27 @@ export default function SidBar({ open, handleDrawerClose }) {
                       : null,
                 }}
               >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
+                <ListItemIcon
+                  sx={{
+                    minWidth: 0,
+                    mr: open ? 2 : "auto",
+                    justifyContent: "center",
+                  }}
+                >
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primaryTypographyProps={{ fontSize: "16px" }}
+                  primary={item.text}
+                  sx={{ opacity: open ? 1 : 0 }}
+                />
+              </ListItemButton>
+            </ListItem>
+          );
+        })}
       </List>
 
       <Divider />
-
-      <List>
-        {Array3.map((item) => (
-          <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
-            <ListItemButton
-              onClick={() => {
-                navigate(item.path);
-              }}
-              sx={{
-                minHeight: 48,
-                justifyContent: open ? "initial" : "center",
-                px: 2.5,
-              }}
-            >
-              <ListItemIcon
-                sx={{
-                  minWidth: 0,
-                  mr: open ? 3 : "auto",
-                  justifyContent: "center",
-                }}
-              >
-                {item.icon}
-              </ListItemIcon>
-              <ListItemText
-                primary={item.text}
-                sx={{ opacity: open ? 1 : 0 }}
-              />
-            </ListItemButton>
-          </ListItem>
-        ))}
-      </List> */}
     </Drawer>
   );
 }

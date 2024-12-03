@@ -38,7 +38,17 @@ export const getFournitureById = async (req, res) => {
 
 // Create a new Fourniture
 export const createFourniture = async (req, res) => {
-  const { name, categorie, besoin, quantite, technicien, isClosed } = req.body;
+  const {
+    name,
+    categorie,
+    besoin,
+    quantite,
+    technicien,
+    isClosed,
+    status,
+    dateCloture,
+    commentaire,
+  } = req.body;
 
   try {
     // Create a new Fourniture with the provided fields
@@ -49,6 +59,9 @@ export const createFourniture = async (req, res) => {
       quantite,
       technicien,
       isClosed,
+      status,
+      dateCloture,
+      commentaire,
     });
 
     await newFourniture.save();
@@ -60,13 +73,31 @@ export const createFourniture = async (req, res) => {
 
 // Update a Fourniture by ID
 export const updateFourniture = async (req, res) => {
-  const { name, categorie, besoin, quantite, isClosed } = req.body;
+  console.log("Update Request Body:", req.body); // Debug log
+  const {
+    name,
+    categorie,
+    besoin,
+    quantite,
+    isClosed,
+    status,
+    dateCloture,
+    commentaire,
+  } = req.body;
 
   try {
-    // Update the Fourniture with the provided fields
     const updatedFourniture = await Fourniture.findByIdAndUpdate(
       req.params.id,
-      { name, categorie, besoin, quantite, isClosed },
+      {
+        name,
+        categorie,
+        besoin,
+        quantite,
+        isClosed,
+        status,
+        dateCloture,
+        commentaire,
+      },
       { new: true }
     );
 

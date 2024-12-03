@@ -97,61 +97,96 @@ const ModelMaintenance = ({ open, onClose }) => {
     "UM SIDI REDOUANE",
   ];
   // Defective equipment options
-  const equipmentList = [
-    "CAMERA SURVILLANCE",
-    "CLIMATISATION",
-    "RENDEZ-VOUS",
-    "CONNEXION",
-    "STETHOSCOPE",
-    "CABLE HDMI",
-    "CÂBLE RÉSEAU",
-    "ORDINATEUR",
-    "ÉCRAN",
-    "ECG",
-    "MIC JABRA",
-    "GROUPE ÉLECTROGÈNE",
-    "VISIONSTATION",
-    "APK ECG",
-    "TACTILE",
-    "CAMERA WEB",
-    "CAMERA MOBILE",
-    "NVR",
-    "APK ECHOGRAPHIE",
-    "BOITIER TELE MEDECINE",
-    "HUB",
-    "PARTAGER PERIPHERIQUE",
-    "SONDE ECHOGRAPHIE",
-    "OTOSCOPE",
-    "IRISCOPE",
-    "DERMATOSCOPE",
-    "SANITAIRE",
-    "REFRIGERATEUR",
-    "SATELLITE",
-    "TABLET",
-    "DOCLICK",
-    "TERMOMETRE",
-    "CABLE",
-    "OXEMETRE",
-    "BOITE ALIMENTATION",
-    "NAVIGATEUR",
-    "ELECTRICITE",
-    "HAUT-PARLEUR JABRA",
-    "INVERSEUR",
-    "TENSIOMETRE",
-    "SATURATION",
-    "CLAVIER",
-    "Télérupteur",
-    "RÉFRIGÉRATEUR",
-  ];
+  // const equipmentList = [
+  //   "CAMERA SURVILLANCE",
+  //   "CLIMATISATION",
+  //   "RENDEZ-VOUS",
+  //   "CONNEXION",
+  //   "STETHOSCOPE",
+  //   "CABLE HDMI",
+  //   "CÂBLE RÉSEAU",
+  //   "ORDINATEUR",
+  //   "ÉCRAN",
+  //   "ECG",
+  //   "MIC JABRA",
+  //   "GROUPE ÉLECTROGÈNE",
+  //   "VISIONSTATION",
+  //   "APK ECG",
+  //   "TACTILE",
+  //   "CAMERA WEB",
+  //   "CAMERA MOBILE",
+  //   "NVR",
+  //   "APK ECHOGRAPHIE",
+  //   "BOITIER TELE MEDECINE",
+  //   "HUB",
+  //   "PARTAGER PERIPHERIQUE",
+  //   "SONDE ECHOGRAPHIE",
+  //   "OTOSCOPE",
+  //   "IRISCOPE",
+  //   "DERMATOSCOPE",
+  //   "SANITAIRE",
+  //   "REFRIGERATEUR",
+  //   "SATELLITE",
+  //   "TABLET",
+  //   "DOCLICK",
+  //   "TERMOMETRE",
+  //   "CABLE",
+  //   "OXEMETRE",
+  //   "BOITE ALIMENTATION",
+  //   "NAVIGATEUR",
+  //   "ELECTRICITE",
+  //   "HAUT-PARLEUR JABRA",
+  //   "INVERSEUR",
+  //   "TENSIOMETRE",
+  //   "SATURATION",
+  //   "CLAVIER",
+  //   "Télérupteur",
+  //   "RÉFRIGÉRATEUR",
+  // ];
+  // const categories = [
+  //   "structure batiment",
+  //   "dispositif médical",
+  //   "matériel informatique",
+  // ];
+  // Equipment lists based on category
+  const equipmentByCategory = {
+    "structure batiment": [
+      "CAMERA SURVILLANCE",
+      "CLIMATISATION",
+      "CÂBLE RÉSEAU",
+      "ORDINATEUR",
+      "ÉCRAN",
+      "GROUPE ÉLECTROGÈNE",
+    ],
+    "dispositif médical": [
+      "STETHOSCOPE",
+      "ECG",
+      "MIC JABRA",
+      "VISIONSTATION",
+      "TENSIOMETRE",
+      "SATURATION",
+    ],
+    "matériel informatique": [
+      "ORDINATEUR",
+      "CÂBLE HDMI",
+      "TABLET",
+      "NAVIGATEUR",
+      "CLAVIER",
+      "ELECTRICITE",
+    ],
+  };
+
   const categories = [
     "structure batiment",
     "dispositif médical",
     "matériel informatique",
   ];
   useEffect(() => {
-    const technicienEmail = localStorage.getItem("userEmail");
-    if (technicienEmail) {
-      setTechnicien(technicienEmail); // Set the fetched email as the initial value
+    // Retrieve the full name from localStorage
+    const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+    if (userInfo && userInfo.nomComplet) {
+      setTechnicien(userInfo.nomComplet); // Set the full name as technicien
+      setProvince(userInfo.province);
     }
   }, []);
 
@@ -162,7 +197,7 @@ const ModelMaintenance = ({ open, onClose }) => {
 
     try {
       const response = await fetch(
-        "http://localhost:3000/api/v1/ticketMaintenance",
+        "https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance",
         {
           method: "POST",
           headers: {
@@ -246,7 +281,6 @@ const ModelMaintenance = ({ open, onClose }) => {
               margin="normal"
             />
           )}
-
           <FormControl fullWidth margin="normal" required>
             <InputLabel id="site-label">Site</InputLabel>
             <Select
@@ -271,27 +305,48 @@ const ModelMaintenance = ({ open, onClose }) => {
             onChange={(e) => setProvince(e.target.value)}
             margin="normal"
             required
+            disabled
           />
           <TextField
             label="Technicien"
             variant="outlined"
             fullWidth
-            value={technicien}
-            onChange={(e) => setTechnicien(e.target.value)} // Allow user to change it if needed
+            value={technicien} // Display the full name here
+            onChange={(e) => setTechnicien(e.target.value)} // Allow user to change if needed
             margin="normal"
             required
             disabled // Disable the field to prevent changing the email manually
           />
           {/* Category field with autocomplete */}
+          {/* Category field with autocomplete */}
           <Autocomplete
             freeSolo
             options={categories}
             value={categorie}
-            onInputChange={(e, newValue) => setCategorie(newValue)}
+            onInputChange={(e, newValue) => {
+              setCategorie(newValue);
+              setEquipementDeficitaire(""); // Reset equipment field when category changes
+            }}
             renderInput={(params) => (
               <TextField
                 {...params}
                 label="Catégorie"
+                variant="outlined"
+                fullWidth
+                margin="normal"
+              />
+            )}
+          />{" "}
+          {/* Equipment field filtered by category */}
+          <Autocomplete
+            freeSolo
+            options={equipmentByCategory[categorie] || []} // Filtered equipment list based on category
+            value={equipement_deficitaire}
+            onInputChange={(e, newValue) => setEquipementDeficitaire(newValue)}
+            renderInput={(params) => (
+              <TextField
+                {...params}
+                label="Équipement défectueux"
                 variant="outlined"
                 fullWidth
                 margin="normal"
@@ -308,21 +363,6 @@ const ModelMaintenance = ({ open, onClose }) => {
             required
           />
           {/* New field for defective equipment */}
-          <Autocomplete
-            freeSolo
-            options={equipmentList}
-            value={equipement_deficitaire}
-            onInputChange={(e, newValue) => setEquipementDeficitaire(newValue)}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Équipement défectueux"
-                variant="outlined"
-                fullWidth
-                margin="normal"
-              />
-            )}
-          />
           {/* New field for urgency */}
           <FormControl fullWidth margin="normal" required>
             <InputLabel>Urgence</InputLabel>

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import { Box, Typography, Chip } from "@mui/material";
 
 const DataDetails = ({ ticket }) => {
   if (!ticket) return null; // If no ticket is selected, return nothing.
@@ -43,56 +44,75 @@ const DataDetails = ({ ticket }) => {
   // Fonction pour obtenir la couleur de l'urgence
   const getUrgencyColor = (urgence) => {
     if (urgence === "élevée") {
-      return "text-red-500"; // Urgence élevée = Rouge
+      return "error"; // Urgence élevée = Rouge
     } else if (urgence === "moyenne") {
-      return "text-yellow-500"; // Urgence modérée = Jaune
+      return "warning"; // Urgence modérée = Jaune
     } else {
-      return "text-green-500"; // Urgence faible = Vert
+      return "success"; // Urgence faible = Vert
     }
   };
 
   return (
-    <div className="font-thin leading-relaxed space-y-3 text-xl">
-      <div>
+    <Box
+      sx={{
+        fontFamily: "Roboto",
+        lineHeight: "1.5",
+        spaceY: 3,
+        fontSize: "1.25rem",
+      }}
+    >
+      <Typography variant="body1">
         <strong>Site:</strong>
-        <span className="ml-2">{ticket.site}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.site}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Province:</strong>
-        <span className="ml-2">{ticket.province}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.province}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Nom:</strong>
-        <span className="ml-2">{ticket.name}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.name}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Technicien:</strong>
-        <span className="ml-2">{ticket.technicien}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.technicien}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Catégorie:</strong>
-        <span className="ml-2">{ticket.categorie}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.categorie}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Description:</strong>
-        <span className="ml-2">{ticket.description}</span>
-      </div>
-      <div>
+        <span style={{ marginLeft: "8px" }}>{ticket.description}</span>
+      </Typography>
+      <Typography variant="body1">
+        <strong>Commentaire responsable:</strong>
+        <span style={{ marginLeft: "8px" }}>{ticket.commentaire}</span>
+      </Typography>
+      <Typography variant="body1">
         <strong>Équipement défectueux:</strong>
-        <span className="ml-2">{ticket.equipement_deficitaire}</span>
-      </div>
-      <div>
-        <strong>Urgence:</strong>
-        <span className={`ml-2 ${getUrgencyColor(ticket.urgence)}`}>
-          {ticket.urgence}
+        <span style={{ marginLeft: "8px" }}>
+          {ticket.equipement_deficitaire}
         </span>
-      </div>
-      <div>
+      </Typography>
+      <Typography variant="body1">
+        <strong>Urgence:</strong>
+        <Chip
+          label={ticket.urgence}
+          color={getUrgencyColor(ticket.urgence)}
+          sx={{ marginLeft: "8px" }}
+        />
+      </Typography>
+      <Typography variant="body1">
         <strong>Date de création:</strong>
-        <span className="ml-2">{formatDate(ticket.createdAt)}</span>
-        <span className="ml-4 text-gray-500">(il y a {timeElapsed})</span>
-      </div>
-    </div>
+        <span style={{ marginLeft: "8px" }}>
+          {formatDate(ticket.createdAt)}
+        </span>
+        <span style={{ marginLeft: "16px", color: "gray" }}>
+          (il y a {timeElapsed})
+        </span>
+      </Typography>
+    </Box>
   );
 };
 
