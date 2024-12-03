@@ -35,7 +35,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
   // Define the needs for each category
   const categoryNeeds = {
-    "structure batiment": [
+    "Structure Bâtiment": [
       "BANC CHAISE",
       "CACHE GROUPE ELECTROGENE",
       "CHAISE D'ACCEUIL",
@@ -56,7 +56,7 @@ const ModelFourniture = ({ open, onClose }) => {
       "TABOURET",
       "VASES PLANTES ARTIFICIELLES",
     ],
-    "dispositif médical": [
+    "Dispositif Médicaux": [
       "BALANCE",
       "BOITIER MEDIOT",
       "BRASSARD TENSIOMETRE",
@@ -113,7 +113,7 @@ const ModelFourniture = ({ open, onClose }) => {
       "STYLO",
       "TENUE INFIRMIER",
     ],
-    "Materiel Informatique": [
+    "Matériel Informatique": [
       "ADAPTATEUR DISPLAY/HDMI",
       "CABLE 3.0 10 M",
       "CÂBLE HDMI 10M",
