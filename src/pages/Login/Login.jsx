@@ -89,7 +89,7 @@ const Login = () => {
       className="flex justify-center items-center h-screen text-white"
       style={{ backgroundImage: `url(${backgroundImage})` }}
     >
-      <section className="dark:bg-gray-900 w-full">
+      <section className="dark:bg-gray-900 w-full ">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <a
             href="#"
@@ -100,7 +100,7 @@ const Login = () => {
               src="https://cdn-icons-png.flaticon.com/512/5759/5759665.png"
               alt="logo"
             />
-            Gestion intelligente de la maintenance pour les unités mobiles
+            Gestion intelligente de la maintenance ummc & ulc
             <img
               className="w-8 h-8 mr-2"
               src="https://cdn-icons-png.flaticon.com/512/5759/5759665.png"
@@ -158,7 +158,7 @@ const Login = () => {
                 >
                   Sign in
                 </button>
-                <p className="text-sm font-light text-gray-500 dark:text-gray-400">
+                {/* <p className="text-sm font-light text-gray-500 dark:text-gray-400">
                   Don’t have an account yet?{" "}
                   <a
                     href="/signup"
@@ -166,7 +166,7 @@ const Login = () => {
                   >
                     Sign up
                   </a>
-                </p>
+                </p> */}
               </form>
             </div>
           </div>
