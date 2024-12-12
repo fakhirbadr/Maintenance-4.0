@@ -47,7 +47,7 @@ const ModelMaintenance = ({ open, onClose }) => {
             if (fetchedNames.length === userIds.length) {
               setNames(fetchedNames); // Mettez à jour avec les objets complets
               setSelectedName(fetchedNames[""].name); // Utilisez le premier nom
-              setCategories(fetchedNames[""].categories || []); // Catégories du premier actif
+              setCategories(fetchedNames[""].categories || [""]); // Catégories du premier actif
               setSelectedCategory(fetchedNames[0].categories[0]?.name || "");
               setEquipments(fetchedNames[0].categories[0]?.equipments || []);
               setSelectedEquipment(
