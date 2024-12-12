@@ -114,13 +114,14 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             inputProps={{ "aria-label": "search" }}
           />
         </Search>
-        <div className="ml-[670px]">
+        {/* Ajouter un espace flexible de chaque côté de l'image */}
+        <Box flexGrow={8} display="flex" justifyContent="center">
           <img
             src={myImage}
             alt="Your description"
             style={{ height: "40px", width: "98px" }}
           />
-        </div>
+        </Box>
         <Box flexGrow={1} />
         <Stack direction={"row"}>
           {theme.palette.mode === "light" ? (

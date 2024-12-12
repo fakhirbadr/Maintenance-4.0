@@ -279,7 +279,7 @@ function UpdateAccountForm() {
 
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/v1/users/user")
+      .get("https://backend-v1-e3bx.onrender.com/api/v1/users/user")
       .then((response) => {
         console.log(response.data); // Log the API response to inspect its structure
         if (Array.isArray(response.data)) {
@@ -300,7 +300,7 @@ function UpdateAccountForm() {
 
     // Récupérer les informations des actifs
     axios
-      .get("http://localhost:3000/api/actifs", {
+      .get("https://backend-v1-e3bx.onrender.com/api/actifs", {
         params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs dans la requête
       })
       .then((response) => {
@@ -332,7 +332,7 @@ function UpdateAccountForm() {
   const handleDelete = async (userId) => {
     try {
       const response = await axios.delete(
-        `http://localhost:3000/api/v1/users/delete/${userId}`
+        `https://backend-v1-e3bx.onrender.com/api/v1/users/delete/${userId}`
       );
 
       if (response.status === 200) {
@@ -353,16 +353,19 @@ function UpdateAccountForm() {
   const handleSave = () => {
     // Exemple d'appel à une API pour mettre à jour l'utilisateur
     axios
-      .put(`http://localhost:3000/api/v1/users/users/${selectedUser._id}`, {
-        ...selectedUser,
-      })
+      .put(
+        `https://backend-v1-e3bx.onrender.com/api/v1/users/users/${selectedUser._id}`,
+        {
+          ...selectedUser,
+        }
+      )
       .then((response) => {
         console.log("User updated successfully:", response.data);
         alert("Utilisateur mis à jour avec succès.");
         setOpen(false);
         // Rafraîchir la liste des utilisateurs
         axios
-          .get("http://localhost:3000/api/v1/users/user")
+          .get("https://backend-v1-e3bx.onrender.com/api/v1/users/user")
           .then((response) => setUsers(response.data));
       })
       .catch((error) => {

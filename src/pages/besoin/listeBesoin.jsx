@@ -105,7 +105,7 @@ const ListeBesoin = () => {
   const handleUpdateFourniture = async () => {
     try {
       await axios.patch(
-        `https://maintenance-4-0-backend-9.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+        `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
         {
           name: updatedName,
           categorie: updatedCategorie,

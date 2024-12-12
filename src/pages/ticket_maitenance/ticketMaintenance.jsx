@@ -42,7 +42,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance?isClosed=false"
+          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false"
         );
         setRows(response.data);
       } catch (error) {
@@ -91,7 +91,7 @@ const TicketMaintenance = () => {
   const handleSubmitUpdate = async () => {
     try {
       const response = await axios.patch(
-        `https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
+        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
         updatedTicket
       );
       if (response.status === 200) {
@@ -114,7 +114,7 @@ const TicketMaintenance = () => {
 
       // Close the ticket first
       const response = await axios.patch(
-        `https://maintenance-4-0-backend-9.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
         { isClosed: true, dateCloture: currentDate.toISOString() } // Update the ticket with the closure date
       );
 
