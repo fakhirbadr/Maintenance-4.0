@@ -361,23 +361,37 @@ const Inventaire = () => {
                                   </Typography>
                                 </AccordionSummary>
                                 <AccordionDetails>
-                                  {category.equipments.map((equipment) => (
-                                    <Accordion
-                                      key={equipment._id}
-                                      sx={{ bgcolor: "#3b3939" }}
-                                    >
-                                      <AccordionSummary
-                                        expandIcon={<ArrowDropDownIcon />}
-                                        aria-controls={`${equipment.name}-content`}
-                                        id={`${equipment.name}-header`}
+                                  <Box
+                                    sx={{
+                                      display: "flex",
+                                      flexWrap: "wrap",
+                                      gap: 2, // Espacement entre les accordéons
+                                    }}
+                                  >
+                                    {category.equipments.map((equipment) => (
+                                      <Accordion
+                                        key={equipment._id}
+                                        sx={{
+                                          bgcolor: "#3b3939",
+                                          flex: "1 1 calc(23.33% - 16px)", // 3 par ligne avec marge
+                                          minWidth: 250, // Largeur minimale pour éviter les problèmes d'ajustement
+                                        }}
                                       >
-                                        <Typography>
-                                          {equipment.name}{" "}
-                                          {equipment.isFunctionel ? "✔️" : "❌"}
-                                        </Typography>
-                                      </AccordionSummary>
-                                    </Accordion>
-                                  ))}
+                                        <AccordionSummary
+                                          expandIcon={<ArrowDropDownIcon />}
+                                          aria-controls={`${equipment.name}-content`}
+                                          id={`${equipment.name}-header`}
+                                        >
+                                          <Typography>
+                                            {equipment.name}{" "}
+                                            {equipment.isFunctionel
+                                              ? "✔️"
+                                              : "❌"}
+                                          </Typography>
+                                        </AccordionSummary>
+                                      </Accordion>
+                                    ))}
+                                  </Box>
                                 </AccordionDetails>
                               </Accordion>
                             );

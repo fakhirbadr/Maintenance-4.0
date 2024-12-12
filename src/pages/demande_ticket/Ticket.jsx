@@ -44,11 +44,11 @@ const Ticket = () => {
     <>
       <Location />
       <div className="fixed flex justify-center items-center inset-0 bg-black z-50 bg-opacity-0">
-        <div className="px-7 flex justify-center items-center space-x-4 flex-col gap-y-5 md:flex-row w-full">
-          {/* Card for maintenance ticket */}
+        <div className="px-7 flex justify-center space-x-4 flex-col gap-y-5 md:flex-col w-full">
+          {/* Card Grid */}
           <Grid container spacing={3} justifyContent="center">
-            {/* Card for maintenance ticket */}
-            <Grid item xs={3} sm={3} md={3}>
+            {/* Maintenance Ticket */}
+            <Grid item xs={6} sm={8} md={3}>
               <Card sx={{ maxWidth: "100%", height: "100%" }}>
                 <CardActionArea onClick={handleOpenMaintenance}>
                   <CardMedia
@@ -56,7 +56,7 @@ const Ticket = () => {
                     image={myImage2}
                     alt="Création d'un ticket de maintenance"
                     sx={{
-                      height: 200,
+                      height: { xs: 100, md: 200 }, // Responsive height for the image
                       objectFit: "cover",
                     }}
                   />
@@ -64,23 +64,27 @@ const Ticket = () => {
                     <Typography gutterBottom variant="h6" component="div">
                       Création d'un ticket de maintenance
                     </Typography>
+                    {/* Responsive text visibility */}
                     <Typography
                       variant="body2"
-                      sx={{ color: "text.secondary" }}
+                      sx={{
+                        display: { xs: "none", md: "block" }, // Hide on small screens
+                        color: "text.secondary",
+                      }}
                     >
                       Veuillez remplir le formulaire ci-dessous afin de
                       soumettre une demande de maintenance.
                       <br /> Cette procédure permet de garantir un suivi
-                      efficace et rapide pour résoudre tout
-                      <br /> problème lié à l'équipement.
+                      efficace et rapide pour résoudre tout problème lié à
+                      l'équipement.
                     </Typography>
                   </CardContent>
                 </CardActionArea>
               </Card>
             </Grid>
 
-            {/* Card for supplies ticket */}
-            <Grid item xs={3} sm={3} md={3}>
+            {/* Supplies Ticket */}
+            <Grid item xs={12} sm={8} md={3}>
               <Card sx={{ maxWidth: "100%", height: "100%" }}>
                 <CardActionArea onClick={handleOpenFourniture}>
                   <CardMedia
@@ -88,7 +92,7 @@ const Ticket = () => {
                     image={myImage}
                     alt="Création d'un ticket commande"
                     sx={{
-                      height: 200,
+                      height: { xs: 100, md: 200 },
                       objectFit: "cover",
                     }}
                   />
@@ -98,13 +102,15 @@ const Ticket = () => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ color: "text.secondary" }}
+                      sx={{
+                        display: { xs: "none", md: "block" },
+                        color: "text.secondary",
+                      }}
                     >
                       Pour une demande de matériel industriel ou informatique,
-                      ou n'importe quelle autre
-                      <br /> demande, veuillez remplir le formulaire. Si vous
-                      avez des doutes concernant la procédure
-                      <br /> ou si la demande n'est pas nécessaire, n'hésitez
+                      ou n'importe quelle autre demande, veuillez remplir le
+                      formulaire. Si vous avez des doutes concernant la
+                      procédure ou si la demande n'est pas nécessaire, n'hésitez
                       pas à contacter notre support technique.
                     </Typography>
                   </CardContent>
@@ -112,8 +118,8 @@ const Ticket = () => {
               </Card>
             </Grid>
 
-            {/* Card for vehicle ticket */}
-            <Grid item xs={3} sm={3} md={3}>
+            {/* Vehicle Ticket */}
+            <Grid item xs={12} sm={8} md={3}>
               <Card sx={{ maxWidth: "100%", height: "100%" }}>
                 <CardActionArea onClick={handleOpenvehiculee}>
                   <CardMedia
@@ -121,7 +127,7 @@ const Ticket = () => {
                     image={myImage5}
                     alt="Création d'un ticket pour véhicule"
                     sx={{
-                      height: 200,
+                      height: { xs: 100, md: 200 },
                       objectFit: "cover",
                     }}
                   />
@@ -131,13 +137,16 @@ const Ticket = () => {
                     </Typography>
                     <Typography
                       variant="body2"
-                      sx={{ color: "text.secondary" }}
+                      sx={{
+                        display: { xs: "none", md: "block" },
+                        color: "text.secondary",
+                      }}
                     >
                       Pour toute demande de matériel industriel, informatique,
-                      ou autre, veuillez remplir le <br /> formulaire
-                      ci-dessous. En cas de doute sur la procédure ou si vous
-                      n'êtes pas sûr <br /> de la nécessité de la demande,
-                      n'hésitez pas à demander de l'aide.
+                      ou autre, veuillez remplir le formulaire ci-dessous. En
+                      cas de doute sur la procédure ou si vous n'êtes pas sûr de
+                      la nécessité de la demande, n'hésitez pas à demander de
+                      l'aide.
                     </Typography>
                   </CardContent>
                 </CardActionArea>
