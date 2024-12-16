@@ -151,7 +151,7 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <ConstructionOutlinedIcon />
-        <HistoryIcon />
+        <HistoryIcon className="w-[18px]" />
       </IconWrapper>
     ),
     path: "/HistoriqueIntervention",
@@ -161,7 +161,7 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <ListAltIcon />
-        <HistoryIcon />
+        <HistoryIcon className="w-[18px]" />
       </IconWrapper>
     ),
     path: "/HistoriqueBesoin",
@@ -171,7 +171,7 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <DirectionsCarRoundedIcon />
-        <HistoryIcon />
+        <HistoryIcon className="w-[18px]" />
       </IconWrapper>
     ),
     path: "/Historiquevehicule",
@@ -243,14 +243,14 @@ export default function SidBar({ open, handleDrawerClose }) {
       <Typography
         className="text-orange-500"
         align="center"
-        sx={{ fontSize: open ? 15 : 0, transition: "0.5s" }}
+        sx={{ fontSize: open ? 12 : 0, transition: "0.5s" }}
       >
         SCX Asset Management
       </Typography>
       <Typography
         align="center"
         sx={{
-          fontSize: open ? 19 : 0,
+          fontSize: open ? 15 : 0,
           transition: "0.5s",
           color: theme.palette.info.main,
           fontFamily: "fantasy",
@@ -297,7 +297,7 @@ export default function SidBar({ open, handleDrawerClose }) {
                   {item.icon}
                 </ListItemIcon>
                 <ListItemText
-                  primaryTypographyProps={{ fontSize: "14px" }}
+                  primaryTypographyProps={{ fontSize: "12px" }}
                   primary={item.text}
                   sx={{ opacity: open ? 1 : 0 }}
                 />
