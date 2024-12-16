@@ -7,7 +7,7 @@ import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
 import BesoinTaux from "./Graphe 2/BesoinTaux";
 import BesoinVehicule from "./Graph 3/BesoinVehicule";
-import CategorieMaintenance from "./Graph4/categorieMaintenance";
+import CategorieMaintenance from "./Graph4/CategorieMaintenance";
 
 const Dashboard = () => {
   const Item = styled(Paper)(({ theme }) => ({
