@@ -163,13 +163,39 @@ const TicketMaintenance = () => {
     setIsDeleting(true); // Activer l'état de suppression
 
     try {
-      await axios.delete(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`
-      );
-      setRows((prevRows) => prevRows.filter((row) => row._id !== rowData._id));
-      alert("Le ticket a été supprimé avec succès !");
+      // Update the equipment status to true (isFunctionel: true)
+      const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
+      const body = {
+        isFunctionel: true, // Update status
+      };
+
+      console.log("Sending PUT request to:", url);
+      console.log("Request body:", JSON.stringify(body, null, 2));
+
+      const equipmentResponse = await axios.put(url, body, {
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      if (equipmentResponse.status === 200) {
+        console.log("Equipment updated successfully");
+
+        // Proceed to delete the ticket if the equipment status update was successful
+        await axios.delete(
+          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`
+        );
+        setRows((prevRows) =>
+          prevRows.filter((row) => row._id !== rowData._id)
+        );
+        alert("Le ticket a été supprimé avec succès !");
+      } else {
+        console.error("Failed to update the equipment");
+      }
     } catch (error) {
       console.error("Erreur lors de la suppression du ticket :", error.message);
+    } finally {
+      setIsDeleting(false); // Disable deletion state after operation
     }
   };
 

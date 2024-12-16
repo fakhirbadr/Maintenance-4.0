@@ -1,12 +1,24 @@
-import React, { useState } from "react";
-import { Grid, Typography, Menu, MenuItem, Button, Box } from "@mui/material";
+import React, { useState, useEffect } from "react";
+import {
+  Grid,
+  Typography,
+  Menu,
+  MenuItem,
+  Button,
+  Box,
+  Select,
+  InputLabel,
+  FormControl,
+  MenuItem as MuiMenuItem,
+} from "@mui/material";
 import { useTheme } from "@mui/material/styles";
+import axios from "axios";
 
 const Mttr = () => {
   const theme = useTheme();
   const [anchorEl, setAnchorEl] = useState(null);
-
-  const regions = [
+  const [mttr, setMttr] = useState(null); // State to store the calculated MTTR
+  const [regions, setRegions] = useState([
     "Casablanca-Settat",
     "Rabat-Salé-Kénitra",
     "Tanger-Tétouan-Al Hoceïma",
@@ -19,20 +31,87 @@ const Mttr = () => {
     "Laâyoune-Sakia El Hamra",
     "Guelmim-Oued Noun",
     "Drâa-Tafilalet",
-  ];
+  ]);
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [sites, setSites] = useState([]); // State to store sites for the selected region
+  const [selectedSite, setSelectedSite] = useState(""); // State to store selected site
 
   const handleClick = (event) => {
-    setAnchorEl(event.currentTarget); // Ouvre le menu
+    setAnchorEl(event.currentTarget); // Open the menu
   };
 
   const handleClose = () => {
-    setAnchorEl(null); // Ferme le menu
+    setAnchorEl(null); // Close the menu
   };
 
   const handleSelectRegion = (region) => {
-    console.log(`Region selected: ${region}`); // Logique lors de la sélection d'une région
-    handleClose(); // Fermer le menu
+    setSelectedRegion(region);
+    setSelectedSite(""); // Reset selected site when region changes
+    handleClose(); // Close the menu after selecting a region
   };
+
+  const handleSelectSite = (site) => {
+    setSelectedSite(site);
+  };
+
+  useEffect(() => {
+    if (selectedRegion) {
+      // Fetch maintenance ticket data for the selected region
+      axios
+        .get(
+          `http://localhost:3000/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&province=${selectedRegion}`
+        )
+        .then((response) => {
+          const data = response.data;
+
+          // Get unique sites for the selected region
+          const uniqueSites = [...new Set(data.map((ticket) => ticket.site))];
+          setSites(uniqueSites);
+
+          const totalMinutes = data.reduce((total, ticket) => {
+            const resolutionTime = ticket.tempsDeResolutionDetaille;
+            const [days, hours, minutes] = resolutionTime
+              .split(" ")
+              .map((time) => parseInt(time));
+            const totalTicketMinutes = days * 24 * 60 + hours * 60 + minutes;
+            return total + totalTicketMinutes;
+          }, 0);
+
+          const averageMttr = totalMinutes / data.length; // Calculate average MTTR
+          setMttr(averageMttr);
+        })
+        .catch((error) => {
+          console.error("Error fetching data", error);
+        });
+    }
+  }, [selectedRegion]);
+
+  useEffect(() => {
+    if (selectedRegion && selectedSite) {
+      // Fetch maintenance ticket data for the selected site and region
+      axios
+        .get(
+          `http://localhost:3000/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&province=${selectedRegion}&site=${selectedSite}`
+        )
+        .then((response) => {
+          const data = response.data;
+          const totalMinutes = data.reduce((total, ticket) => {
+            const resolutionTime = ticket.tempsDeResolutionDetaille;
+            const [days, hours, minutes] = resolutionTime
+              .split(" ")
+              .map((time) => parseInt(time));
+            const totalTicketMinutes = days * 24 * 60 + hours * 60 + minutes;
+            return total + totalTicketMinutes;
+          }, 0);
+
+          const averageMttr = totalMinutes / data.length; // Calculate average MTTR
+          setMttr(averageMttr);
+        })
+        .catch((error) => {
+          console.error("Error fetching data for selected site", error);
+        });
+    }
+  }, [selectedRegion, selectedSite]);
 
   return (
     <Box
@@ -58,9 +137,7 @@ const Mttr = () => {
           restaurer dans toutes ses fonctions
         </Typography>
       </Box>
-      {/* Grille principale */}
       <Grid container sx={{ flexGrow: 1 }}>
-        {/* Section MTTR */}
         <Grid
           item
           xs={6}
@@ -68,13 +145,17 @@ const Mttr = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRight: "1px solid #444", // Ligne séparatrice
+            borderRight: "1px solid #444", // Line separator
           }}
         >
-          <Typography variant="h6">43min 56s</Typography>
+          {/* Display average MTTR with two decimal places */}
+          <Typography variant="h6">
+            {mttr
+              ? `${Math.floor(mttr / 60)}h ${(mttr % 60).toFixed(2)}m`
+              : "Loading..."}
+          </Typography>
         </Grid>
 
-        {/* Section Filtre avec bouton menu */}
         <Grid
           item
           xs={6}
@@ -106,6 +187,27 @@ const Mttr = () => {
               </MenuItem>
             ))}
           </Menu>
+
+          {/* Site filter dropdown */}
+          {selectedRegion && (
+            <FormControl fullWidth sx={{ mt: 2 }}>
+              <InputLabel id="site-select-label">
+                Sélectionner un site
+              </InputLabel>
+              <Select
+                labelId="site-select-label"
+                value={selectedSite}
+                onChange={(e) => handleSelectSite(e.target.value)}
+                label="Sélectionner un site"
+              >
+                {sites.map((site, index) => (
+                  <MuiMenuItem key={index} value={site}>
+                    {site}
+                  </MuiMenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          )}
         </Grid>
       </Grid>
     </Box>
