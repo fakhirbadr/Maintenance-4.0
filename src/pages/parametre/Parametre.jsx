@@ -365,26 +365,46 @@ function UpdateAccountForm() {
   }, []);
 
   useEffect(() => {
-    // Effectuer une requête pour récupérer les actifs en fonction des actifIds
-    const allActifIds = users.flatMap((user) => user.actifIds); // Récupérer tous les actifIds des utilisateurs
+    if (!Array.isArray(users) || users.length === 0) {
+      console.warn(
+        "Aucun utilisateur valide trouvé ou 'users' n'est pas un tableau."
+      );
+      return;
+    }
+
+    // Extraire les actifIds des utilisateurs
+    const allActifIds = users.flatMap((user) => user.actifIds || []); // Ajout d'une validation pour éviter les erreurs
     const uniqueActifIds = [...new Set(allActifIds)]; // Éviter les doublons
 
-    // Récupérer les informations des actifs
+    if (uniqueActifIds.length === 0) {
+      console.warn("Aucun actifId unique trouvé.");
+      return;
+    }
+
+    // Requête pour récupérer les informations des actifs
     axios
       .get("https://backend-v1-e3bx.onrender.com/api/actifs", {
-        params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs dans la requête
+        params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs sous forme de chaîne
       })
       .then((response) => {
-        const actifsMap = response.data.reduce((acc, actif) => {
-          acc[actif._id] = actif.name; // Stocker le nom de chaque actif avec son ID
-          return acc;
-        }, {});
-        setActifs(actifsMap); // Mettre à jour l'état avec les noms des actifs
+        if (Array.isArray(response.data)) {
+          const actifsMap = response.data.reduce((acc, actif) => {
+            acc[actif._id] = actif.name || "Nom inconnu"; // Gestion des noms manquants
+            return acc;
+          }, {});
+          setActifs(actifsMap); // Mettre à jour l'état
+        } else {
+          console.error(
+            "Réponse inattendue : les données des actifs ne sont pas un tableau.",
+            response.data
+          );
+        }
       })
       .catch((error) => {
-        console.error("There was an error fetching actifs!", error);
+        console.error("Erreur lors de la récupération des actifs :", error);
       });
-  }, [users]); // La dépendance ici garantit que l'effet sera exécuté quand `users` changera
+  }, [users]);
+  // La dépendance ici garantit que l'effet sera exécuté quand `users` changera
 
   const handleOpenDialog = (user) => {
     setSelectedUser(user); // Définir l'utilisateur sélectionné
@@ -442,7 +462,6 @@ function UpdateAccountForm() {
         console.error("Erreur lors de la mise à jour:", error);
         alert("Une erreur est survenue lors de la mise à jour.");
       });
-    window.location.reload();
   };
 
   const handleInputChange = (field, value) => {

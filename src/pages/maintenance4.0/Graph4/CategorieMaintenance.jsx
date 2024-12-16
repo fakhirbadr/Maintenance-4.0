@@ -18,7 +18,7 @@ const CategorieMaintenance = () => {
   const fetchData = async () => {
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/v1/ticketMaintenance?isClosed"
+        "http://localhost:3000/api/v1/ticketMaintenance?isClosed=true"
       );
 
       console.log("API Response:", response.data);
@@ -44,7 +44,7 @@ const CategorieMaintenance = () => {
             value: count,
             label: `${category} (${((count / totalTickets) * 100).toFixed(
               1
-            )}%)`, // Ajouter le pourcentage
+            )}%) ${count}`, // Ajouter le pourcentage
           })
         );
 
