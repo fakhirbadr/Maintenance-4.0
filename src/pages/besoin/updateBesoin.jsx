@@ -60,6 +60,7 @@ const UpdateDialog = ({
           name="name"
           value={formData.name}
           onChange={handleChange}
+          disabled
         />
         <TextField
           label="Catégorie"
@@ -69,6 +70,7 @@ const UpdateDialog = ({
           name="categorie"
           value={formData.categorie}
           onChange={handleChange}
+          disabled
         />
         <TextField
           label="Besoin"
@@ -78,6 +80,7 @@ const UpdateDialog = ({
           name="besoin"
           value={formData.besoin}
           onChange={handleChange}
+          disabled
         />
         <TextField
           label="Quantité"
@@ -96,6 +99,7 @@ const UpdateDialog = ({
           name="technicien"
           value={formData.technicien}
           onChange={handleChange}
+          disabled
         />
         <TextField
           label="commentaire responsable"
@@ -105,6 +109,7 @@ const UpdateDialog = ({
           name="commentaire"
           value={formData.commentaire}
           onChange={handleChange}
+          disabled
         />
         <TextField
           label="Date de création"

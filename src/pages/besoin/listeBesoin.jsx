@@ -359,6 +359,7 @@ const ListeBesoin = () => {
               variant="standard"
               value={updatedName}
               onChange={(e) => setUpdatedName(e.target.value)}
+              disabled
             />
             <TextField
               margin="dense"
@@ -368,6 +369,7 @@ const ListeBesoin = () => {
               variant="standard"
               value={updatedCategorie}
               onChange={(e) => setUpdatedCategorie(e.target.value)}
+              disabled
             />
             <TextField
               margin="dense"
@@ -377,6 +379,7 @@ const ListeBesoin = () => {
               variant="standard"
               value={updatedBesoin}
               onChange={(e) => setUpdatedBesoin(e.target.value)}
+              disabled
             />
             <TextField
               margin="dense"
@@ -395,6 +398,7 @@ const ListeBesoin = () => {
               variant="standard"
               value={updatedCommentaire}
               onChange={(e) => setUpdatedCommentaire(e.target.value)}
+              disabled
             />
 
             <TextField

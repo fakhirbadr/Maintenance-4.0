@@ -44,13 +44,26 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
     <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
       <DialogTitle>Modifier le Ticket</DialogTitle>
       <DialogContent>
-        <TextField
-          label="Nom"
-          fullWidth
-          margin="normal"
-          value={ticket?.name || ""}
-          onChange={(e) => onFieldChange("name", e.target.value)}
-        />
+        <FormControl fullWidth margin="normal">
+          <InputLabel id="name-select-label">Nom</InputLabel>
+          <Select
+            labelId="name-select-label"
+            value={ticket?.name || ""} // Ajouter une valeur par défaut vide pour éviter l'undefined
+            onChange={(e) => onFieldChange("name", e.target.value)}
+            label="Nom"
+          >
+            <MenuItem value="REPARATION TECHNIQUE">
+              REPARATION TECHNIQUE
+            </MenuItem>
+            <MenuItem value="ASSISTANCE ET FORMATION">
+              ASSISTANCE ET FORMATION
+            </MenuItem>
+            <MenuItem value="PROBLEME LOGICIEL">Problème Logiciel</MenuItem>
+            <MenuItem value="PROBLEME ELECTRIQUE">Problème Électrique</MenuItem>
+            <MenuItem value="APPAREIL DEFECTUEUX">Appareil Défectueux</MenuItem>
+          </Select>
+        </FormControl>
+
         <TextField
           label="Site"
           fullWidth

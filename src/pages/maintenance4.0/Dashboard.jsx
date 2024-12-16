@@ -5,6 +5,9 @@ import { styled } from "@mui/material/styles";
 import Box from "@mui/material/Box";
 import Paper from "@mui/material/Paper";
 import Grid from "@mui/material/Grid";
+import BesoinTaux from "./Graphe 2/BesoinTaux";
+import BesoinVehicule from "./Graph 3/BesoinVehicule";
+import CategorieMaintenance from "./Graph4/categorieMaintenance";
 
 const Dashboard = () => {
   const Item = styled(Paper)(({ theme }) => ({
@@ -24,28 +27,26 @@ const Dashboard = () => {
 
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
-          <Grid item xs={3} lg={3}>
+          <Grid item xs={12} lg={4}>
             <div>
               <ClotureNonCloture />
             </div>
           </Grid>
-          <Grid item xs={3} lg={3}>
+          <Grid item xs={12} lg={4}>
             <div>
-              <ClotureNonCloture />
+              <BesoinTaux />
             </div>
           </Grid>
-          <Grid item xs={3} lg={3}>
+          <Grid item xs={12} lg={4}>
             <div>
-              <ClotureNonCloture />
+              <BesoinVehicule />
             </div>
           </Grid>
-          <Grid item xs={3} lg={3}>
-            <div>
-              <ClotureNonCloture />
-            </div>
-          </Grid>
+
           <Grid item xs={4}>
-            <Item>xs=4</Item>
+            <Item sx={{ backgroundColor: "#1E1E1E" }}>
+              <CategorieMaintenance />
+            </Item>
           </Grid>
           <Grid item xs={4}>
             <Item>xs=4</Item>

@@ -6,8 +6,9 @@
 
 * {
   font-family: "Roboto", sans-serif;
-  font-weight: 400;
+  font-weight: 300;
   font-style: normal;
+  font-size: 12px;
 }
 
 .debug {

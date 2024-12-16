@@ -21,6 +21,53 @@ const HistoriqueIntervention = () => {
 
   const [rows, setRows] = useState([]); // Stocker les données
   const [loading, setLoading] = useState(true); // Gérer l'état de chargement
+  const [actifNames, setActifNames] = useState([]); // Stocker les noms des actifs
+
+  // Récupérer les IDs d'actifs depuis localStorage et charger les noms correspondants
+  useEffect(() => {
+    const fetchActifs = async () => {
+      const userActifs = JSON.parse(localStorage.getItem("userActifs")) || [];
+
+      console.log("IDs récupérés depuis localStorage:", userActifs);
+
+      try {
+        const promises = userActifs.map(async (id) => {
+          try {
+            const res = await axios.get(
+              `https://backend-v1-e3bx.onrender.com/api/actifs/${id}`
+            );
+            if (res.data && res.data.name) {
+              return res.data.name;
+            } else {
+              console.warn(
+                `Données manquantes ou mal formées pour l'ID ${id}:`,
+                res.data
+              );
+              return `Nom inconnu pour l'ID ${id}`;
+            }
+          } catch (error) {
+            console.error(
+              `Erreur lors de la récupération des données pour l'ID ${id}:`,
+              error
+            );
+            return `Erreur pour l'ID ${id}`;
+          }
+        });
+
+        const noms = await Promise.all(promises);
+        setActifNames(noms);
+
+        console.log("Noms des actifs récupérés:", noms);
+      } catch (error) {
+        console.error(
+          "Erreur générale lors de la récupération des actifs :",
+          error
+        );
+      }
+    };
+
+    fetchActifs();
+  }, []);
 
   // Définir les colonnes du tableau
   const columns = [
@@ -76,9 +123,20 @@ const HistoriqueIntervention = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
+        // Vérifier si actifNames contient des données
+        if (actifNames.length === 0) {
+          console.warn("Aucun actif récupéré pour le site.");
+          setLoading(false);
+          return;
+        }
+
+        // Construire la chaîne des sites
+        const siteParam = actifNames.join(",");
+
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true"
+          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&site=${siteParam}`
         );
+
         setRows(response.data); // Mettre à jour les lignes du tableau
         setLoading(false); // Arrêter l'état de chargement
       } catch (error) {
@@ -88,7 +146,7 @@ const HistoriqueIntervention = () => {
     };
 
     fetchData();
-  }, []);
+  }, [actifNames]); // Relancer seulement quand actifNames change
 
   // Définir le thème de Material-UI
   const getMuiTheme = () =>

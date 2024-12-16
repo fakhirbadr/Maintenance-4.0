@@ -11,6 +11,7 @@ import {
   Checkbox,
   ListItemText,
   Select,
+  Grid,
 } from "@mui/material";
 import {
   Table,
@@ -205,130 +206,135 @@ function CreateAccountForm() {
       }}
     >
       <Typography variant="h6">Création de compte</Typography>
-      <TextField
-        label="Nom Complet"
-        name="nomComplet"
-        value={formData.nomComplet}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-      />
-      <TextField
-        label="Email"
-        name="email"
-        type="email"
-        value={formData.email}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-      />
-      <TextField
-        label="Mot de passe"
-        name="password"
-        type="password"
-        value={formData.password}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-      />
-      <TextField
-        label="Rôle"
-        name="role"
-        select
-        value={formData.role}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-      >
-        <MenuItem value="admin">Admin</MenuItem>
-        <MenuItem value="user">User</MenuItem>
-      </TextField>
-
-      <TextField
-        label="Région"
-        name="region"
-        select
-        value={formData.region}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-      >
-        {Object.keys(regions).map((region) => (
-          <MenuItem key={region} value={region}>
-            {region}
-          </MenuItem>
-        ))}
-      </TextField>
-
-      <TextField
-        label="Province"
-        name="province"
-        select
-        value={formData.province}
-        onChange={handleChange}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-        disabled={!formData.region}
-      >
-        {formData.region &&
-          regions[formData.region]?.map((province) => (
-            <MenuItem key={province} value={province}>
-              {province}
-            </MenuItem>
-          ))}
-      </TextField>
-
-      <TextField
-        label="Actifs"
-        name="actifIds"
-        select
-        value={formData.actifIds} // Doit être un tableau pour le mode multiple
-        onChange={(event) => {
-          const { value } = event.target;
-          setFormData((prevData) => ({
-            ...prevData,
-            actifIds: typeof value === "string" ? value.split(",") : value, // Gérer les tableaux
-          }));
-        }}
-        fullWidth
-        required
-        sx={{ width: "70%" }}
-        SelectProps={{
-          multiple: true, // Activer la sélection multiple
-          renderValue: (selected) =>
-            actifs
-              .filter((actif) => selected.includes(actif._id))
-              .map((actif) => actif.name)
-              .join(", "),
-        }}
-      >
-        {loading ? (
-          <MenuItem disabled>
-            <Skeleton variant="text" width="100%" />
-          </MenuItem>
-        ) : actifs.length > 0 ? (
-          actifs.map((actif) => (
-            <MenuItem key={actif._id} value={actif._id}>
-              <Checkbox checked={formData.actifIds.includes(actif._id)} />
-              <ListItemText primary={actif.name} />
-            </MenuItem>
-          ))
-        ) : (
-          <MenuItem disabled>Aucun actif disponible</MenuItem>
-        )}
-      </TextField>
-
+      <Grid container spacing={2}>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Nom Complet"
+            name="nomComplet"
+            value={formData.nomComplet}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Email"
+            name="email"
+            type="email"
+            value={formData.email}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Mot de passe"
+            name="password"
+            type="password"
+            value={formData.password}
+            onChange={handleChange}
+            fullWidth
+            required
+          />
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Rôle"
+            name="role"
+            select
+            value={formData.role}
+            onChange={handleChange}
+            fullWidth
+            required
+          >
+            <MenuItem value="admin">Admin</MenuItem>
+            <MenuItem value="user">User</MenuItem>
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Région"
+            name="region"
+            select
+            value={formData.region}
+            onChange={handleChange}
+            fullWidth
+            required
+          >
+            {Object.keys(regions).map((region) => (
+              <MenuItem key={region} value={region}>
+                {region}
+              </MenuItem>
+            ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={6}>
+          <TextField
+            label="Province"
+            name="province"
+            select
+            value={formData.province}
+            onChange={handleChange}
+            fullWidth
+            required
+            disabled={!formData.region}
+          >
+            {formData.region &&
+              regions[formData.region]?.map((province) => (
+                <MenuItem key={province} value={province}>
+                  {province}
+                </MenuItem>
+              ))}
+          </TextField>
+        </Grid>
+        <Grid item xs={12} sm={12}>
+          <TextField
+            label="Actifs"
+            name="actifIds"
+            select
+            value={formData.actifIds} // Should be an array for multiple selection
+            onChange={(event) => {
+              const { value } = event.target;
+              setFormData((prevData) => ({
+                ...prevData,
+                actifIds: typeof value === "string" ? value.split(",") : value, // Handle arrays
+              }));
+            }}
+            fullWidth
+            required
+            SelectProps={{
+              multiple: true, // Enable multiple selection
+              renderValue: (selected) =>
+                actifs
+                  .filter((actif) => selected.includes(actif._id))
+                  .map((actif) => actif.name)
+                  .join(", "),
+            }}
+          >
+            {loading ? (
+              <MenuItem disabled>
+                <Skeleton variant="text" width="100%" />
+              </MenuItem>
+            ) : actifs.length > 0 ? (
+              actifs.map((actif) => (
+                <MenuItem key={actif._id} value={actif._id}>
+                  <Checkbox checked={formData.actifIds.includes(actif._id)} />
+                  <ListItemText primary={actif.name} />
+                </MenuItem>
+              ))
+            ) : (
+              <MenuItem disabled>Aucun actif disponible</MenuItem>
+            )}
+          </TextField>
+        </Grid>
+      </Grid>
       <Button
         type="submit"
         variant="contained"
         color="primary"
-        sx={{ width: "70%" }}
+        sx={{ width: "100%" }}
       >
         Créer l'utilisateur
       </Button>
@@ -417,12 +423,11 @@ function UpdateAccountForm() {
 
   const handleSave = () => {
     // Exemple d'appel à une API pour mettre à jour l'utilisateur
+    const { _id, ...userData } = selectedUser;
     axios
       .put(
-        `https://backend-v1-e3bx.onrender.com/api/v1/users/users/${selectedUser._id}`,
-        {
-          ...selectedUser,
-        }
+        `https://backend-v1-e3bx.onrender.com/api/v1/users/users/${_id}`,
+        userData
       )
       .then((response) => {
         console.log("User updated successfully:", response.data);
@@ -481,21 +486,23 @@ function UpdateAccountForm() {
                   {/* Affiche "Aucun actif" si actifIds est vide ou manquant */}
                   <TableCell>{user.role}</TableCell>
                   <TableCell>
-                    <Button
-                      variant="outlined"
-                      color="primary"
-                      onClick={() => handleOpenDialog(user)}
-                      style={{ marginRight: "10px" }}
-                    >
-                      Update
-                    </Button>
-                    <Button
-                      variant="outlined"
-                      color="error"
-                      onClick={() => handleDelete(user._id)} // Passer l'ID de l'utilisateur
-                    >
-                      Delete
-                    </Button>
+                    <Box display="flex" alignItems="center">
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        onClick={() => handleOpenDialog(user)}
+                        style={{ marginRight: "5px" }}
+                      >
+                        Update
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="error"
+                        onClick={() => handleDelete(user._id)} // Pass the user ID
+                      >
+                        Delete
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

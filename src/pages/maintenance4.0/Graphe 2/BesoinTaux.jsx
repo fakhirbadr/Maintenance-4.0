@@ -11,25 +11,22 @@ import List from "@mui/material/List";
 import Divider from "@mui/material/Divider";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
-import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
-import InboxIcon from "@mui/icons-material/MoveToInbox";
-import MailIcon from "@mui/icons-material/Mail";
 import { useTheme } from "@mui/material/styles";
 import { formatDistanceToNow } from "date-fns";
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
-const ClotureNonCloture = () => {
-  const [tickets, setTickets] = useState([]);
+const BesoinTaux = () => {
+  const [fournitures, setFournitures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  const [ticketsCreated, setTicketsCreated] = useState(0);
-  const [ticketsClosed, setTicketsClosed] = useState(0);
+  const [fournituresCreated, setFournituresCreated] = useState(0);
+  const [fournituresClosed, setFournituresClosed] = useState(0);
   const [closureRate, setClosureRate] = useState(0);
 
-  const [state, setState] = React.useState({
+  const [state, setState] = useState({
     top: false, // Drawer qui s'ouvre depuis le haut
   });
   const theme = useTheme(); // Récupérer le thème actuel (dark ou light)
@@ -45,30 +42,33 @@ const ClotureNonCloture = () => {
   };
 
   useEffect(() => {
-    // Récupérer tous les tickets
-    const fetchTickets = async () => {
+    // Récupérer toutes les fournitures
+    const fetchFournitures = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/ticketMaintenance",
+          "http://localhost:3000/api/v1/fournitureRoutes",
           {
             params: {
-              currentMonth: true, // Filtrer par mois actuel
+              // Vous pouvez ajuster ce filtre pour obtenir les fournitures ouvertes ou fermées
             },
           }
         );
 
-        const allTickets = response.data; // Tous les tickets
-        setTickets(allTickets);
+        const allFournitures = response.data; // Toutes les fournitures
+        setFournitures(allFournitures);
 
-        // Compter les tickets créés (total)
-        setTicketsCreated(allTickets.length);
+        // Compter les fournitures créées (total)
+        setFournituresCreated(allFournitures.length);
 
-        // Compter les tickets clôturés
-        const closedTickets = allTickets.filter((ticket) => ticket.isClosed);
-        setTicketsClosed(closedTickets.length);
+        // Compter les fournitures fermées
+        const closedFournitures = allFournitures.filter(
+          (fourniture) => fourniture.isClosed
+        );
+        setFournituresClosed(closedFournitures.length);
 
         // Calculer le taux de clôturation
-        const rate = (closedTickets.length / allTickets.length) * 100 || 0;
+        const rate =
+          (closedFournitures.length / allFournitures.length) * 100 || 0;
         setClosureRate(rate.toFixed(2)); // Fixer à 2 décimales
       } catch (err) {
         setError(err.message);
@@ -77,13 +77,16 @@ const ClotureNonCloture = () => {
       }
     };
 
-    fetchTickets(); // Appeler la fonction lors de l'appel du composant
+    fetchFournitures(); // Appeler la fonction lors de l'appel du composant
   }, []);
 
   if (loading) return <div>Chargement...</div>;
   if (error) return <div>Erreur : {error}</div>;
-  const openTickets = tickets.filter((ticket) => !ticket.isClosed);
-  const displayedTickets = openTickets.slice(0, 100);
+
+  const openFournitures = fournitures.filter(
+    (fourniture) => !fourniture.isClosed
+  );
+  const displayedFournitures = openFournitures.slice(0, 100);
 
   const list = () => (
     <Box
@@ -99,18 +102,18 @@ const ClotureNonCloture = () => {
       role="presentation"
     >
       <List>
-        {displayedTickets.length > 0 ? (
-          displayedTickets.map((ticket) => (
-            <ListItem key={ticket._id} disablePadding>
+        {displayedFournitures.length > 0 ? (
+          displayedFournitures.map((fourniture) => (
+            <ListItem key={fourniture._id} disablePadding>
               <ListItemButton>
                 <ListItemText
-                  primary={`Ticket: ${ticket.name} - Site: ${ticket.site} - equipement: ${ticket.equipement_deficitaire} `}
-                  secondary={`Technicien: ${ticket.technicien} - Urgence: ${ticket.urgence}`}
+                  primary={`Site: ${fourniture.name} - Categorie: ${fourniture.categorie} - Equipement: ${fourniture.besoin}`}
+                  secondary={`Technicien: ${fourniture.technicien} - Statut: ${fourniture.status}`}
                   sx={{ fontSize: "6px" }}
                 />
-                {/* Display the time passed since the ticket was created */}
+                {/* Display the time passed since the fourniture was created */}
                 <span style={{ fontSize: "12px", marginLeft: "auto" }}>
-                  {formatDistanceToNow(new Date(ticket.createdAt), {
+                  {formatDistanceToNow(new Date(fourniture.dateCreation), {
                     addSuffix: true,
                   })}
                 </span>
@@ -119,7 +122,7 @@ const ClotureNonCloture = () => {
           ))
         ) : (
           <ListItem>
-            <ListItemText primary="Aucun ticket non clôturé pour ce mois." />
+            <ListItemText primary="Aucune fourniture non clôturée pour ce mois." />
           </ListItem>
         )}
       </List>
@@ -130,24 +133,22 @@ const ClotureNonCloture = () => {
     <Card sx={{ minWidth: 275 }}>
       <CardContent>
         <Typography gutterBottom sx={{ color: "text.secondary", fontSize: 14 }}>
-          TICKET DE MAINTENANCE{" "}
+          FOURNITURES/COMMANDES
         </Typography>
         <Typography
           sx={{ fontSize: "13px", marginBottom: "5px" }}
           component="div"
         >
-          Rapport des tickets maintenance pour le mois de -{" "}
-          {
-            <span className="text-blue-800 uppercase font-bold">
-              {currentMonth}
-            </span>
-          }
+          Rapport des fournitures/commandes pour le mois de -{" "}
+          <span className="text-blue-800 uppercase font-bold">
+            {currentMonth}
+          </span>
         </Typography>
         <Typography variant="body1">
-          Nombre de tickets créés : <strong>{ticketsCreated}</strong>
+          Nombre de fournitures créées : <strong>{fournituresCreated}</strong>
         </Typography>
         <Typography variant="body1">
-          Nombre de tickets clôturés : <strong>{ticketsClosed}</strong>
+          Nombre de fournitures clôturées : <strong>{fournituresClosed}</strong>
         </Typography>
         <Typography variant="body1">
           Taux de clôturation : <strong>{closureRate}%</strong>
@@ -163,15 +164,11 @@ const ClotureNonCloture = () => {
         </Button>
       </CardActions>
       {/* Drawer qui s'ouvre depuis le haut */}
-      <Drawer
-        anchor="top" // Position de l'animation depuis le haut
-        open={state.top}
-        onClose={toggleDrawer(false)} // Ferme le Drawer lorsque l'utilisateur clique en dehors
-      >
+      <Drawer anchor="top" open={state.top} onClose={toggleDrawer(false)}>
         {list()}
       </Drawer>
     </Card>
   );
 };
 
-export default ClotureNonCloture;
+export default BesoinTaux;
