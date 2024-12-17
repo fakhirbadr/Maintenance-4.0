@@ -270,7 +270,7 @@ const TicketMaintenance = () => {
         filter: false,
         sort: false,
         customBodyRender: (value, tableMeta) => {
-          const rowData = rows[tableMeta.rowIndex];
+          const rowData = rows.find((row) => row._id === tableMeta.rowData[0]); // Recherche de la bonne ligne par ID
           return (
             <div style={{ display: "flex", gap: "8px" }}>
               <IconButton onClick={() => handleView(rowData)} color="primary">
@@ -280,7 +280,10 @@ const TicketMaintenance = () => {
                 <EditIcon />
               </IconButton>
               <IconButton
-                onClick={() => handleDelete(rowData)}
+                onClick={() => {
+                  console.log(rowData);
+                  handleDelete(rowData);
+                }}
                 color="secondary"
               >
                 <DeleteIcon />
