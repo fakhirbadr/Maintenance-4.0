@@ -246,6 +246,7 @@ const TicketMaintenance = () => {
   const columns = [
     { name: "_id", options: { display: "excluded" } },
     { name: "site", label: "Site" },
+    { name: "region", label: "region" },
     { name: "province", label: "Province" },
     { name: "name", label: "Nom" },
     { name: "technicien", label: "créé par" },

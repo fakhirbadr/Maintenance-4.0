@@ -74,6 +74,7 @@ const HistoriqueIntervention = () => {
     { name: "cloturerPar", label: "Traité par" },
     { name: "name", label: "Nom" },
     { name: "site", label: "Site" },
+    { name: "region", label: "region" },
     { name: "province", label: "Province" },
     { name: "technicien", label: "Créé par" },
     { name: "categorie", label: "Catégorie" },

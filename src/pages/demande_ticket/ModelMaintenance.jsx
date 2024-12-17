@@ -31,6 +31,7 @@ const ModelMaintenance = ({ open, onClose }) => {
   const [selectedActifId, setSelectedActifId] = useState("");
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState("");
+  const [selectedRegionActif, setSelectedRegionActif] = useState("");
 
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
@@ -89,6 +90,7 @@ const ModelMaintenance = ({ open, onClose }) => {
     if (selectedActif) {
       setSelectedActifId(selectedActif._id); // Stocke l'ID de l'actif
       setCategories(selectedActif.categories);
+      setSelectedRegionActif(selectedActif.region);
       setSelectedCategory(selectedActif.categories[""]?.name || "");
       setSelectedEquipment(
         selectedActif.categories[0]?.equipments[0]?._id || ""
@@ -148,6 +150,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       name: name, // Envoie l'ID de l'équipement
       urgence: urgence,
       province,
+      region: selectedRegionActif,
       technicien,
       description,
       selectedActifId: selectedActifId,
@@ -311,6 +314,15 @@ const ModelMaintenance = ({ open, onClose }) => {
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Region"
+              value={selectedRegionActif}
+              onChange={(e) => setSelectedRegionActif(e.target.value)}
+              disabled
+            />
           </Grid>
 
           <Grid item xs={12} sm={6}>
