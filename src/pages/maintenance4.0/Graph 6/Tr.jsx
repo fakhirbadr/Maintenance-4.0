@@ -5,20 +5,20 @@ import { Button, Typography, Container } from "@mui/material";
 
 const Tr = () => {
   const theme = useTheme();
-  const [tr, setTr] = useState(null);
-  const [filteredData, setFilteredData] = useState(null);
+  const [tr, setTr] = useState([]); // Données brutes
+  const [filteredData, setFilteredData] = useState([]); // Données filtrées
   const [isFiltered, setIsFiltered] = useState(false);
 
   // Fonction pour calculer la moyenne du temps de réponse
   const calculateAverageResponseTime = (data) => {
     if (data && data.length > 0) {
       const totalResponseTime = data.reduce(
-        (acc, item) => acc + item.responseTime,
+        (acc, item) => acc + item.responseTime, // Remplacez par le champ correct
         0
       );
-      return totalResponseTime / data.length;
+      return totalResponseTime / data.length; // Moyenne
     }
-    return 0;
+    return 0; // Aucune donnée
   };
 
   // Effet pour récupérer les données de l'API
@@ -26,60 +26,55 @@ const Tr = () => {
     axios
       .get("http://localhost:3000/api/v1/fournitureRoutes?isClosed=true")
       .then((response) => {
-        const date = response.data;
-        setTr(date);
-        setFilteredData(date);
+        const data = response.data.tempsDeResolutionDetaille;
+        setTr(data); // Données brutes
+        setFilteredData(data); // Initialiser avec toutes les données
       })
       .catch((error) => {
         console.error("Erreur lors de la récupération des données", error);
       });
   }, []);
 
-  // Filtrage des données
+  // Temps moyen de réponse global
+  const overallAverageResponseTime = calculateAverageResponseTime(tr);
+
+  // Fonction de filtre pour les données
   const handleFilter = () => {
     setIsFiltered(!isFiltered);
     if (!isFiltered) {
-      // Exemple de filtrage (vous pouvez personnaliser selon vos besoins)
-      setFilteredData(tr.filter((item) => item.someCondition === true));
+      // Filtrer les données selon une condition
+      const filtered = tr.filter((item) => item.someCondition === true);
+      setFilteredData(filtered);
     } else {
-      setFilteredData(tr);
+      setFilteredData(tr); // Réinitialiser les données filtrées
     }
   };
 
-  // Calcul de la moyenne du temps de réponse
-  const averageResponseTime = calculateAverageResponseTime(filteredData);
-
   return (
-    <Container>
+    <Container
+      sx={{
+        backgroundColor: theme.palette.mode === "dark" ? "#1E1E1E" : "#FFFFFF",
+        color: theme.palette.text.primary,
+        minHeight: 240,
+        borderRadius: 0,
+        display: "flex",
+        flexDirection: "column",
+        p: 2,
+      }}
+    >
       <Typography variant="h4" gutterBottom>
-        Temps de Réponse Moyenne
-      </Typography>
-      <Typography variant="h6" color="textSecondary" gutterBottom>
-        La moyenne du temps de réponse des routes fournies.
+        Temps de Réponse Moyen Global
       </Typography>
 
-      {/* Affichage de la moyenne du temps de réponse */}
+      {/* Affichage du temps moyen global */}
       <Typography variant="h5" color={theme.palette.primary.main} gutterBottom>
-        {averageResponseTime > 0
-          ? `Moyenne: ${averageResponseTime.toFixed(2)} heures`
+        {overallAverageResponseTime > 0
+          ? `${overallAverageResponseTime.toFixed(2)} heures`
           : "Aucune donnée disponible"}
       </Typography>
 
-      {/* Affichage du TR */}
-      <Typography variant="body1" gutterBottom>
-        {filteredData ? (
-          filteredData.map((item, index) => (
-            <div key={index}>
-              <Typography variant="body2">{` ${item.name}: ${item.responseTime} heures`}</Typography>
-            </div>
-          ))
-        ) : (
-          <Typography variant="body2">Chargement des données...</Typography>
-        )}
-      </Typography>
-
       {/* Bouton de filtre */}
-      <Button variant="contained" onClick={handleFilter}>
+      <Button variant="contained" onClick={handleFilter} sx={{ mt: 2 }}>
         {isFiltered ? "Afficher toutes les données" : "Filtrer les données"}
       </Button>
     </Container>

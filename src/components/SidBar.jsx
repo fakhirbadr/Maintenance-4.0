@@ -89,15 +89,15 @@ const IconWrapper = ({ children }) => {
 };
 
 const Array1 = [
-  // {
-  //   text: "Dashboard",
-  //   icon: (
-  //     <IconWrapper>
-  //       <DashboardIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/dashboard",
-  // },
+  {
+    text: "Dashboard",
+    icon: (
+      <IconWrapper>
+        <DashboardIcon />
+      </IconWrapper>
+    ),
+    path: "/dashboard",
+  },
   {
     text: "Inventaire des actifs",
     icon: (
