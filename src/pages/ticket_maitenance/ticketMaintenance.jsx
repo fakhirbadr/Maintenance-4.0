@@ -37,6 +37,19 @@ const TicketMaintenance = () => {
   const [updatedTicket, setUpdatedTicket] = useState({});
   const [selectedRow, setSelectedRow] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [name, setName] = useState("");
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
+
+      if (userInfo.nomComplet) {
+        setName(userInfo.nomComplet); // Mise à jour du technicien
+      }
+    }
+  }, []);
+
   // Récupérer les données des tickets
   useEffect(() => {
     const fetchData = async () => {
@@ -115,7 +128,11 @@ const TicketMaintenance = () => {
       // Close the ticket first
       const response = await axios.patch(
         `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
-        { isClosed: true, dateCloture: currentDate.toISOString() } // Update the ticket with the closure date
+        {
+          isClosed: true,
+          dateCloture: currentDate.toISOString(),
+          cloturerPar: name,
+        } // Update the ticket with the closure date
       );
 
       if (response.status === 200) {
@@ -127,6 +144,7 @@ const TicketMaintenance = () => {
                   ...row,
                   isClosed: true,
                   dateCloture: currentDate.toISOString(), // Update the closure date in the state
+                  cloturerPar: name,
                 }
               : row
           )
@@ -230,7 +248,7 @@ const TicketMaintenance = () => {
     { name: "site", label: "Site" },
     { name: "province", label: "Province" },
     { name: "name", label: "Nom" },
-    { name: "technicien", label: "Technicien" },
+    { name: "technicien", label: "créé par" },
     { name: "categorie", label: "Catégorie" },
     { name: "description", label: "Description" },
     { name: "equipement_deficitaire", label: "Équipement défectueux" },

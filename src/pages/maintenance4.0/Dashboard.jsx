@@ -9,6 +9,7 @@ import BesoinTaux from "./Graphe 2/BesoinTaux";
 import BesoinVehicule from "./Graph 3/BesoinVehicule";
 import CategorieMaintenance from "./Graph4/CategorieMaintenance";
 import Mttr from "./Graphe5/Mttr";
+import Tr from "./Graph 6/Tr";
 
 const Dashboard = () => {
   const Item = styled(Paper)(({ theme }) => ({
@@ -54,8 +55,10 @@ const Dashboard = () => {
               <Mttr />
             </Item>
           </Grid>
-          <Grid item xs={8}>
-            <Item>xs=8</Item>
+          <Grid item xs={12} lg={4}>
+            <Item>
+              <Tr />
+            </Item>
           </Grid>
         </Grid>
       </Box>

@@ -71,10 +71,11 @@ const HistoriqueIntervention = () => {
 
   // Définir les colonnes du tableau
   const columns = [
+    { name: "cloturerPar", label: "Traité par" },
     { name: "name", label: "Nom" },
     { name: "site", label: "Site" },
     { name: "province", label: "Province" },
-    { name: "technicien", label: "Technicien" },
+    { name: "technicien", label: "Créé par" },
     { name: "categorie", label: "Catégorie" },
     { name: "equipement_deficitaire", label: "Équipement Déficitaire" },
     { name: "description", label: "Description" },

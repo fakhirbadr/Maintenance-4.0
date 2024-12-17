@@ -119,7 +119,7 @@ const Mttr = () => {
         backgroundColor: theme.palette.mode === "dark" ? "#1E1E1E" : "#FFFFFF",
         color: theme.palette.text.primary,
         minHeight: 240,
-        borderRadius: 2,
+        borderRadius: 0,
         display: "flex",
         flexDirection: "column",
         p: 2,
@@ -149,10 +149,10 @@ const Mttr = () => {
           }}
         >
           {/* Display average MTTR with two decimal places */}
-          <Typography variant="h6">
+          <Typography variant="h6" className="text-rose-600">
             {mttr
               ? `${Math.floor(mttr / 60)}h ${(mttr % 60).toFixed(2)}m`
-              : "Loading..."}
+              : "pas de donnees"}
           </Typography>
         </Grid>
 
@@ -163,6 +163,8 @@ const Mttr = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
+            flexDirection: "column", // Stack buttons vertically
+            gap: 2, // Add space between the buttons
           }}
         >
           <Button
@@ -190,7 +192,7 @@ const Mttr = () => {
 
           {/* Site filter dropdown */}
           {selectedRegion && (
-            <FormControl fullWidth sx={{ mt: 2 }}>
+            <FormControl fullWidth>
               <InputLabel id="site-select-label">
                 Sélectionner un site
               </InputLabel>

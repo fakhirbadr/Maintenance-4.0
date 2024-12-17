@@ -35,7 +35,7 @@ const HistoriqueBesoin = () => {
     },
     {
       name: "technicien",
-      label: "Technicien",
+      label: "créé par",
       options: { filter: true, sort: true },
     },
     {

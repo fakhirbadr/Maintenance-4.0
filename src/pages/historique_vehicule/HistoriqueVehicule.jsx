@@ -40,7 +40,7 @@ const HistoriqueVehicule = () => {
   const columns = [
     {
       name: "technicien",
-      label: "Technicien",
+      label: "Créé par",
       options: { filter: true, sort: true },
     },
     {
