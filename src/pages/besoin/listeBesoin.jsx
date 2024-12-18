@@ -214,40 +214,40 @@ const ListeBesoin = () => {
   }, []);
 
   const columns = [
-    { name: "name", label: "Nom", options: { filter: true, sort: true } },
+    { name: "name", label: "Nom", options: { filter: true, sort: false } },
     {
       name: "categorie",
       label: "Catégorie",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: false },
     },
-    { name: "besoin", label: "Besoin", options: { filter: true, sort: true } },
+    { name: "besoin", label: "Besoin", options: { filter: true, sort: false } },
     {
       name: "quantite",
       label: "Quantité",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: false },
     },
     {
       name: "technicien",
       label: "créé par",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: false },
     },
 
     {
       name: "status",
       label: "Status",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: false },
     },
     {
       name: "commentaire",
       label: "commentaire responsable",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: false },
     },
     {
       name: "dateCreation",
       label: "Date de création",
       options: {
         filter: true,
-        sort: true,
+        sort: false,
         customBodyRender: (value) => {
           const date = new Date(value);
           return date.toLocaleString("fr-FR", {
@@ -316,6 +316,7 @@ const ListeBesoin = () => {
   const options = {
     filterType: "checkbox",
     selectableRows: "none",
+
     rowsPerPage: 10,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
