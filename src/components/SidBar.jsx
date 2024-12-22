@@ -198,7 +198,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/parametres",
-    roleRequired: ["superviseur"],
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Suivi demande",
