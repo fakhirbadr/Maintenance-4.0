@@ -95,6 +95,7 @@ const regions = {
     "Chichaoua",
     "Al Haouz",
     "Youssoufia",
+    "El Kelaâ des Sraghna",
   ],
   "Drâa-Tafilalet": ["Errachidia", "Ouarzazate", "Zagora", "Tinghir", "Midelt"],
   "Souss-Massa": [
@@ -297,22 +298,41 @@ function CreateAccountForm() {
             value={formData.actifIds} // Should be an array for multiple selection
             onChange={(event) => {
               const { value } = event.target;
-              setFormData((prevData) => ({
-                ...prevData,
-                actifIds: typeof value === "string" ? value.split(",") : value, // Handle arrays
-              }));
+              // Si "All" est sélectionné, on sélectionne tous les actifs
+              if (value.includes("all")) {
+                setFormData((prevData) => ({
+                  ...prevData,
+                  actifIds: actifs.map((actif) => actif._id), // Sélectionne tous les actifs
+                }));
+              } else {
+                setFormData((prevData) => ({
+                  ...prevData,
+                  actifIds:
+                    typeof value === "string" ? value.split(",") : value, // Handle arrays
+                }));
+              }
             }}
             fullWidth
             required
             SelectProps={{
               multiple: true, // Enable multiple selection
               renderValue: (selected) =>
-                actifs
-                  .filter((actif) => selected.includes(actif._id))
-                  .map((actif) => actif.name)
-                  .join(", "),
+                selected.length === 0
+                  ? ""
+                  : selected.includes("all")
+                  ? "All" // Affiche "All" si tous les actifs sont sélectionnés
+                  : actifs
+                      .filter((actif) => selected.includes(actif._id))
+                      .map((actif) => actif.name)
+                      .join(", "),
             }}
           >
+            {/* "All" option */}
+            <MenuItem value="all">
+              <Checkbox checked={formData.actifIds.length === actifs.length} />
+              <ListItemText primary="All" />
+            </MenuItem>
+
             {loading ? (
               <MenuItem disabled>
                 <Skeleton variant="text" width="100%" />

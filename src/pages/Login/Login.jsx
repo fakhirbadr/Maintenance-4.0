@@ -61,6 +61,7 @@ const Login = () => {
           localStorage.setItem(
             "userInfo",
             JSON.stringify({
+              id: user.id,
               email: user.email,
               role: user.role,
               site: user.site,

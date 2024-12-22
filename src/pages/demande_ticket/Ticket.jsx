@@ -48,7 +48,7 @@ const Ticket = () => {
           {/* Card Grid */}
           <Grid container spacing={3} justifyContent="center">
             {/* Maintenance Ticket */}
-            <Grid item xs={6} sm={8} md={3}>
+            <Grid item xs={12} sm={8} md={3}>
               <Card sx={{ maxWidth: "100%", height: "100%" }}>
                 <CardActionArea onClick={handleOpenMaintenance}>
                   <CardMedia

@@ -21,13 +21,31 @@ const HistoriqueBesoin = () => {
 
   // Define table columns
   const columns = [
-    { name: "name", label: "Nom", options: { filter: true, sort: true } },
+    {
+      name: "name",
+      label: "Nom",
+      options: { filter: true, sort: true, filterType: "dropdown" },
+    },
+    {
+      name: "region",
+      label: "Region",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
+    {
+      name: "province",
+      label: "Region",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
     {
       name: "categorie",
       label: "Catégorie",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: true, filterType: "dropdown" },
     },
-    { name: "besoin", label: "Besoin", options: { filter: true, sort: true } },
+    {
+      name: "besoin",
+      label: "Besoin",
+      options: { filter: true, sort: true, filterType: "dropdown" },
+    },
     {
       name: "quantite",
       label: "Quantité",
@@ -36,12 +54,12 @@ const HistoriqueBesoin = () => {
     {
       name: "technicien",
       label: "créé par",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: true, filterType: "dropdown" },
     },
     {
       name: "commentaire",
       label: "commentaire responsable",
-      options: { filter: true, sort: true },
+      options: { filter: true, sort: true, filterType: "dropdown" },
     },
     {
       name: "dateCreation",
@@ -57,6 +75,7 @@ const HistoriqueBesoin = () => {
             hour: "2-digit",
             minute: "2-digit",
           }),
+        filterType: "dropdown",
       },
     },
     {
@@ -65,6 +84,7 @@ const HistoriqueBesoin = () => {
       options: {
         customBodyRender: (value) =>
           value ? dayjs(value).format("DD/MM/YY HH:mm") : "N/A", // Affiche "N/A" si dateCloture est null
+        filterType: "dropdown",
       },
     },
     {
@@ -74,6 +94,7 @@ const HistoriqueBesoin = () => {
         filter: true,
         sort: true,
         customBodyRender: (value) => (value ? "Fermé" : "Ouvert"),
+        filterType: "dropdown",
       },
     },
     {
@@ -98,6 +119,7 @@ const HistoriqueBesoin = () => {
 
           return `${hours}h ${minutes}m`;
         },
+        filterType: "dropdown",
       },
     },
   ];

@@ -41,7 +41,7 @@ const BesoinVehicule = () => {
     const fetchTicketVehicules = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/ticketvehicules"
+          "https://backend-v1-e3bx.onrender.com/api/ticketvehicules"
         );
         setTicketVehicules(response.data);
       } catch (err) {
@@ -124,10 +124,7 @@ const BesoinVehicule = () => {
           sx={{ fontSize: "13px", marginBottom: "5px" }}
           component="div"
         >
-          Rapport des tickets maintenance pour le mois de-{" "}
-          <span className="text-blue-800 uppercase font-bold">
-            {currentMonth}
-          </span>
+          Rapport des tickets véhicule
         </Typography>
         <Typography variant="body1">
           Nombre de tickets créés : <strong>{ticketsCreated}</strong>
@@ -138,8 +135,11 @@ const BesoinVehicule = () => {
         <Typography variant="body1">
           Taux de clôturation : <strong>{closureRate}%</strong>
         </Typography>
+        <Typography variant="body1">
+          Temps de réponse : <strong> 00h 00m</strong>
+        </Typography>
       </CardContent>
-      <CardActions>
+      <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           onClick={toggleDrawer(true)}
           variant="contained"

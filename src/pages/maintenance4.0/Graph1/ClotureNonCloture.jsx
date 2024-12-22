@@ -20,7 +20,14 @@ import { formatDistanceToNow } from "date-fns";
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
-const ClotureNonCloture = () => {
+const ClotureNonCloture = ({
+  region,
+  province,
+  startDate,
+  endDate,
+  onTicketsClosedUpdate,
+  site,
+}) => {
   const [tickets, setTickets] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -28,6 +35,7 @@ const ClotureNonCloture = () => {
   const [ticketsCreated, setTicketsCreated] = useState(0);
   const [ticketsClosed, setTicketsClosed] = useState(0);
   const [closureRate, setClosureRate] = useState(0);
+  const [avgRepairTime, setAvgRepairTime] = useState("");
 
   const [state, setState] = React.useState({
     top: false, // Drawer qui s'ouvre depuis le haut
@@ -49,11 +57,9 @@ const ClotureNonCloture = () => {
     const fetchTickets = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/ticketMaintenance",
+          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance",
           {
-            params: {
-              currentMonth: true, // Filtrer par mois actuel
-            },
+            params: { region, province, startDate, endDate, site },
           }
         );
 
@@ -63,13 +69,42 @@ const ClotureNonCloture = () => {
         // Compter les tickets créés (total)
         setTicketsCreated(allTickets.length);
 
-        // Compter les tickets clôturés
+        // Filtrer les tickets clôturés
         const closedTickets = allTickets.filter((ticket) => ticket.isClosed);
         setTicketsClosed(closedTickets.length);
 
-        // Calculer le taux de clôturation
+        // Appeler la fonction pour transmettre `ticketsClosed` au composant parent
+        if (onTicketsClosedUpdate) {
+          onTicketsClosedUpdate(closedTickets.length);
+        }
+
+        // Calculer le taux de clôture
         const rate = (closedTickets.length / allTickets.length) * 100 || 0;
-        setClosureRate(rate.toFixed(2)); // Fixer à 2 décimales
+        setClosureRate(rate.toFixed(2));
+
+        // Calculer le temps moyen de réparation
+        const totalRepairTime = closedTickets.reduce((total, ticket) => {
+          const resolutionTime = ticket.tempsDeResolutionDetaille;
+
+          if (resolutionTime) {
+            const daysMatch = resolutionTime.match(/(\d+)j/);
+            const hoursMatch = resolutionTime.match(/(\d+)h/);
+            const minutesMatch = resolutionTime.match(/(\d+)m/);
+
+            const days = daysMatch ? parseInt(daysMatch[1]) : 0;
+            const hours = hoursMatch ? parseInt(hoursMatch[1]) : 0;
+            const minutes = minutesMatch ? parseInt(minutesMatch[1]) : 0;
+
+            const totalMinutes = days * 1440 + hours * 60 + minutes;
+            return total + totalMinutes;
+          }
+          return total;
+        }, 0);
+
+        const avgRepairTime = totalRepairTime / closedTickets.length;
+        const hours = Math.floor(avgRepairTime / 60);
+        const minutes = Math.round(avgRepairTime % 60);
+        setAvgRepairTime(`${hours}h ${minutes}m`);
       } catch (err) {
         setError(err.message);
       } finally {
@@ -77,8 +112,8 @@ const ClotureNonCloture = () => {
       }
     };
 
-    fetchTickets(); // Appeler la fonction lors de l'appel du composant
-  }, []);
+    fetchTickets();
+  }, [region, province, startDate, endDate, onTicketsClosedUpdate, site]);
 
   if (loading) return <div>Chargement...</div>;
   if (error) return <div>Erreur : {error}</div>;
@@ -136,12 +171,7 @@ const ClotureNonCloture = () => {
           sx={{ fontSize: "13px", marginBottom: "5px" }}
           component="div"
         >
-          Rapport des tickets maintenance pour le mois de -{" "}
-          {
-            <span className="text-blue-800 uppercase font-bold">
-              {currentMonth}
-            </span>
-          }
+          Rapport des tickets maintenance
         </Typography>
         <Typography variant="body1">
           Nombre de tickets créés : <strong>{ticketsCreated}</strong>
@@ -150,10 +180,13 @@ const ClotureNonCloture = () => {
           Nombre de tickets clôturés : <strong>{ticketsClosed}</strong>
         </Typography>
         <Typography variant="body1">
-          Taux de clôturation : <strong>{closureRate}%</strong>
+          Taux de clôture : <strong>{closureRate}%</strong>
+        </Typography>
+        <Typography variant="body1">
+          Temps moyen de réparation : <strong>{avgRepairTime}</strong>
         </Typography>
       </CardContent>
-      <CardActions>
+      <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           onClick={toggleDrawer(true)}
           variant="contained"

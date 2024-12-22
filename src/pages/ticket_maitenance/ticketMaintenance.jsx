@@ -9,6 +9,7 @@ import {
   DialogTitle,
   Button,
   TextField,
+  Alert,
 } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import {
@@ -38,6 +39,7 @@ const TicketMaintenance = () => {
   const [selectedRow, setSelectedRow] = useState(null);
   const [isDeleting, setIsDeleting] = useState(false);
   const [name, setName] = useState("");
+  const [alertMessage, setAlertMessage] = useState(null); // État pour afficher l'alerte
 
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
@@ -55,7 +57,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false"
+          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=false"
         );
         setRows(response.data);
       } catch (error) {
@@ -181,10 +183,9 @@ const TicketMaintenance = () => {
     setIsDeleting(true); // Activer l'état de suppression
 
     try {
-      // Update the equipment status to true (isFunctionel: true)
       const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
       const body = {
-        isFunctionel: true, // Update status
+        isFunctionel: true,
       };
 
       console.log("Sending PUT request to:", url);
@@ -199,19 +200,38 @@ const TicketMaintenance = () => {
       if (equipmentResponse.status === 200) {
         console.log("Equipment updated successfully");
 
-        // Proceed to delete the ticket if the equipment status update was successful
-        await axios.delete(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`
+        // Get the name of the person who deleted from localStorage
+        const deletedBy = name; // Using state variable `name`
+
+        // Proceed with PATCH to mark ticket as deleted
+        const response = await axios.patch(
+          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+          {
+            isDeleted: true,
+            deletedBy: deletedBy,
+            isClosed: true,
+          }
         );
-        setRows((prevRows) =>
-          prevRows.filter((row) => row._id !== rowData._id)
-        );
-        alert("Le ticket a été supprimé avec succès !");
-      } else {
-        console.error("Failed to update the equipment");
+
+        console.log("PATCH response:", response); // Check response
+        if (response.status === 200) {
+          setRows((prevRows) =>
+            prevRows.map((row) =>
+              row._id === rowData._id ? { ...row, isDeleted: true } : row
+            )
+          );
+
+          // Show the alert for 1 second
+          setAlertMessage(true);
+          setTimeout(() => {
+            setAlertMessage(false); // Hide the alert after 1 second
+          }, 1000);
+        } else {
+          console.error("Failed to update the ticket");
+        }
       }
     } catch (error) {
-      console.error("Erreur lors de la suppression du ticket :", error.message);
+      console.error("Error during deletion:", error.response || error.message);
     } finally {
       setIsDeleting(false); // Disable deletion state after operation
     }
@@ -244,23 +264,102 @@ const TicketMaintenance = () => {
     });
 
   const columns = [
-    { name: "_id", options: { display: "excluded" } },
-    { name: "site", label: "Site" },
-    { name: "region", label: "region" },
-    { name: "province", label: "Province" },
-    { name: "name", label: "Nom" },
-    { name: "technicien", label: "créé par" },
-    { name: "categorie", label: "Catégorie" },
-    { name: "description", label: "Description" },
-    { name: "equipement_deficitaire", label: "Équipement défectueux" },
-    { name: "commentaire", label: "Commentaire responsable" },
-    { name: "urgence", label: "Urgence" },
+    {
+      name: "_id",
+      options: {
+        display: "excluded",
+        filter: false, // No filter option for this column
+        sort: false, // No sorting option for this column
+      },
+    },
+    {
+      name: "site",
+      label: "Site",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "region",
+      label: "Region",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "province",
+      label: "Province",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "name",
+      label: "Nom",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "technicien",
+      label: "Créé par",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "categorie",
+      label: "Catégorie",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "description",
+      label: "Description",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "equipement_deficitaire",
+      label: "Équipement défectueux",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "commentaire",
+      label: "Commentaire responsable",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
+    {
+      name: "urgence",
+      label: "Urgence",
+      options: {
+        filter: true,
+        filterType: "dropdown",
+      },
+    },
     {
       name: "createdAt",
       label: "Date de création",
       options: {
         customBodyRender: (value) =>
           value ? moment(value).format("DD/MM/YYYY HH:mm") : "",
+        filter: true,
+        filterType: "date",
       },
     },
     {
@@ -360,6 +459,27 @@ const TicketMaintenance = () => {
           onFieldChange={handleFieldChange}
           onSubmit={handleSubmitUpdate}
         />
+      </div>
+      <div>
+        {/* Custom Alert */}
+        {alertMessage && (
+          <Alert
+            severity="warning" // Display a warning alert
+            sx={{
+              position: "fixed",
+              top: "90%",
+              left: "15%",
+              transform: "translate(-50%, -50%)",
+              zIndex: 9999,
+              width: "auto", // Adjust width
+              padding: "16px",
+              borderRadius: "8px",
+            }}
+          >
+            Le ticket a été marqué comme rejeté avec succès !
+          </Alert>
+        )}
+        {/* Your existing code */}
       </div>
     </>
   );

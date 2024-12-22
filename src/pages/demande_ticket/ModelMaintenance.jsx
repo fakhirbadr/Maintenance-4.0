@@ -72,9 +72,9 @@ const ModelMaintenance = ({ open, onClose }) => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
-      if (userInfo.province) {
-        setProvince(userInfo.province); // Mise à jour de province
-      }
+      // if (userInfo.province) {
+      //   setProvince(userInfo.province); // Mise à jour de province
+      // }
       if (userInfo.nomComplet) {
         setTechnicien(userInfo.nomComplet); // Mise à jour du technicien
       }
@@ -91,6 +91,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       setSelectedActifId(selectedActif._id); // Stocke l'ID de l'actif
       setCategories(selectedActif.categories);
       setSelectedRegionActif(selectedActif.region);
+      setProvince(selectedActif.province);
       setSelectedCategory(selectedActif.categories[""]?.name || "");
       setSelectedEquipment(
         selectedActif.categories[0]?.equipments[0]?._id || ""
@@ -276,27 +277,6 @@ const ModelMaintenance = ({ open, onClose }) => {
               />
             </Grid>
           )}
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Province"
-              value={province}
-              onChange={(e) => setProvince(e.target.value)}
-              disabled
-            />
-          </Grid>
-
-          <Grid item xs={12} sm={6}>
-            <TextField
-              fullWidth
-              label="Technicien"
-              value={technicien}
-              onChange={(e) => setTechnicien(e.target.value)}
-              disabled
-            />
-          </Grid>
-
           {/* Third row: Actif, Catégorie, Équipement */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
@@ -314,6 +294,25 @@ const ModelMaintenance = ({ open, onClose }) => {
                 ))}
               </Select>
             </FormControl>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Technicien"
+              value={technicien}
+              onChange={(e) => setTechnicien(e.target.value)}
+              disabled
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              label="Province"
+              value={province}
+              onChange={(e) => setProvince(e.target.value)}
+              disabled
+            />
           </Grid>
           <Grid item xs={12} sm={6}>
             <TextField

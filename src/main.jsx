@@ -38,6 +38,8 @@ import BesoinVehicule from "./pages/besoin_vehicule/besoinVehicule";
 import Inventaire from "./pages/Inventaire des actifs/Inventaire";
 import HistoriqueVehicule from "./pages/historique_vehicule/HistoriqueVehicule";
 import Parametre from "./pages/parametre/Parametre";
+import ProfilUser from "./pages/ProfilUser/ProfilUser";
+import SuiviDemandeTechnicien from "./pages/SuiviTechnicien/SuiviDemandeTechnicien";
 
 // Création des routes
 // const router = createBrowserRouter(
@@ -151,6 +153,14 @@ const router = createBrowserRouter([
       {
         path: "parametres",
         element: <ProtectedRoute element={<Parametre />} />,
+      },
+      {
+        path: "SuiviDemande",
+        element: <ProtectedRoute element={<SuiviDemandeTechnicien />} />,
+      },
+      {
+        path: "utilisateur",
+        element: <ProtectedRoute element={<ProfilUser />} />,
       },
     ],
   },

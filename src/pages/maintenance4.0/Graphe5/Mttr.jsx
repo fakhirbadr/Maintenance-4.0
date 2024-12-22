@@ -1,109 +1,94 @@
 import React, { useState, useEffect } from "react";
-import {
-  Grid,
-  Typography,
-  Menu,
-  MenuItem,
-  Button,
-  Box,
-  Select,
-  InputLabel,
-  FormControl,
-  MenuItem as MuiMenuItem,
-} from "@mui/material";
+import { Grid, Typography, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import axios from "axios";
 
-const Mttr = () => {
+const Mttr = ({ region, province, startDate, endDate }) => {
   const theme = useTheme();
-  const [anchorEl, setAnchorEl] = useState(null);
   const [mttr, setMttr] = useState(null); // State to store the calculated MTTR
-  const [regions, setRegions] = useState([]); // State for available regions
-  const [selectedRegion, setSelectedRegion] = useState(null);
-  const [sites, setSites] = useState([]); // State to store sites for the selected region
-  const [selectedSite, setSelectedSite] = useState(""); // State to store selected site
+  const [isLoading, setIsLoading] = useState(true); // State to manage loading
+  const [hasError, setHasError] = useState(false); // State to handle errors
 
-  const handleClick = (event) => {
-    setAnchorEl(event.currentTarget); // Open the menu
-  };
-
-  const handleClose = () => {
-    setAnchorEl(null); // Close the menu
-  };
-
-  const handleSelectRegion = (region) => {
-    setSelectedRegion(region);
-    setSelectedSite(""); // Reset selected site when region changes
-    handleClose(); // Close the menu after selecting a region
-  };
-
-  const handleSelectSite = (site) => {
-    setSelectedSite(site);
-  };
-
-  // Fetch all regions dynamically
+  // Fetch data for the region passed as a prop
   useEffect(() => {
+    setIsLoading(true);
+    setHasError(false);
+
+    let url =
+      "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true";
+
+    // Ajouter la région et la province à l'URL si elles sont fournies
+    if (region) {
+      url += `&region=${region}`;
+    }
+    if (province) {
+      url += `&province=${province}`;
+    }
+
+    // Ajouter startDate et endDate à l'URL si elles sont fournies
+    if (startDate) {
+      url += `&startDate=${startDate}`;
+    }
+    if (endDate) {
+      url += `&endDate=${endDate}`;
+    }
+
     axios
-      .get(
-        "http://localhost:3000/api/v1/ticketMaintenance?isClosed=true&currentMonth=true"
-      )
+      .get(url)
       .then((response) => {
         const data = response.data;
 
-        // Extract unique regions from the fetched data
-        const uniqueRegions = [...new Set(data.map((ticket) => ticket.region))];
-        setRegions(uniqueRegions); // Update regions state
+        if (data.length === 0) {
+          setMttr(0); // Pas de données, définir MTTR à 0
+        } else {
+          // Filtrer les données pour exclure les tickets sans 'tempsDeResolutionDetaille'
+          const validTickets = data.filter(
+            (ticket) => ticket.tempsDeResolutionDetaille
+          );
+
+          if (validTickets.length === 0) {
+            setMttr(0); // Pas de tickets valides, définir MTTR à 0
+          } else {
+            // Calculer le temps total de résolution
+            const totalMinutes = validTickets.reduce((total, ticket) => {
+              const resolutionTime =
+                ticket.tempsDeResolutionDetaille || "0j 0h 0m";
+              const [days, hours, minutes] = resolutionTime
+                .split(" ")
+                .map((time) => {
+                  const value = parseInt(time, 10);
+                  return isNaN(value) ? 0 : value;
+                });
+
+              const totalTicketMinutes = days * 24 * 60 + hours * 60 + minutes;
+              return total + totalTicketMinutes;
+            }, 0);
+
+            const averageMttr = totalMinutes / validTickets.length;
+            setMttr(averageMttr);
+
+            // Log des calculs dans la console
+            console.log("Total Minutes:", totalMinutes);
+            console.log("Average MTTR:", averageMttr);
+            console.log(data); // Vérifiez ici la structure de vos données
+          }
+        }
       })
       .catch((error) => {
-        console.error("Error fetching regions", error);
+        console.error("Erreur lors de la récupération des données", error);
+        setHasError(true);
+      })
+      .finally(() => {
+        setIsLoading(false);
       });
-  }, []);
-
-  // Fetch data for the selected region
-  useEffect(() => {
-    if (selectedRegion) {
-      axios
-        .get(
-          `http://localhost:3000/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&region=${selectedRegion}`
-        )
-        .then((response) => {
-          const data = response.data;
-
-          // Récupérer les sites uniques pour la région
-          const uniqueSites = [...new Set(data.map((ticket) => ticket.site))];
-          setSites(uniqueSites);
-
-          // Filtrer les données par site si un site est sélectionné
-          const filteredData = selectedSite
-            ? data.filter((ticket) => ticket.site === selectedSite)
-            : data;
-
-          // Recalculer le MTTR pour les données filtrées
-          const totalMinutes = filteredData.reduce((total, ticket) => {
-            const resolutionTime = ticket.tempsDeResolutionDetaille;
-            const [days, hours, minutes] = resolutionTime
-              .split(" ")
-              .map((time) => parseInt(time));
-            const totalTicketMinutes = days * 24 * 60 + hours * 60 + minutes;
-            return total + totalTicketMinutes;
-          }, 0);
-
-          const averageMttr =
-            filteredData.length > 0 ? totalMinutes / filteredData.length : 0;
-          setMttr(averageMttr);
-        })
-        .catch((error) => {
-          console.error("Error fetching data", error);
-        });
-    }
-  }, [selectedRegion, selectedSite]); // Ajoutez selectedSite comme dépendance
+  }, [region, province, startDate, endDate]); // Ajouter startDate et endDate comme dépendances
 
   return (
     <Box
       sx={{
         backgroundColor: theme.palette.mode === "dark" ? "#1E1E1E" : "#FFFFFF",
         color: theme.palette.text.primary,
-        minHeight: 240,
+        minHeight: 300,
         borderRadius: 0,
         display: "flex",
         flexDirection: "column",
@@ -125,75 +110,31 @@ const Mttr = () => {
       <Grid container sx={{ flexGrow: 1 }}>
         <Grid
           item
-          xs={6}
+          xs={12}
           sx={{
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            borderRight: "1px solid #444", // Line separator
           }}
         >
-          {/* Display average MTTR with two decimal places */}
-          <Typography variant="h6" className="text-rose-600">
-            {mttr
-              ? `${Math.floor(mttr / 60)}h ${(mttr % 60).toFixed(0)}m`
-              : "00:00"}
-          </Typography>
-        </Grid>
-
-        <Grid
-          item
-          xs={6}
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            flexDirection: "column", // Stack buttons vertically
-            gap: 2, // Add space between the buttons
-          }}
-        >
-          <Button
-            variant="contained"
-            onClick={handleClick}
-            sx={{
-              textTransform: "none",
-              backgroundColor: theme.palette.primary.main,
-              color: theme.palette.primary.contrastText,
-            }}
-          >
-            Sélectionner une région
-          </Button>
-          <Menu
-            anchorEl={anchorEl}
-            open={Boolean(anchorEl)}
-            onClose={handleClose}
-          >
-            {regions.map((region, index) => (
-              <MenuItem key={index} onClick={() => handleSelectRegion(region)}>
-                {region}
-              </MenuItem>
-            ))}
-          </Menu>
-
-          {/* Site filter dropdown */}
-          {selectedRegion && (
-            <FormControl fullWidth>
-              <InputLabel id="site-select-label">
-                Sélectionner un site
-              </InputLabel>
-              <Select
-                labelId="site-select-label"
-                value={selectedSite}
-                onChange={(e) => handleSelectSite(e.target.value)}
-                label="Sélectionner un site"
-              >
-                {sites.map((site, index) => (
-                  <MuiMenuItem key={index} value={site}>
-                    {site}
-                  </MuiMenuItem>
-                ))}
-              </Select>
-            </FormControl>
+          {isLoading ? (
+            <Typography variant="h6" color={theme.palette.primary.main}>
+              Chargement...
+            </Typography>
+          ) : hasError ? (
+            <Typography variant="h6" color="error">
+              Erreur de chargement
+            </Typography>
+          ) : (
+            <Typography variant="h6" color={theme.palette.primary.main}>
+              {mttr
+                ? `${Math.floor(mttr / 1440)} j ${Math.floor(
+                    (mttr % 1440) / 60
+                  )} h ${Math.floor(mttr % 60)} m ${((mttr % 1) * 60).toFixed(
+                    0
+                  )} s`
+                : "00 j : 00 h : 00 m : 00 s"}
+            </Typography>
           )}
         </Grid>
       </Grid>

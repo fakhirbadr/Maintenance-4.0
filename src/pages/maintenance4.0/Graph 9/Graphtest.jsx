@@ -8,6 +8,10 @@ import {
   CssBaseline,
   Box,
   Typography,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
 } from "@mui/material";
 
 // Register Chart.js components
@@ -17,6 +21,8 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   const [data, setData] = useState([]); // Données pour le PieChart
   const [loading, setLoading] = useState(true); // Indicateur de chargement
   const [error, setError] = useState(null); // Gestion des erreurs
+  const [categories, setCategories] = useState([]); // Toutes les catégories disponibles
+  const [selectedCategory, setSelectedCategory] = useState(""); // Catégorie filtrée
 
   // Fonction pour récupérer les données de l'API
   const fetchData = async () => {
@@ -40,22 +46,27 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
 
       console.log("API Response:", response.data);
 
-      // Vérification du format de la réponse API
       if (Array.isArray(response.data)) {
         const tickets = response.data;
 
+        // Extraire toutes les catégories disponibles
+        const uniqueCategories = Array.from(
+          new Set(tickets.map((ticket) => ticket.categorie || "Inconnu"))
+        );
+        setCategories(uniqueCategories);
+
         // Grouper les tickets par catégorie
-        const categories = tickets.reduce((acc, ticket) => {
-          const category = ticket.name || "Inconnu"; // Utiliser "Inconnu" si le champ est manquant
+        const categoriesData = tickets.reduce((acc, ticket) => {
+          const category = ticket.categorie || "Inconnu";
           acc[category] = (acc[category] || 0) + 1;
           return acc;
         }, {});
 
-        // Calcul du total des tickets pour le calcul du pourcentage
+        // Calculer le total des tickets pour les pourcentages
         const totalTickets = tickets.length;
 
-        // Transformer les données pour le PieChart, incluant le pourcentage
-        const chartData = Object.entries(categories).map(
+        // Transformer les données pour le PieChart
+        const chartData = Object.entries(categoriesData).map(
           ([category, count]) => ({
             label: `${category} (${((count / totalTickets) * 100).toFixed(
               1
@@ -82,31 +93,18 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
     fetchData();
   }, [region, province, startDate, endDate]);
 
-  // Thème Material-UI
-  const theme = createTheme({
-    palette: {
-      mode: "dark", // Dark mode enabled for the whole theme
-    },
-  });
-
-  // Gestion des états (chargement, erreur, données)
-  if (loading) return <div>Chargement...</div>;
-  if (error) return <div>{error}</div>;
-  if (!data || data.length === 0) return <div>Aucune donnée disponible.</div>;
+  // Filtrer les données en fonction de la catégorie sélectionnée
+  const filteredData = selectedCategory
+    ? data.filter((item) => item.label.startsWith(selectedCategory))
+    : data;
 
   // Préparer les données pour Chart.js
   const chartData = {
-    labels: data.map((item) => item.label),
+    labels: filteredData.map((item) => item.label),
     datasets: [
       {
-        data: data.map((item) => item.value),
-        backgroundColor: [
-          "#00ABBD",
-          "#0099DD",
-          "#FF9933",
-          "#A1C7E0",
-          "#D6D58E",
-        ], // Customize the colors
+        data: filteredData.map((item) => item.value),
+        backgroundColor: ["#FFFA8B", "#8BFFF9", "#6CBCFF", "#FF98EF", ""],
       },
     ],
   };
@@ -124,25 +122,32 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
             marginRight: 1,
           }}
         />
-        <Typography
-          variant="body2"
-          color="textPrimary"
-          sx={{ fontSize: "0.75rem" }} // Réduction de la taille de la police
-        >
+        <Typography variant="body2" color="textPrimary">
           {chartData.labels[index]}
         </Typography>
       </Box>
     )
   );
 
-  // Options to disable the default legend
+  // Options pour désactiver la légende par défaut
   const options = {
     plugins: {
       legend: {
-        display: false, // Disable the default legend
+        display: false,
       },
     },
   };
+
+  // Thème Material-UI
+  const theme = createTheme({
+    palette: {
+      mode: "dark",
+    },
+  });
+
+  if (loading) return <div>Chargement...</div>;
+  if (error) return <div>{error}</div>;
+  if (!data || data.length === 0) return <div>Aucune donnée disponible.</div>;
 
   return (
     <ThemeProvider theme={theme}>
@@ -167,7 +172,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
-            paddingLeft: "12px",
+            padding: "12px",
           }}
         >
           <Pie data={chartData} options={options} width={400} height={200} />
@@ -189,11 +194,13 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
               mb: 1,
               my: 1,
               mr: 3,
-              fontSize: "0.79rem",
-              overflow: "hidden",
+              fontSize: "0.72rem",
+              whiteSpace: "nowrap", // Empêche le texte de sauter à la ligne
+              overflow: "hidden", // Facultatif : cache le texte qui dépasse
+              textOverflow: "ellipsis", // Facultatif : ajoute "..." si le texte est trop long
             }}
           >
-            Tickets de Maintenance par Catégorie
+            Tickets de Maintenance par Catégorie d'équipment
           </Typography>
 
           {/* Custom Legend below the title */}

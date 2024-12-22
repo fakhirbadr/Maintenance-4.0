@@ -17,7 +17,13 @@ import { formatDistanceToNow } from "date-fns";
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
-const BesoinTaux = () => {
+const BesoinTaux = ({
+  region,
+  province,
+  startDate,
+  endDate,
+  onFournituresClosedUpdate,
+}) => {
   const [fournitures, setFournitures] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -25,6 +31,80 @@ const BesoinTaux = () => {
   const [fournituresCreated, setFournituresCreated] = useState(0);
   const [fournituresClosed, setFournituresClosed] = useState(0);
   const [closureRate, setClosureRate] = useState(0);
+
+  const [data, setData] = useState([]);
+  const [moyenne, setMoyenne] = useState(null);
+  useEffect(() => {
+    if (onFournituresClosedUpdate) {
+      onFournituresClosedUpdate(fournituresClosed);
+    }
+  }, [fournituresClosed, onFournituresClosedUpdate]);
+  useEffect(() => {
+    const fetchFournitures = async () => {
+      try {
+        const response = await axios.get(
+          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
+          {
+            params: { region, province, startDate, endDate },
+          }
+        );
+
+        const allFournitures = response.data; // Toutes les fournitures
+        setFournitures(allFournitures);
+
+        // Compter les fournitures créées (total)
+        setFournituresCreated(allFournitures.length);
+
+        // Compter les fournitures fermées
+        const closedFournitures = allFournitures.filter(
+          (fourniture) => fourniture.isClosed
+        );
+        setFournituresClosed(closedFournitures.length);
+
+        // Calculer le taux de clôturation
+        const rate =
+          (closedFournitures.length / allFournitures.length) * 100 || 0;
+        setClosureRate(rate.toFixed(2)); // Fixer à 2 décimales
+
+        // Calculer la moyenne du temps de réponse
+        calculerMoyenne(allFournitures); // Appel à la fonction de calcul
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFournitures();
+  }, [region, province, startDate, endDate]);
+
+  // Fonction pour convertir le temps en minutes
+  const parseTemps = (temps) => {
+    const match = temps.match(/(\d+)j (\d+)h (\d+)m/);
+    if (!match) return 0;
+
+    const jours = parseInt(match[1], 10);
+    const heures = parseInt(match[2], 10);
+    const minutes = parseInt(match[3], 10);
+
+    return jours * 24 * 60 + heures * 60 + minutes;
+  };
+
+  // Fonction pour calculer la moyenne
+  const calculerMoyenne = (data) => {
+    const tempsEnMinutes = data.map((item) =>
+      parseTemps(item.tempsDeResolutionDetaille)
+    );
+    const totalMinutes = tempsEnMinutes.reduce((acc, curr) => acc + curr, 0);
+    const moyenneMinutes = totalMinutes / tempsEnMinutes.length;
+
+    // Conversion de la moyenne en jours, heures et minutes
+    const jours = Math.floor(moyenneMinutes / (24 * 60));
+    const heures = Math.floor((moyenneMinutes % (24 * 60)) / 60);
+    const minutes = Math.floor(moyenneMinutes % 60);
+
+    setMoyenne(`${jours}j ${heures}h ${minutes}m`);
+  };
 
   const [state, setState] = useState({
     top: false, // Drawer qui s'ouvre depuis le haut
@@ -46,11 +126,9 @@ const BesoinTaux = () => {
     const fetchFournitures = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/fournitureRoutes",
+          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
           {
-            params: {
-              // Vous pouvez ajuster ce filtre pour obtenir les fournitures ouvertes ou fermées
-            },
+            params: { region, province, startDate, endDate },
           }
         );
 
@@ -78,7 +156,7 @@ const BesoinTaux = () => {
     };
 
     fetchFournitures(); // Appeler la fonction lors de l'appel du composant
-  }, []);
+  }, [region, province, startDate, endDate]);
 
   if (loading) return <div>Chargement...</div>;
   if (error) return <div>Erreur : {error}</div>;
@@ -139,10 +217,7 @@ const BesoinTaux = () => {
           sx={{ fontSize: "13px", marginBottom: "5px" }}
           component="div"
         >
-          Rapport des fournitures/commandes pour le mois de -{" "}
-          <span className="text-blue-800 uppercase font-bold">
-            {currentMonth}
-          </span>
+          Rapport des tickets fournitures/commandes
         </Typography>
         <Typography variant="body1">
           Nombre de fournitures créées : <strong>{fournituresCreated}</strong>
@@ -151,10 +226,13 @@ const BesoinTaux = () => {
           Nombre de fournitures clôturées : <strong>{fournituresClosed}</strong>
         </Typography>
         <Typography variant="body1">
-          Taux de clôturation : <strong>{closureRate}%</strong>
+          Taux de clôture : <strong>{closureRate}%</strong>
+        </Typography>
+        <Typography variant="body1">
+          Temps de réponse : <strong> {moyenne}</strong>
         </Typography>
       </CardContent>
-      <CardActions>
+      <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
           onClick={toggleDrawer(true)}
           variant="contained"

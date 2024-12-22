@@ -13,7 +13,7 @@ import {
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
+const CategorieBesoin = ({ region, province, startDate, endDate }) => {
   const [data, setData] = useState([]); // Données pour le PieChart
   const [loading, setLoading] = useState(true); // Indicateur de chargement
   const [error, setError] = useState(null); // Gestion des erreurs
@@ -22,20 +22,13 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
+      let url = `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?${
+        region ? `&region=${region}` : ""
+      }${province ? `&province=${province}` : ""}${
+        startDate ? `&startDate=${startDate}` : ""
+      }${endDate ? `&endDate=${endDate}` : ""}`;
 
-      if (region) {
-        url += `&region=${region}`;
-      }
-      if (province) {
-        url += `&province=${province}`;
-      }
-      if (startDate) {
-        url += `&startDate=${startDate}`; // Ajout du filtre startDate
-      }
-      if (endDate) {
-        url += `&endDate=${endDate}`; // Ajout du filtre endDate
-      }
+      // Effectuer la requête GET avec l'URL construite
       const response = await axios.get(url);
 
       console.log("API Response:", response.data);
@@ -46,7 +39,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
 
         // Grouper les tickets par catégorie
         const categories = tickets.reduce((acc, ticket) => {
-          const category = ticket.name || "Inconnu"; // Utiliser "Inconnu" si le champ est manquant
+          const category = ticket.categorie || "Inconnu"; // Utiliser "Inconnu" si le champ est manquant
           acc[category] = (acc[category] || 0) + 1;
           return acc;
         }, {});
@@ -80,7 +73,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   // Récupérer les données au montage du composant
   useEffect(() => {
     fetchData();
-  }, [region, province, startDate, endDate]);
+  }, [region, province, startDate, endDate]); // Ajouter startDate et endDate comme dépendances
 
   // Thème Material-UI
   const theme = createTheme({
@@ -101,11 +94,11 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
       {
         data: data.map((item) => item.value),
         backgroundColor: [
-          "#00ABBD",
-          "#0099DD",
-          "#FF9933",
-          "#A1C7E0",
-          "#D6D58E",
+          "#F2DCC2",
+          "#22CCF2",
+          "#1EA4D9",
+          "#1A80D9",
+          "#A36CD9",
         ], // Customize the colors
       },
     ],
@@ -124,11 +117,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
             marginRight: 1,
           }}
         />
-        <Typography
-          variant="body2"
-          color="textPrimary"
-          sx={{ fontSize: "0.75rem" }} // Réduction de la taille de la police
-        >
+        <Typography variant="body2" color="textPrimary">
           {chartData.labels[index]}
         </Typography>
       </Box>
@@ -163,10 +152,11 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
         <Box
           sx={{
             width: "50%", // Adjust the width of the pie chart
-            height: "240px",
+            height: "300px",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
+            paddingY: "12px",
             paddingLeft: "12px",
           }}
         >
@@ -185,15 +175,9 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
           <Typography
             variant="h6"
             color="textPrimary"
-            sx={{
-              mb: 1,
-              my: 1,
-              mr: 3,
-              fontSize: "0.79rem",
-              overflow: "hidden",
-            }}
+            sx={{ mb: 1, my: 1, fontSize: "0.77rem" }}
           >
-            Tickets de Maintenance par Catégorie
+            Analyse des Catégories de Besoins
           </Typography>
 
           {/* Custom Legend below the title */}
@@ -212,4 +196,4 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   );
 };
 
-export default CategorieMaintenance;
+export default CategorieBesoin;

@@ -214,33 +214,50 @@ const ListeBesoin = () => {
   }, []);
 
   const columns = [
-    { name: "name", label: "Nom", options: { filter: true, sort: false } },
+    {
+      name: "name",
+      label: "Nom",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
+    {
+      name: "region",
+      label: "Region",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
+    {
+      name: "province",
+      label: "Province",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
     {
       name: "categorie",
       label: "Catégorie",
-      options: { filter: true, sort: false },
+      options: { filter: true, sort: false, filterType: "dropdown" },
     },
-    { name: "besoin", label: "Besoin", options: { filter: true, sort: false } },
+    {
+      name: "besoin",
+      label: "Besoin",
+      options: { filter: true, sort: false, filterType: "dropdown" },
+    },
     {
       name: "quantite",
       label: "Quantité",
-      options: { filter: true, sort: false },
+      options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "technicien",
       label: "créé par",
-      options: { filter: true, sort: false },
+      options: { filter: true, sort: false, filterType: "dropdown" },
     },
-
     {
       name: "status",
       label: "Status",
-      options: { filter: true, sort: false },
+      options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "commentaire",
       label: "commentaire responsable",
-      options: { filter: true, sort: false },
+      options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "dateCreation",
@@ -258,6 +275,7 @@ const ListeBesoin = () => {
             minute: "2-digit",
           });
         },
+        filterType: "dropdown",
       },
     },
     {

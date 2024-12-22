@@ -1,51 +1,95 @@
 import React, { useEffect, useState } from "react";
 import { useTheme } from "@mui/material/styles";
 import axios from "axios";
-import { Button, Typography, Container } from "@mui/material";
+import {
+  Typography,
+  Container,
+  MenuItem,
+  Select,
+  FormControl,
+  InputLabel,
+} from "@mui/material";
 
 const Tr = () => {
   const theme = useTheme();
   const [tr, setTr] = useState([]); // Données brutes
   const [filteredData, setFilteredData] = useState([]); // Données filtrées
-  const [isFiltered, setIsFiltered] = useState(false);
+  const [selectedName, setSelectedName] = useState(""); // Nom sélectionné
+  const [names, setNames] = useState([]); // Liste des noms disponibles
+
+  // Fonction pour convertir un temps formaté (jj/hh/mm) en heures
+  const convertToHours = (timeString) => {
+    const regex = /(\d+)j\s*(\d+)h\s*(\d+)m/; // Extraction des jours, heures et minutes
+    const match = timeString.match(regex);
+    if (match) {
+      const days = parseInt(match[1], 10) || 0;
+      const hours = parseInt(match[2], 10) || 0;
+      const minutes = parseInt(match[3], 10) || 0;
+      return days * 24 + hours + minutes / 60; // Conversion en heures
+    }
+    return 0; // Valeur par défaut si le format est incorrect
+  };
+
+  // Fonction pour formater un temps en heures vers jj / hh / mm
+  const formatTime = (totalHours) => {
+    const days = Math.floor(totalHours / 24);
+    const hours = Math.floor(totalHours % 24);
+    const minutes = Math.round((totalHours % 1) * 60);
+    return `${days}j / ${hours}h / ${minutes}m`;
+  };
 
   // Fonction pour calculer la moyenne du temps de réponse
   const calculateAverageResponseTime = (data) => {
     if (data && data.length > 0) {
       const totalResponseTime = data.reduce(
-        (acc, item) => acc + item.responseTime, // Remplacez par le champ correct
+        (acc, item) => acc + convertToHours(item.tempsDeResolutionDetaille),
         0
       );
-      return totalResponseTime / data.length; // Moyenne
+      const averageTime = totalResponseTime / data.length;
+      return formatTime(averageTime); // Moyenne au format jj / hh / mm
     }
-    return 0; // Aucune donnée
+    return "0j / 0h / 0m"; // Aucune donnée
   };
 
   // Effet pour récupérer les données de l'API
   useEffect(() => {
     axios
-      .get("http://localhost:3000/api/v1/fournitureRoutes?isClosed=true")
+      .get(
+        "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=true"
+      )
       .then((response) => {
-        const data = response.data.tempsDeResolutionDetaille;
-        setTr(data); // Données brutes
-        setFilteredData(data); // Initialiser avec toutes les données
+        console.log("Données brutes reçues de l'API:", response.data);
+        const data = response.data; // Utiliser directement les données reçues
+        if (data && Array.isArray(data)) {
+          setTr(data); // Données brutes
+          setFilteredData(data); // Initialiser avec toutes les données
+
+          // Extraire les noms uniques
+          const uniqueNames = [...new Set(data.map((item) => item.name))];
+          console.log("Noms uniques extraits:", uniqueNames);
+          setNames(uniqueNames);
+        } else {
+          console.error("Structure inattendue dans les données:", data);
+        }
       })
       .catch((error) => {
-        console.error("Erreur lors de la récupération des données", error);
+        console.error("Erreur lors de la récupération des données:", error);
       });
   }, []);
 
   // Temps moyen de réponse global
-  const overallAverageResponseTime = calculateAverageResponseTime(tr);
+  const overallAverageResponseTime = calculateAverageResponseTime(filteredData);
 
-  // Fonction de filtre pour les données
-  const handleFilter = () => {
-    setIsFiltered(!isFiltered);
-    if (!isFiltered) {
-      // Filtrer les données selon une condition
-      const filtered = tr.filter((item) => item.someCondition === true);
+  // Fonction pour filtrer par nom
+  const handleFilterByName = (event) => {
+    const name = event.target.value;
+    setSelectedName(name);
+    if (name) {
+      const filtered = tr.filter((item) => item.name === name);
+      console.log(`Données filtrées pour le nom "${name}":`, filtered);
       setFilteredData(filtered);
     } else {
+      console.log("Réinitialisation des données filtrées");
       setFilteredData(tr); // Réinitialiser les données filtrées
     }
   };
@@ -62,21 +106,34 @@ const Tr = () => {
         p: 2,
       }}
     >
-      <Typography variant="h4" gutterBottom>
+      <Typography variant="h6" gutterBottom>
         Temps de Réponse Moyen Global
       </Typography>
 
       {/* Affichage du temps moyen global */}
       <Typography variant="h5" color={theme.palette.primary.main} gutterBottom>
-        {overallAverageResponseTime > 0
-          ? `${overallAverageResponseTime.toFixed(2)} heures`
+        {overallAverageResponseTime !== "0j / 0h / 0m"
+          ? overallAverageResponseTime
           : "Aucune donnée disponible"}
       </Typography>
 
-      {/* Bouton de filtre */}
-      <Button variant="contained" onClick={handleFilter} sx={{ mt: 2 }}>
-        {isFiltered ? "Afficher toutes les données" : "Filtrer les données"}
-      </Button>
+      {/* Filtre par nom */}
+      <FormControl sx={{ mt: 2, minWidth: 200 }}>
+        <InputLabel id="filter-by-name-label">Filtrer par Nom</InputLabel>
+        <Select
+          labelId="filter-by-name-label"
+          value={selectedName}
+          onChange={handleFilterByName}
+          label="Filtrer par Nom"
+        >
+          <MenuItem value="">Tous les noms</MenuItem>
+          {names.map((name) => (
+            <MenuItem key={name} value={name}>
+              {name}
+            </MenuItem>
+          ))}
+        </Select>
+      </FormControl>
     </Container>
   );
 };

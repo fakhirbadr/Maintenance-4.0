@@ -29,8 +29,8 @@ const ModelFourniture = ({ open, onClose }) => {
     customBesoin: "",
     status: "créé",
     province: "",
-    commentaire: "",
-    // Ajout du commentaire
+    region: "", // Add region to formData
+    commentaire: "", // Ajout du commentaire
   });
 
   const [besoins, setBesoins] = useState([]);
@@ -184,6 +184,14 @@ const ModelFourniture = ({ open, onClose }) => {
             if (fetchedNames.length === userIds.length) {
               setNames(fetchedNames);
               setSelectedName(fetchedNames[0]?.name || "");
+
+              // Retrieve region and province from the fetched data
+              const siteData = fetchedNames[0]; // Assuming the first result corresponds to the user site
+              setFormData((prevData) => ({
+                ...prevData,
+                province: siteData.province, // Set province from the fetched data
+                region: siteData.region, // Set region from the fetched data
+              }));
             }
           } else {
             console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
@@ -205,7 +213,7 @@ const ModelFourniture = ({ open, onClose }) => {
       if (userInfo.province) {
         setFormData((prevData) => ({
           ...prevData,
-          province: userInfo.province,
+
           site: userInfo.site,
           technicien: userInfo.nomComplet,
         }));
@@ -220,6 +228,16 @@ const ModelFourniture = ({ open, onClose }) => {
       ...prevData,
       name: value, // Mise à jour de l'état formData pour le champ 'name'
     }));
+
+    // Find the selected actif's region and province
+    const selectedActif = names.find((actif) => actif.name === value);
+    if (selectedActif) {
+      setFormData((prevData) => ({
+        ...prevData,
+        region: selectedActif.region || "", // Set region from the selected actif
+        province: selectedActif.province || "", // Set province from the selected actif
+      }));
+    }
   };
 
   const handleChange = (e) => {
@@ -275,6 +293,8 @@ const ModelFourniture = ({ open, onClose }) => {
         "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
         {
           name,
+          region: formData.region,
+          province: formData.province,
           categorie: selectedCategorie,
           besoin: selectedBesoin,
           quantite,
@@ -324,7 +344,7 @@ const ModelFourniture = ({ open, onClose }) => {
           <InputLabel id="select-label">Nom de l'Actif</InputLabel>
           <Select
             labelId="select-label"
-            value={formData.name} // Assurez-vous que la valeur de 'name' est liée à formData.name
+            value={formData.name}
             onChange={handleSelectChange}
           >
             {names.map((actif) => (
@@ -340,6 +360,15 @@ const ModelFourniture = ({ open, onClose }) => {
           label="Technicien"
           name="technicien"
           value={formData.technicien}
+          onChange={handleChange}
+          disabled
+        />
+        <TextField
+          fullWidth
+          margin="normal"
+          label="Region"
+          name="region"
+          value={formData.region}
           onChange={handleChange}
           disabled
         />

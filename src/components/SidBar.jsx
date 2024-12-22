@@ -32,6 +32,8 @@ import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
+import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
+import StarRateIcon from "@mui/icons-material/StarRate";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -89,15 +91,16 @@ const IconWrapper = ({ children }) => {
 };
 
 const Array1 = [
-  // {
-  //   text: "Dashboard",
-  //   icon: (
-  //     <IconWrapper>
-  //       <DashboardIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/dashboard",
-  // },
+  {
+    text: "Dashboard",
+    icon: (
+      <IconWrapper>
+        <DashboardIcon />
+      </IconWrapper>
+    ),
+    path: "/dashboard",
+    roleRequired: "superviseur",
+  },
   {
     text: "Inventaire des actifs",
     icon: (
@@ -106,6 +109,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Inventaire",
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Création ticket",
@@ -124,7 +128,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/ticket",
-    roleRequired: "admin",
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Gestion de commande",
@@ -134,7 +138,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Besoin",
-    roleRequired: "admin",
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Demande véhicule",
@@ -144,7 +148,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/BesoinVehicule",
-    roleRequired: "admin",
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Historique Intervention",
@@ -194,7 +198,26 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/parametres",
-    roleRequired: "admin",
+    roleRequired: ["superviseur"],
+  },
+  {
+    text: "Suivi demande",
+    icon: (
+      <IconWrapper>
+        <StarRateIcon />
+      </IconWrapper>
+    ),
+    path: "/SuiviDemande",
+    roleRequired: "user",
+  },
+  {
+    text: "Utilisateur",
+    icon: (
+      <IconWrapper>
+        <BadgeOutlinedIcon />
+      </IconWrapper>
+    ),
+    path: "/utilisateur",
   },
 ];
 
@@ -264,9 +287,14 @@ export default function SidBar({ open, handleDrawerClose }) {
 
       <List>
         {Array1.map((item) => {
-          // Vérifier si l'élément nécessite un rôle spécifique
-          if (item.roleRequired && role !== item.roleRequired) {
-            return null; // Si l'utilisateur n'a pas le bon rôle, on ne l'affiche pas
+          // Vérification des rôles
+          if (
+            item.roleRequired &&
+            !(Array.isArray(item.roleRequired)
+              ? item.roleRequired.includes(role)
+              : role === item.roleRequired)
+          ) {
+            return null; // Si l'utilisateur n'a pas le bon rôle, ne pas afficher l'élément
           }
 
           return (
