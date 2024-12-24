@@ -55,7 +55,7 @@ export default function MiniDrawer() {
             </>
           )}
 
-          <Box component="main" sx={{ flexGrow: 1, p: 3 }}>
+          <Box component="main" className="" sx={{ flexGrow: 1, p: 3 }}>
             <DrawerHeader />
             <div className=" mx-auto">
               <Outlet />

@@ -34,6 +34,7 @@ import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import StarRateIcon from "@mui/icons-material/StarRate";
+import ErrorIcon from "@mui/icons-material/Error";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -180,16 +181,16 @@ const Array1 = [
     ),
     path: "/Historiquevehicule",
   },
-  // {
-  //   text: "test",
-  //   icon: (
-  //     <IconWrapper>
-  //       <ListAltIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/test",
-  //   roleRequired: "admin",
-  // },
+  {
+    text: "test",
+    icon: (
+      <IconWrapper>
+        <ListAltIcon />
+      </IconWrapper>
+    ),
+    path: "/test",
+    roleRequired: "superviseur",
+  },
   {
     text: "Paramètres",
     icon: (
@@ -208,7 +209,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: "user",
+    roleRequired: "superviseur",
   },
   {
     text: "Utilisateur",
@@ -218,6 +219,15 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/utilisateur",
+  },
+  {
+    text: "Alertes",
+    icon: (
+      <IconWrapper>
+        <ErrorIcon />
+      </IconWrapper>
+    ),
+    path: "/Alerte",
   },
 ];
 

@@ -49,14 +49,14 @@ const ListeBesoin = () => {
       const response = await axios.get(
         "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=false"
       );
-      setRows(response.data); // Assurez-vous que la structure des données de l'API correspond
+      const reversedData = response.data.reverse(); // Inverser l'ordre des données
+      setRows(reversedData); // Mettre à jour l'état avec les données inversées
       setLoading(false);
     } catch (error) {
       console.error("Erreur lors de la récupération des fournitures :", error);
       setLoading(false);
     }
   };
-
   // Handle view dialog opening and start timer
   const handleView = (rowIndex) => {
     const rowData = rows[rowIndex];
@@ -208,6 +208,12 @@ const ListeBesoin = () => {
       }
     }
   };
+  const styles = {
+    largeIcon: {
+      width: 60,
+      height: 60,
+    },
+  };
 
   useEffect(() => {
     fetchFournitures();
@@ -287,21 +293,21 @@ const ListeBesoin = () => {
         customBodyRender: (value, tableMeta) => {
           const rowIndex = tableMeta.rowIndex; // Obtient l'index de la ligne
           return (
-            <div style={{ display: "flex", gap: "8px" }}>
+            <div style={{ display: "flex", gap: "1px" }}>
               <IconButton onClick={() => handleView(rowIndex)} color="primary">
-                <Eye />
+                <Eye style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton onClick={() => handleEdit(rowIndex)} color="default">
-                <Edit />
+                <Edit style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
                 onClick={() => handleDelete(rowIndex)}
                 color="secondary"
               >
-                <Delete />
+                <Delete style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton onClick={() => handleClose(rowIndex)} color="success">
-                <CheckCircle />
+                <CheckCircle style={{ width: "18px", height: "18px" }} />
               </IconButton>
             </div>
           );
@@ -452,7 +458,17 @@ const ListeBesoin = () => {
                 label="Status"
                 name="status"
               >
-                {["Ouvert", "En cours", "Livré"].map((status, index) => (
+                {[
+                  "Ouvert",
+                  "En cours",
+                  "Reçu par le support",
+                  "Expédié",
+                  "Demandé aux achats",
+                  "Demandé à Biopetra",
+                  "Demandé à la pharmacie",
+                  "En cours de livraison",
+                  "Livré",
+                ].map((status, index) => (
                   <MenuItem key={index} value={status}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
                     {/* Capitalize first letter */}

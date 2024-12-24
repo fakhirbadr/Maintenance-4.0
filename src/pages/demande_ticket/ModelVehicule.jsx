@@ -17,6 +17,8 @@ const TicketForm = ({ open, onClose }) => {
     technicien: "",
     province: "",
     immatriculation: "",
+    KM: "",
+    prix: "",
     marque: "",
     model: "",
     categorie: "",
@@ -59,6 +61,7 @@ const TicketForm = ({ open, onClose }) => {
     ],
     Besoin: [
       "Vidange",
+      "Demande gasoil",
       "Pneu",
       "Plaquettes de frein",
       "Disques de frein",
@@ -181,25 +184,49 @@ const TicketForm = ({ open, onClose }) => {
           </Grid>
 
           {/* 3ème ligne */}
-          {formData.categorie && (
-            <Grid item xs={12} sm={6}>
-              <TextField
-                select
-                label="Commande"
-                name="commande"
-                value={formData.commande}
-                onChange={handleChange}
-                fullWidth
-                margin="dense"
-              >
-                {commandesParCategorie[formData.categorie]?.map((commande) => (
-                  <MenuItem key={commande} value={commande}>
-                    {commande}
-                  </MenuItem>
-                ))}
-              </TextField>
-            </Grid>
-          )}
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              select
+              label="Commande"
+              name="commande"
+              value={formData.commande}
+              onChange={handleChange}
+              fullWidth
+              margin="dense"
+            >
+              {commandesParCategorie[formData.categorie]?.map((commande) => (
+                <MenuItem key={commande} value={commande}>
+                  {commande}
+                </MenuItem>
+              ))}
+            </TextField>
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            {" "}
+            <TextField
+              label="kilométrage"
+              value={formData.KM}
+              onChange={handleChange}
+              name="KM"
+              fullWidth
+              margin="dense"
+              helperText="Entrez un commentaire pour l'urgence"
+            />
+          </Grid>
+          <Grid item xs={12} sm={6}>
+            {" "}
+            <TextField
+              label="Prix"
+              value={formData.prix}
+              onChange={handleChange}
+              name="prix"
+              fullWidth
+              margin="dense"
+              helperText="Entrez un commentaire pour l'urgence"
+            />
+          </Grid>
 
           <Grid item xs={12} sm={6}>
             <TextField

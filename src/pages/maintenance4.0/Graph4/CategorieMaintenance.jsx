@@ -193,7 +193,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
               overflow: "hidden",
             }}
           >
-            Tickets de Maintenance par Catégorie
+            Tickets de Maintenance par Catégorie d'intervention
           </Typography>
 
           {/* Custom Legend below the title */}

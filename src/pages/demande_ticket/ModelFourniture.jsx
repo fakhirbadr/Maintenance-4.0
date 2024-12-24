@@ -43,6 +43,7 @@ const ModelFourniture = ({ open, onClose }) => {
     "Matériel Informatique",
     "Fourniture",
     "équipement généreaux",
+    "Connexion",
   ];
 
   const categoryNeeds = {
@@ -167,6 +168,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
       // ... autres besoins
     ],
+    Connexion: ["satellite", "IAM", "Orange", "Inwi"],
   };
 
   useEffect(() => {
@@ -395,20 +397,8 @@ const ModelFourniture = ({ open, onClose }) => {
                 {cat}
               </MenuItem>
             ))}
-            <MenuItem value="Autre">Autre</MenuItem>
           </Select>
         </FormControl>
-
-        {formData.categorie === "Autre" && (
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Autre Catégorie"
-            name="customCategorie"
-            value={formData.customCategorie}
-            onChange={handleChange}
-          />
-        )}
 
         <FormControl fullWidth margin="normal">
           <InputLabel id="besoin-label">Besoin</InputLabel>

@@ -244,7 +244,6 @@ const ModelMaintenance = ({ open, onClose }) => {
                 <MenuItem value="APPAREIL DEFECTUEUX">
                   Appareil Défectueux
                 </MenuItem>
-                <MenuItem value="Autre">Autre</MenuItem>
               </Select>
             </FormControl>
           </Grid>

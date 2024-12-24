@@ -188,6 +188,16 @@ const BesoinVehicule = () => {
     },
 
     {
+      name: "KM",
+      label: "kilométrage",
+      options: { filter: true, sort: true },
+    },
+    {
+      name: "prix",
+      label: "Prix",
+      options: { filter: true, sort: true },
+    },
+    {
       name: "description",
       label: "Description",
       options: { filter: true, sort: true },
@@ -223,7 +233,7 @@ const BesoinVehicule = () => {
     },
     {
       name: "actions",
-      label: "Actions",
+      label: "ACTION",
       options: {
         filter: false,
         sort: false,
@@ -232,19 +242,19 @@ const BesoinVehicule = () => {
           return (
             <div style={{ display: "flex", gap: "8px" }}>
               <IconButton onClick={() => handleView(rowIndex)} color="primary">
-                <Eye />
+                <Eye style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton onClick={() => handleEdit(rowIndex)} color="default">
-                <Edit />
+                <Edit style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
                 onClick={() => handleDelete(rowIndex)}
                 color="secondary"
               >
-                <Delete />
+                <Delete style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton onClick={() => handleClose(rowIndex)} color="success">
-                <CheckCircle />
+                <CheckCircle style={{ width: "18px", height: "18px" }} />
               </IconButton>
             </div>
           );

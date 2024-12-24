@@ -40,6 +40,7 @@ import HistoriqueVehicule from "./pages/historique_vehicule/HistoriqueVehicule";
 import Parametre from "./pages/parametre/Parametre";
 import ProfilUser from "./pages/ProfilUser/ProfilUser";
 import SuiviDemandeTechnicien from "./pages/SuiviTechnicien/SuiviDemandeTechnicien";
+import Alerte from "./pages/Alertes/Alerte";
 
 // Création des routes
 // const router = createBrowserRouter(
@@ -162,7 +163,15 @@ const router = createBrowserRouter([
         path: "utilisateur",
         element: <ProtectedRoute element={<ProfilUser />} />,
       },
+      {
+        path: "Alerte",
+        element: <ProtectedRoute element={<Alerte />} />,
+      },
     ],
+  },
+  {
+    path: "test",
+    element: <ProtectedRoute element={<Test />} />,
   },
 ]);
 

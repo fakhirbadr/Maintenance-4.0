@@ -12,6 +12,8 @@ import {
   ListItemText,
   Select,
   Grid,
+  InputLabel,
+  FormControl,
 } from "@mui/material";
 import {
   Table,
@@ -123,6 +125,8 @@ function CreateAccountForm() {
 
   const [actifs, setActifs] = useState([]);
   const [loading, setLoading] = useState(true);
+
+  // Fonction pour mettre à jour la valeur de la recherche
 
   // Fetch actifs depuis l'API
   useEffect(() => {
@@ -367,6 +371,17 @@ function UpdateAccountForm() {
   const [actifs, setActifs] = useState({}); // Dictionnaire pour stocker les noms des actifs
   const [open, setOpen] = useState(false);
   const [selectedUser, setSelectedUser] = useState(null); // Utilisateur sélectionné
+  const [searchQuery, setSearchQuery] = useState(""); // État pour gérer la recherche
+
+  // Fonction pour mettre à jour la valeur de la recherche
+  const handleSearchChange = (e) => {
+    setSearchQuery(e.target.value);
+  };
+
+  // Filtrer les actifs en fonction de la recherche
+  const filteredActifs = Object.keys(actifs).filter((actifId) =>
+    actifs[actifId].includes(searchQuery)
+  );
 
   useEffect(() => {
     axios
@@ -586,25 +601,44 @@ function UpdateAccountForm() {
             />
             {/* Liste des actifs */}
             <div>
-              <label>Actifs</label>
-              <Select
-                multiple
-                value={selectedUser.actifIds || []}
-                onChange={(e) => handleInputChange("actifIds", e.target.value)}
-                fullWidth
-                renderValue={(selected) => {
-                  return selected
-                    .map((actifId) => actifs[actifId] || "Actif inconnu")
-                    .join(", ");
-                }}
-                className="w-full" // Forcer la largeur à 100%
-              >
-                {Object.keys(actifs).map((actifId) => (
-                  <MenuItem key={actifId} value={actifId}>
-                    {actifs[actifId] || "Actif inconnu"}
-                  </MenuItem>
-                ))}
-              </Select>
+              <InputLabel>Actifs</InputLabel>
+              <FormControl fullWidth>
+                <Select
+                  multiple
+                  value={selectedUser.actifIds || []}
+                  onChange={(e) =>
+                    handleInputChange("actifIds", e.target.value)
+                  }
+                  renderValue={(selected) => {
+                    return selected
+                      .map((actifId) => actifs[actifId] || "Actif inconnu")
+                      .join(", ");
+                  }}
+                  className="w-full"
+                >
+                  {/* Champ de recherche */}
+                  <TextField
+                    fullWidth
+                    label="Rechercher"
+                    value={searchQuery}
+                    onChange={handleSearchChange}
+                    variant="outlined"
+                    size="small"
+                    style={{ marginBottom: "8px" }} // Style optionnel pour le champ de recherche
+                  />
+
+                  {/* MenuItems filtrés selon la recherche */}
+                  {filteredActifs.length > 0 ? (
+                    filteredActifs.map((actifId) => (
+                      <MenuItem key={actifId} value={actifId}>
+                        {actifs[actifId] || "Actif inconnu"}
+                      </MenuItem>
+                    ))
+                  ) : (
+                    <MenuItem disabled>Aucun actif trouvé</MenuItem> // Message lorsque rien n'est trouvé
+                  )}
+                </Select>
+              </FormControl>
             </div>
           </DialogContent>
 

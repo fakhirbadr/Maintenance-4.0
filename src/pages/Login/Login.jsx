@@ -77,6 +77,30 @@ const Login = () => {
             localStorage.setItem("userActifs", JSON.stringify([])); // Valeur par défaut si aucun actif
           }
 
+          // Ajouter une requête pour enregistrer l'historique des connexions
+          axios
+            .post(
+              "https://backend-v1-e3bx.onrender.com/api/v1/connection-history/record",
+              {
+                userId: user.id,
+                email: user.email,
+              },
+              {
+                headers: {
+                  Authorization: `Bearer ${token}`, // Inclure le token pour sécuriser la requête
+                },
+              }
+            )
+            .then(() => {
+              console.log("Historique des connexions enregistré.");
+            })
+            .catch((error) => {
+              console.error(
+                "Erreur lors de l'enregistrement de l'historique:",
+                error
+              );
+            });
+
           // Redirige vers la page tickets après la connexion
           navigate("/");
         }

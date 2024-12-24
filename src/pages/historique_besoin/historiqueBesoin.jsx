@@ -22,19 +22,19 @@ const HistoriqueBesoin = () => {
   // Define table columns
   const columns = [
     {
-      name: "name",
-      label: "Nom",
-      options: { filter: true, sort: true, filterType: "dropdown" },
-    },
-    {
       name: "region",
       label: "Region",
       options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "province",
-      label: "Region",
+      label: "Province",
       options: { filter: true, sort: false, filterType: "dropdown" },
+    },
+    {
+      name: "name",
+      label: "Nom",
+      options: { filter: true, sort: true, filterType: "dropdown" },
     },
     {
       name: "categorie",
@@ -58,7 +58,7 @@ const HistoriqueBesoin = () => {
     },
     {
       name: "commentaire",
-      label: "commentaire responsable",
+      label: "commentaire ",
       options: { filter: true, sort: true, filterType: "dropdown" },
     },
     {

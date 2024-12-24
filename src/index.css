@@ -20,3 +20,7 @@
 .debug > * > * {
   border: 1px solid blue !important;
 }
+
+:root {
+  --upbar-height: 11rem;
+}

@@ -373,10 +373,10 @@ const TicketMaintenance = () => {
           return (
             <div style={{ display: "flex", gap: "8px" }}>
               <IconButton onClick={() => handleView(rowData)} color="primary">
-                <EyeIcon />
+                <EyeIcon style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton onClick={() => handleUpdate(rowData)} color="default">
-                <EditIcon />
+                <EditIcon style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
                 onClick={() => {
@@ -385,7 +385,7 @@ const TicketMaintenance = () => {
                 }}
                 color="secondary"
               >
-                <DeleteIcon />
+                <DeleteIcon style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
                 onClick={() => {
@@ -394,7 +394,7 @@ const TicketMaintenance = () => {
                 }}
                 color="success"
               >
-                <CheckCircleIcon />
+                <CheckCircleIcon style={{ width: "18px", height: "18px" }} />
               </IconButton>
             </div>
           );
