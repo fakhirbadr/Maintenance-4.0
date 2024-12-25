@@ -136,7 +136,7 @@ const HistoriqueIntervention = () => {
         const siteParam = actifNames.join(",");
 
         const response = await axios.get(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&site=${siteParam}&isDeleted=false`
+          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&site=${siteParam}&isDeleted=true`
         );
 
         setRows(response.data); // Mettre à jour les lignes du tableau
