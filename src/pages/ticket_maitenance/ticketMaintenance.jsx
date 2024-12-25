@@ -57,7 +57,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=false"
+          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=true"
         );
         setRows(response.data);
       } catch (error) {
