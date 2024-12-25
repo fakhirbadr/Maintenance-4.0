@@ -209,7 +209,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: "superviseur",
+    roleRequired: "user",
   },
   {
     text: "Utilisateur",
@@ -228,6 +228,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Alerte",
+    roleRequired: ["superviseur"],
   },
 ];
 
