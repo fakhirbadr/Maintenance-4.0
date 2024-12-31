@@ -22,7 +22,7 @@ const CategorieBesoin = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?${
+      let url = `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?${
         region ? `&region=${region}` : ""
       }${province ? `&province=${province}` : ""}${
         startDate ? `&startDate=${startDate}` : ""
