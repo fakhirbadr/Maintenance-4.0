@@ -49,7 +49,7 @@ const TauxDisponibilité = () => {
   };
 
   useEffect(() => {
-    fetch("https://backend-v1-e3bx.onrender.com/api/actifs")
+    fetch("https://backend-v1-1.onrender.com/api/actifs")
       .then((response) => response.json())
       .then((data) => {
         setData(getCumulativeEquipmentsStatusCount(data));
