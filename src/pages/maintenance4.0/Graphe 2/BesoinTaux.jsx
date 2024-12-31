@@ -43,7 +43,7 @@ const BesoinTaux = ({
     const fetchFournitures = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
+          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
           {
             params: { region, province, startDate, endDate },
           }
@@ -126,7 +126,7 @@ const BesoinTaux = ({
     const fetchFournitures = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
+          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
           {
             params: { region, province, startDate, endDate },
           }
