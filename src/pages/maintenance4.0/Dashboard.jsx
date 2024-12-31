@@ -43,7 +43,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-e3bx.onrender.com/api/actifs")
+      .get("https://backend-v1-1.onrender.com/api/actifs")
       .then((response) => {
         const fetchedRegions = response.data.map((item) => item.region); // Extraire les régions
         const uniqueRegions = [...new Set(fetchedRegions)]; // Éviter les doublons
@@ -58,7 +58,7 @@ const Dashboard = () => {
     if (selectedRegion) {
       axios
         .get(
-          `https://backend-v1-e3bx.onrender.com/api/actifs?region=${selectedRegion}`
+          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}`
         )
         .then((response) => {
           const fetchedProvinces = response.data.map((item) => item.province); // Extract provinces
@@ -77,7 +77,7 @@ const Dashboard = () => {
     if (selectedProvince) {
       axios
         .get(
-          `https://backend-v1-e3bx.onrender.com/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
+          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
         )
         .then((response) => {
           const fetchedActifs = response.data.map((item) => item.name);
