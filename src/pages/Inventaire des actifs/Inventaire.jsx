@@ -48,7 +48,7 @@ const Inventaire = () => {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-e3bx.onrender.com/api/actifs") // Remplacez par l'URL de votre API
+      .get("https://backend-v1-1.onrender.com/api/actifs") // Remplacez par l'URL de votre API
       .then((response) => {
         setActifs(response.data); // Stocker les données dans l'état
         setLoading(false);
@@ -119,7 +119,7 @@ const Inventaire = () => {
 
     // Make the POST request
     axios
-      .post("https://backend-v1-e3bx.onrender.com/api/actifs", newActif) // Change URL if necessary
+      .post("https://backend-v1-1.onrender.com/api/actifs", newActif) // Change URL if necessary
       .then((response) => {
         console.log(response);
         handleClose(); // Fermer le dialogue après un ajout réussi
