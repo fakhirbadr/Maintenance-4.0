@@ -18,7 +18,7 @@ const Login = () => {
     if (token) {
       axios
         .get(
-          "https://maintenance-4-0-backend-9.onrender.com/api/v1/users/profile",
+          "https://backend-v1-1.onrender.com/api/v1/users/profile",
           {
             headers: {
               Authorization: `Bearer ${token}`,
