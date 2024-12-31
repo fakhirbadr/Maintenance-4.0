@@ -57,7 +57,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=true"
+          "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=true"
         );
         setRows(response.data);
       } catch (error) {
@@ -106,7 +106,7 @@ const TicketMaintenance = () => {
   const handleSubmitUpdate = async () => {
     try {
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
         updatedTicket
       );
       if (response.status === 200) {
@@ -129,7 +129,7 @@ const TicketMaintenance = () => {
 
       // Close the ticket first
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
         {
           isClosed: true,
           dateCloture: currentDate.toISOString(),
@@ -153,7 +153,7 @@ const TicketMaintenance = () => {
         );
 
         // Log the URL and the request body for the PUT request
-        const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
+        const url = `https://backend-v1-1.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
         const body = {
           isFunctionel: true, // Example of status update
         };
@@ -183,7 +183,7 @@ const TicketMaintenance = () => {
     setIsDeleting(true); // Activer l'état de suppression
 
     try {
-      const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
+      const url = `https://backend-v1-1.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
       const body = {
         isFunctionel: true,
       };
@@ -205,7 +205,7 @@ const TicketMaintenance = () => {
 
         // Proceed with PATCH to mark ticket as deleted
         const response = await axios.patch(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
           {
             isDeleted: true,
             deletedBy: deletedBy,
