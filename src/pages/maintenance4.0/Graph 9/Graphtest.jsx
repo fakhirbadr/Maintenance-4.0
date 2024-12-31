@@ -28,7 +28,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
+      let url = `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
 
       if (region) {
         url += `&region=${region}`;
