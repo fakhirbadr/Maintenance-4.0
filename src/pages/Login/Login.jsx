@@ -46,7 +46,7 @@ const Login = () => {
     e.preventDefault();
 
     axios
-      .post("https://backend-v1-e3bx.onrender.com/api/v1/users/login", {
+      .post("https://backend-v1-1.onrender.com/api/v1/users/login", {
         email,
         password,
       })
@@ -80,7 +80,7 @@ const Login = () => {
           // Ajouter une requête pour enregistrer l'historique des connexions
           axios
             .post(
-              "https://backend-v1-e3bx.onrender.com/api/v1/connection-history/record",
+              "https://backend-v1-1.onrender.com/api/v1/connection-history/record",
               {
                 userId: user.id,
                 email: user.email,
