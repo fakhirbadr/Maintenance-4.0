@@ -47,7 +47,7 @@ const ListeBesoin = () => {
   const fetchFournitures = async () => {
     try {
       const response = await axios.get(
-        "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=false"
+        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false"
       );
       const reversedData = response.data.reverse(); // Inverser l'ordre des données
       setRows(reversedData); // Mettre à jour l'état avec les données inversées
@@ -105,7 +105,7 @@ const ListeBesoin = () => {
   const handleUpdateFourniture = async () => {
     try {
       await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
         {
           name: updatedName,
           categorie: updatedCategorie,
@@ -151,7 +151,7 @@ const ListeBesoin = () => {
 
       // Send a PATCH request to update `isClosed` and `dateCloture`
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
         {
           isClosed: true,
           dateCloture: currentDate.toISOString(), // Format ISO for the date
@@ -196,7 +196,7 @@ const ListeBesoin = () => {
       try {
         // Send a DELETE request to the backend
         await axios.delete(
-          `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
+          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
         );
 
         // Remove the item from the local state after successful deletion
