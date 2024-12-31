@@ -15,7 +15,7 @@ const Mttr = ({ region, province, startDate, endDate }) => {
     setHasError(false);
 
     let url =
-      "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true";
+      "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true";
 
     // Ajouter la région et la province à l'URL si elles sont fournies
     if (region) {
