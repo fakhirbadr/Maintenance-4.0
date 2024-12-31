@@ -30,7 +30,7 @@ const BesoinVehicule = () => {
   const fetchVehicule = async () => {
     try {
       const response = await axios.get(
-        "https://backend-v1-e3bx.onrender.com/api/ticketvehicules?isClosed=false"
+        "https://backend-v1-1.onrender.com/api/ticketvehicules?isClosed=false"
       );
       console.log(response.data); // Vérifiez ici
       setRows(response.data);
@@ -68,7 +68,7 @@ const BesoinVehicule = () => {
       try {
         // Send a DELETE request to the backend
         await axios.delete(
-          `https://backend-v1-e3bx.onrender.com/api/ticketvehicules/${rowData._id}`
+          `https://backend-v1-1.onrender.com/api/ticketvehicules/${rowData._id}`
         );
 
         // Remove the item from the local state after successful deletion
@@ -91,7 +91,7 @@ const BesoinVehicule = () => {
 
       // Send a PATCH request to update `isClosed` and `dateCloture`
       const response = await axios.put(
-        `https://backend-v1-e3bx.onrender.com/api/ticketvehicules/${rowData._id}`,
+        `https://backend-v1-1.onrender.com/api/ticketvehicules/${rowData._id}`,
 
         {
           isClosed: true,
@@ -136,7 +136,7 @@ const BesoinVehicule = () => {
 
     try {
       const response = await axios.put(
-        `https://backend-v1-e3bx.onrender.com/api/ticketvehicules/${selectedRow._id}`,
+        `https://backend-v1-1.onrender.com/api/ticketvehicules/${selectedRow._id}`,
         selectedRow
       );
 
