@@ -178,7 +178,7 @@ const ModelFourniture = ({ open, onClose }) => {
       userIds.forEach(async (id) => {
         try {
           const response = await fetch(
-            `https://backend-v1-e3bx.onrender.com/api/actifs/${id}`
+            `https://backend-v1-1.onrender.com/api/actifs/${id}`
           );
           if (response.ok) {
             const data = await response.json();
@@ -292,7 +292,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
     try {
       const response = await axios.post(
-        "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
+        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
         {
           name,
           region: formData.region,
