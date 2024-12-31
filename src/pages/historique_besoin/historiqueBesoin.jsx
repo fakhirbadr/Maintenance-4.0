@@ -129,7 +129,7 @@ const HistoriqueBesoin = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=true"
+          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true"
         );
         setRows(response.data); // Update table rows
         setLoading(false); // Stop loading
