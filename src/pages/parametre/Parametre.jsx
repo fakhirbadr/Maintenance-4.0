@@ -133,7 +133,7 @@ function CreateAccountForm() {
     const fetchActifs = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/actifs"
+          "https://backend-v1-1.onrender.com/api/actifs"
         );
         setActifs(response.data);
       } catch (error) {
@@ -177,7 +177,7 @@ function CreateAccountForm() {
       console.log("Données envoyées :", dataToSend);
 
       const response = await axios.post(
-        "https://backend-v1-e3bx.onrender.com/api/v1/users/register",
+        "https://backend-v1-1.onrender.com/api/v1/users/register",
         dataToSend
       );
 
@@ -385,7 +385,7 @@ function UpdateAccountForm() {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-e3bx.onrender.com/api/v1/users/user")
+      .get("https://backend-v1-1.onrender.com/api/v1/users/user")
       .then((response) => {
         console.log(response.data); // Log the API response to inspect its structure
         if (Array.isArray(response.data)) {
@@ -418,7 +418,7 @@ function UpdateAccountForm() {
 
     // Requête pour récupérer les informations des actifs
     axios
-      .get("https://backend-v1-e3bx.onrender.com/api/actifs", {
+      .get("https://backend-v1-1.onrender.com/api/actifs", {
         params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs sous forme de chaîne
       })
       .then((response) => {
@@ -458,7 +458,7 @@ function UpdateAccountForm() {
   const handleDelete = async (userId) => {
     try {
       const response = await axios.delete(
-        `https://backend-v1-e3bx.onrender.com/api/v1/users/delete/${userId}`
+        `https://backend-v1-1.onrender.com/api/v1/users/delete/${userId}`
       );
 
       if (response.status === 200) {
@@ -481,7 +481,7 @@ function UpdateAccountForm() {
     const { _id, ...userData } = selectedUser;
     axios
       .put(
-        `https://backend-v1-e3bx.onrender.com/api/v1/users/users/${_id}`,
+        `https://backend-v1-1.onrender.com/api/v1/users/users/${_id}`,
         userData
       )
       .then((response) => {
