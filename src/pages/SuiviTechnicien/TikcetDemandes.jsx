@@ -29,7 +29,7 @@ const TicketDemandes = () => {
         const response = await axios.get(
           `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?technicien=${name}`
         );
-        setRows(response.data);
+        setRows(response.data.fournitures);
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);
       }
@@ -95,7 +95,7 @@ const TicketDemandes = () => {
     }
   }, []);
   const columns = [
-    { name: "id", options: { filter: false } },
+    // { name: "id", options: { filter: false } },
     {
       name: "name",
       label: "Nom",
