@@ -23,7 +23,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
       };
       // Faites un appel PATCH pour mettre à jour le ticket sur le serveur
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
         updatedTicketData
       );
 
@@ -70,6 +70,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           margin="normal"
           value={ticket?.site || ""}
           onChange={(e) => onFieldChange("site", e.target.value)}
+          disabled
         />
         <TextField
           label="Province"
@@ -77,6 +78,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           margin="normal"
           value={ticket?.province || ""}
           onChange={(e) => onFieldChange("province", e.target.value)}
+          disabled
         />
         <TextField
           label="Technicien"
@@ -84,6 +86,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           margin="normal"
           value={ticket?.technicien || ""}
           onChange={(e) => onFieldChange("technicien", e.target.value)}
+          disabled
         />
         <TextField
           label="Catégorie"
@@ -91,20 +94,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           margin="normal"
           value={ticket?.categorie || ""}
           onChange={(e) => onFieldChange("categorie", e.target.value)}
-        />
-        <TextField
-          label="Description"
-          fullWidth
-          margin="normal"
-          value={ticket?.description || ""}
-          onChange={(e) => onFieldChange("description", e.target.value)}
-        />
-        <TextField
-          label="Commentaire"
-          fullWidth
-          margin="normal"
-          value={ticket?.commentaire || ""}
-          onChange={(e) => onFieldChange("commentaire", e.target.value)}
+          disabled
         />
         <TextField
           label="Équipement défectueux"
@@ -114,7 +104,24 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
           onChange={(e) =>
             onFieldChange("equipement_deficitaire", e.target.value)
           }
+          disabled
         />
+        <TextField
+          label="Description"
+          fullWidth
+          margin="normal"
+          value={ticket?.description || ""}
+          onChange={(e) => onFieldChange("description", e.target.value)}
+          disabled
+        />
+        <TextField
+          label="Commentaire"
+          fullWidth
+          margin="normal"
+          value={ticket?.commentaire || ""}
+          onChange={(e) => onFieldChange("commentaire", e.target.value)}
+        />
+
         <FormControl fullWidth margin="normal">
           <InputLabel id="urgence-label">Urgence</InputLabel>
           <Select

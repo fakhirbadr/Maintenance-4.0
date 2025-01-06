@@ -11,11 +11,62 @@ import dayjs from "dayjs";
 
 const HistoriqueBesoin = () => {
   const handleDownloadExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(rows);
+    // Mapper les données pour inclure les colonnes souhaitées
+    const formattedRows = rows.map((row) => {
+      const dateCreation = new Date(row.dateCreation);
+      const dateCloture = row.dateCloture ? new Date(row.dateCloture) : null;
+
+      return {
+        Nom: row.name,
+        Région: row.region,
+        Province: row.province,
+        Catégorie: row.categorie,
+        Besoin: row.besoin,
+        Quantité: row.quantite,
+        "Créé par": row.technicien,
+        Commentaire: row.commentaire,
+        "Date de création": dateCreation.toLocaleDateString("fr-FR"),
+        "Heure de création": dateCreation.toLocaleTimeString("fr-FR", {
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+        "Date de clôture": dateCloture
+          ? dateCloture.toLocaleDateString("fr-FR")
+          : "N/A",
+        "Heure de clôture": dateCloture
+          ? dateCloture.toLocaleTimeString("fr-FR", {
+              hour: "2-digit",
+              minute: "2-digit",
+            })
+          : "N/A",
+        Statut: row.isClosed ? "Fermé" : "Ouvert",
+        "Temps de réponse": calculateResponseTime(
+          row.dateCreation,
+          row.dateCloture
+        ),
+      };
+    });
+
+    // Générer le fichier Excel
+    const worksheet = XLSX.utils.json_to_sheet(formattedRows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Historique des Besoins");
     XLSX.writeFile(workbook, "Historique des Besoins.xlsx");
   };
+
+  // Fonction pour calculer le temps de réponse
+  const calculateResponseTime = (dateCreation, dateCloture) => {
+    if (!dateCreation || !dateCloture) return "N/A";
+
+    const duration = dayjs.duration(
+      dayjs(dateCloture).diff(dayjs(dateCreation))
+    );
+    const hours = Math.floor(duration.asHours());
+    const minutes = duration.minutes();
+
+    return `${hours}h ${minutes}m`;
+  };
+
   const [rows, setRows] = useState([]); // Store data
   const [loading, setLoading] = useState(true); // Loading state
 
@@ -128,11 +179,57 @@ const HistoriqueBesoin = () => {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=true"
-        );
-        setRows(response.data); // Update table rows
-        setLoading(false); // Stop loading
+        // Effectuer les deux appels d'API en parallèle
+        const [fournitureResponse, subTicketResponse] = await Promise.all([
+          axios.get(
+            "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true"
+          ),
+          axios.get(
+            "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=true"
+          ),
+        ]);
+
+        // Mapper les données de fourniture
+        const fournitures = fournitureResponse.data.fournitures.map((item) => ({
+          id: item.id,
+          name: item.name,
+          region: item.region,
+          province: item.province,
+          categorie: item.categorie,
+          technicien: item.technicien,
+          besoin: item.besoin,
+          quantite: item.quantite,
+          commentaire: item.commentaire,
+          dateCreation: new Date(item.dateCreation),
+          dateCloture: new Date(item.dateCloture),
+          source: "source1",
+        }));
+
+        // Mapper les données des sous-tickets
+        const subTickets = subTicketResponse.data.subTickets.map((item) => ({
+          id: item.id,
+          name: item.name,
+          region: item.region,
+          province: item.province,
+          categorie: item.categorie,
+          technicien: item.technicien,
+          besoin: item.equipement_deficitaire,
+          quantite: item.quantite,
+          commentaire: item.commentaire,
+          dateCreation: new Date(item.createdAt),
+          dateCloture: new Date(item.updatedAt),
+          source: "source2",
+        }));
+
+        // Fusionner les deux listes
+        const combinedData = [...fournitures, ...subTickets];
+
+        // Trier par date de clôture (ordre décroissant)
+        combinedData.sort((a, b) => b.dateCloture - a.dateCloture);
+
+        // Mettre à jour les lignes du tableau
+        setRows(combinedData);
+        setLoading(false);
       } catch (error) {
         console.error("Error fetching data:", error);
         setLoading(false);

@@ -41,7 +41,7 @@ const BesoinVehicule = () => {
     const fetchTicketVehicules = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/ticketvehicules"
+          "https://backend-v1-1.onrender.com/api/ticketvehicules"
         );
         setTicketVehicules(response.data);
       } catch (err) {

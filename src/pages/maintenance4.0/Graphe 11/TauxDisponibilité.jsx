@@ -5,6 +5,8 @@ import {
   ThemeProvider,
   CssBaseline,
   createTheme,
+  Stack,
+  LinearProgress,
 } from "@mui/material";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
@@ -49,7 +51,7 @@ const TauxDisponibilité = () => {
   };
 
   useEffect(() => {
-    fetch("https://backend-v1-e3bx.onrender.com/api/actifs")
+    fetch("https://backend-v1-1.onrender.com/api/actifs")
       .then((response) => response.json())
       .then((data) => {
         setData(getCumulativeEquipmentsStatusCount(data));
@@ -58,7 +60,16 @@ const TauxDisponibilité = () => {
   }, []);
 
   if (!data) {
-    return <div>Loading...</div>;
+    return (
+      <div>
+        {" "}
+        <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
+          <LinearProgress color="secondary" />
+          <LinearProgress color="success" />
+          <LinearProgress color="inherit" />
+        </Stack>
+      </div>
+    );
   }
 
   // Préparer les données pour le graphique

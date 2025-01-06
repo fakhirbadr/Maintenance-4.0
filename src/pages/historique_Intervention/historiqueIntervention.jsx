@@ -34,7 +34,7 @@ const HistoriqueIntervention = () => {
         const promises = userActifs.map(async (id) => {
           try {
             const res = await axios.get(
-              `https://backend-v1-e3bx.onrender.com/api/actifs/${id}`
+              `https://backend-v1-1.onrender.com/api/actifs/${id}`
             );
             if (res.data && res.data.name) {
               return res.data.name;
@@ -136,10 +136,10 @@ const HistoriqueIntervention = () => {
         const siteParam = actifNames.join(",");
 
         const response = await axios.get(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true&site=${siteParam}&isDeleted=true`
+          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true&site=${siteParam}&isDeleted=true`
         );
 
-        setRows(response.data); // Mettre à jour les lignes du tableau
+        setRows(response.data.reverse()); // Mettre à jour les lignes du tableau
         setLoading(false); // Arrêter l'état de chargement
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);

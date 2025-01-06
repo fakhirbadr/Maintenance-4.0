@@ -22,7 +22,9 @@ import axios from "axios";
 import moment from "moment";
 import DataDetails from "./dataDetails";
 import UpdateModel from "./updateModel";
+import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
+import SubTickets from "./SubTickets";
 
 const TicketMaintenance = () => {
   const handleDownloadExcel = () => {
@@ -34,6 +36,7 @@ const TicketMaintenance = () => {
   const [rows, setRows] = useState([]);
   const [openModal, setOpenModal] = useState(false);
   const [openUpdateModal, setOpenUpdateModal] = useState(false);
+  const [openSubTicket, setOpenSubTicket] = useState(false);
   const [selectedTicket, setSelectedTicket] = useState(null);
   const [updatedTicket, setUpdatedTicket] = useState({});
   const [selectedRow, setSelectedRow] = useState(null);
@@ -57,7 +60,7 @@ const TicketMaintenance = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=true"
+          "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=false&currentMonth=true&isDeleted=true&isVisible=true"
         );
         setRows(response.data);
       } catch (error) {
@@ -91,6 +94,12 @@ const TicketMaintenance = () => {
     setOpenUpdateModal(true);
   };
 
+  const hundleSubTicket = (rowData) => {
+    setSelectedTicket(rowData);
+    setUpdatedTicket({ ...rowData });
+    setOpenSubTicket(true);
+  };
+
   const handleCloseUpdateModal = () => {
     setOpenUpdateModal(false);
     setUpdatedTicket({});
@@ -106,7 +115,7 @@ const TicketMaintenance = () => {
   const handleSubmitUpdate = async () => {
     try {
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${updatedTicket._id}`,
         updatedTicket
       );
       if (response.status === 200) {
@@ -129,7 +138,7 @@ const TicketMaintenance = () => {
 
       // Close the ticket first
       const response = await axios.patch(
-        `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
         {
           isClosed: true,
           dateCloture: currentDate.toISOString(),
@@ -153,7 +162,7 @@ const TicketMaintenance = () => {
         );
 
         // Log the URL and the request body for the PUT request
-        const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
+        const url = `https://backend-v1-1.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
         const body = {
           isFunctionel: true, // Example of status update
         };
@@ -183,7 +192,7 @@ const TicketMaintenance = () => {
     setIsDeleting(true); // Activer l'état de suppression
 
     try {
-      const url = `https://backend-v1-e3bx.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
+      const url = `https://backend-v1-1.onrender.com/api/actifs/${rowData.selectedActifId}/categories/${rowData.selectedCategoryId}/equipments/${rowData.selectedEquipmentId}`;
       const body = {
         isFunctionel: true,
       };
@@ -205,7 +214,7 @@ const TicketMaintenance = () => {
 
         // Proceed with PATCH to mark ticket as deleted
         const response = await axios.patch(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
+          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData._id}`,
           {
             isDeleted: true,
             deletedBy: deletedBy,
@@ -262,6 +271,20 @@ const TicketMaintenance = () => {
         },
       },
     });
+
+  const handleOpenDialog = (ticket) => {
+    setSelectedTicket(ticket);
+    setOpenSubTicket(true);
+  };
+
+  const handleCloseDialog = () => {
+    setOpenSubTicket(false);
+  };
+
+  const handleSave = () => {
+    console.log("Updated ticket:", selectedTicket);
+    setOpenSubTicket(false);
+  };
 
   const columns = [
     {
@@ -396,6 +419,17 @@ const TicketMaintenance = () => {
               >
                 <CheckCircleIcon style={{ width: "18px", height: "18px" }} />
               </IconButton>
+              <IconButton
+                onClick={() => {
+                  console.log(rowData);
+                  hundleSubTicket(rowData); // This will print rowData in the console
+                }}
+                color="info"
+              >
+                <Inventory2OutlinedIcon
+                  style={{ width: "18px", height: "18px" }}
+                />
+              </IconButton>
             </div>
           );
         },
@@ -437,7 +471,7 @@ const TicketMaintenance = () => {
         <Dialog
           open={openModal}
           onClose={handleCloseModal}
-          maxWidth="md"
+          maxWidth="xs"
           fullWidth
         >
           <DialogTitle>Détails du Ticket</DialogTitle>
@@ -480,7 +514,16 @@ const TicketMaintenance = () => {
           </Alert>
         )}
         {/* Your existing code */}
+        {/* Dialogue */}
       </div>
+
+      {/* Utilisation du composant séparé */}
+      <SubTickets
+        open={openSubTicket}
+        ticket={selectedTicket}
+        onClose={handleCloseDialog}
+        onSave={handleSave}
+      />
     </>
   );
 };

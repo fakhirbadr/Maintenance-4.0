@@ -57,7 +57,7 @@ const ClotureNonCloture = ({
     const fetchTickets = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance",
+          "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance",
           {
             params: { region, province, startDate, endDate, site },
           }

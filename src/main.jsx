@@ -41,6 +41,7 @@ import Parametre from "./pages/parametre/Parametre";
 import ProfilUser from "./pages/ProfilUser/ProfilUser";
 import SuiviDemandeTechnicien from "./pages/SuiviTechnicien/SuiviDemandeTechnicien";
 import Alerte from "./pages/Alertes/Alerte";
+import Validation from "./pages/ValidationTicket/Validation";
 
 // Création des routes
 // const router = createBrowserRouter(
@@ -130,6 +131,10 @@ const router = createBrowserRouter([
       {
         path: "tickets",
         element: <ProtectedRoute element={<Tickets />} />,
+      },
+      {
+        path: "Validation",
+        element: <ProtectedRoute element={<Validation />} />,
       },
       {
         path: "besoin",

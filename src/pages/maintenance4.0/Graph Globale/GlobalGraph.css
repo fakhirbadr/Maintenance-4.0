@@ -1,0 +1,12 @@
+/* Réduction de la hauteur de la ligne contenant les icônes */
+.icon-row {
+  height: 6px; /* Vous pouvez ajuster la valeur */
+}
+
+.icon-row .MuiTableCell-root {
+  padding: 4px; /* Réduction de l'espacement pour les cellules */
+}
+
+.icon-row .MuiIconButton-root {
+  padding: 2px; /* Ajustement de l'espacement autour des icônes */
+}

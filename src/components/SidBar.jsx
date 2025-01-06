@@ -22,6 +22,7 @@ import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
 import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 import BugReportIcon from "@mui/icons-material/BugReport";
+import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
 import { Avatar, List, styled, Typography, useTheme } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { grey } from "@mui/material/colors";
@@ -85,7 +86,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 }));
 const IconWrapper = ({ children }) => {
   return (
-    <div style={{ fontSize: "12px", display: "flex", alignItems: "center" }}>
+    <div style={{ fontSize: "10px", display: "flex", alignItems: "center" }}>
       {children}
     </div>
   );
@@ -122,6 +123,16 @@ const Array1 = [
     path: "/Tickets",
   },
   {
+    text: "Validation demandes",
+    icon: (
+      <IconWrapper>
+        <BookmarkAddedIcon />
+      </IconWrapper>
+    ),
+    path: "/Validation",
+    roleRequired: ["admin"],
+  },
+  {
     text: "Gestion de maintenance",
     icon: (
       <IconWrapper>
@@ -156,7 +167,7 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <ConstructionOutlinedIcon />
-        <HistoryIcon className="w-[18px]" />
+        <HistoryIcon className="w-[16px]" />
       </IconWrapper>
     ),
     path: "/HistoriqueIntervention",
@@ -166,7 +177,7 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <ListAltIcon />
-        <HistoryIcon className="w-[18px]" />
+        <HistoryIcon className="w-[16px]" />
       </IconWrapper>
     ),
     path: "/HistoriqueBesoin",
@@ -176,21 +187,21 @@ const Array1 = [
     icon: (
       <IconWrapper>
         <DirectionsCarRoundedIcon />
-        <HistoryIcon className="w-[18px]" />
+        <HistoryIcon className="w-[16px]" />
       </IconWrapper>
     ),
     path: "/Historiquevehicule",
   },
-  {
-    text: "test",
-    icon: (
-      <IconWrapper>
-        <ListAltIcon />
-      </IconWrapper>
-    ),
-    path: "/test",
-    roleRequired: "superviseur",
-  },
+  // {
+  //   text: "test",
+  //   icon: (
+  //     <IconWrapper>
+  //       <ListAltIcon />
+  //     </IconWrapper>
+  //   ),
+  //   path: "/test",
+  //   roleRequired: "superviseur",
+  // },
   {
     text: "Paramètres",
     icon: (

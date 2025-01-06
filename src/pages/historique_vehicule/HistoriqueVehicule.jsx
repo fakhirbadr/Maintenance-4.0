@@ -15,7 +15,7 @@ const HistoriqueVehicule = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-e3bx.onrender.com/api/ticketvehicules?isClosed=true"
+          "https://backend-v1-1.onrender.com/api/ticketvehicules?isClosed=true"
         );
         setRows(response.data); // Update table rows
       } catch (error) {

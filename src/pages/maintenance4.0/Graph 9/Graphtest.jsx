@@ -12,6 +12,8 @@ import {
   Select,
   FormControl,
   InputLabel,
+  Stack,
+  LinearProgress,
 } from "@mui/material";
 
 // Register Chart.js components
@@ -28,7 +30,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
+      let url = `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
 
       if (region) {
         url += `&region=${region}`;
@@ -145,7 +147,17 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
     },
   });
 
-  if (loading) return <div>Chargement...</div>;
+  if (loading)
+    return (
+      <div>
+        {" "}
+        <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
+          <LinearProgress color="secondary" />
+          <LinearProgress color="success" />
+          <LinearProgress color="inherit" />
+        </Stack>
+      </div>
+    );
   if (error) return <div>{error}</div>;
   if (!data || data.length === 0) return <div>Aucune donnée disponible.</div>;
 

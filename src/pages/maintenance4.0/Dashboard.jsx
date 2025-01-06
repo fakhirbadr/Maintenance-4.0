@@ -16,6 +16,7 @@ import Graphtest from "./Graph 9/Graphtest";
 import axios from "axios";
 import { MenuItem, TextField } from "@mui/material";
 import TauxDisponibilité from "./Graphe 11/TauxDisponibilité";
+import GlobalGraph from "./Graph Globale/GlobalGraph";
 
 const Dashboard = () => {
   const [regions, setRegions] = useState([]); // Liste des régions depuis l'API
@@ -43,7 +44,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-e3bx.onrender.com/api/actifs")
+      .get("https://backend-v1-1.onrender.com/api/actifs")
       .then((response) => {
         const fetchedRegions = response.data.map((item) => item.region); // Extraire les régions
         const uniqueRegions = [...new Set(fetchedRegions)]; // Éviter les doublons
@@ -58,7 +59,7 @@ const Dashboard = () => {
     if (selectedRegion) {
       axios
         .get(
-          `https://backend-v1-e3bx.onrender.com/api/actifs?region=${selectedRegion}`
+          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}`
         )
         .then((response) => {
           const fetchedProvinces = response.data.map((item) => item.province); // Extract provinces
@@ -77,7 +78,7 @@ const Dashboard = () => {
     if (selectedProvince) {
       axios
         .get(
-          `https://backend-v1-e3bx.onrender.com/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
+          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
         )
         .then((response) => {
           const fetchedActifs = response.data.map((item) => item.name);
@@ -139,7 +140,7 @@ const Dashboard = () => {
 
       {/* Barre de filtre */}
       {/* Barre de filtre */}
-      <div className="text-black flex items-center justify-center py-2 space-x-4">
+      <div className="text-black flex items-center justify-center py-2 space-x-4 py-5">
         {/* Region Filter */}
         <TextField
           label="Filtrer par Région"
@@ -220,6 +221,14 @@ const Dashboard = () => {
 
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
+          <Grid item xs={12} lg={12}>
+            <GlobalGraph
+              region={selectedRegion} // Already passing selectedRegion
+              province={selectedProvince} // Passing selectedProvince to ClotureNonCloture
+              startDate={startDate} // Passing startDate
+              endDate={endDate}
+            />
+          </Grid>
           <Grid item xs={12} lg={4}>
             <div>
               <ClotureNonCloture

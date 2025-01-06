@@ -33,7 +33,7 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
     const fetchData = async () => {
       try {
         // Construction de l'URL avec les filtres
-        let url = `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=true`;
+        let url = `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true`;
 
         if (region) {
           url += `&region=${region}`;
@@ -50,12 +50,12 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
 
         // Attente de la réponse de l'API
         const response = await axios.get(url);
-        console.log("Données de l'API:", response.data);
+        console.log("Données de l'API:", response.data.fournitures);
 
         // Vérification que la réponse est un tableau
-        if (response.data && Array.isArray(response.data)) {
+        if (response.data && Array.isArray(response.data.fournitures)) {
           // Regrouper les données par label et cumuler les quantités
-          const groupedData = response.data.reduce((acc, item) => {
+          const groupedData = response.data.fournitures.reduce((acc, item) => {
             const existingItem = acc.find((i) => i.label === item.besoin);
             if (existingItem) {
               existingItem.quantity += item.quantite; // Cumul des quantités

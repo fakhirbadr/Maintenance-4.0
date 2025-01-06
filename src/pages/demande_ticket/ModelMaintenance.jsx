@@ -40,7 +40,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       userIds.forEach(async (id) => {
         try {
           const response = await fetch(
-            `https://backend-v1-e3bx.onrender.com/api/actifs/${id}`
+            `https://backend-v1-1.onrender.com/api/actifs/${id}`
           );
           if (response.ok) {
             const data = await response.json();
@@ -162,7 +162,7 @@ const ModelMaintenance = ({ open, onClose }) => {
     try {
       // POST pour créer un ticket de maintenance
       const response = await fetch(
-        "https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance",
+        "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance",
         {
           method: "POST",
           headers: {
@@ -177,7 +177,7 @@ const ModelMaintenance = ({ open, onClose }) => {
 
         // Si le ticket a été créé avec succès, effectuer la mise à jour via PUT
         const updateResponse = await fetch(
-          `https://backend-v1-e3bx.onrender.com/api/actifs/${selectedActifId}/categories/${selectedCategoryId}/equipments/${selectedEquipmentId}`,
+          `https://backend-v1-1.onrender.com/api/actifs/${selectedActifId}/categories/${selectedCategoryId}/equipments/${selectedEquipmentId}`,
           {
             method: "PUT",
             headers: {

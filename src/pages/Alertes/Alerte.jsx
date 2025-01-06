@@ -53,7 +53,7 @@ const Alerte = () => {
     const fetchTicketData = async () => {
       try {
         const response = await axios.get(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?isClosed=false`
+          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=false`
         );
         const fetchedData = response.data;
 
@@ -68,9 +68,9 @@ const Alerte = () => {
     const fetchFournitureData = async () => {
       try {
         const response = await axios.get(
-          `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?isClosed=false`
+          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false`
         );
-        const fetchedData = response.data;
+        const fetchedData = response.data.fournitures;
 
         // Filtrer les données de fourniture en fonction du rôle
         const filteredFournitureData = filterDataByRole(fetchedData, userRole);

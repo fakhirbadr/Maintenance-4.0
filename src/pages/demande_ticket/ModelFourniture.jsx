@@ -178,7 +178,7 @@ const ModelFourniture = ({ open, onClose }) => {
       userIds.forEach(async (id) => {
         try {
           const response = await fetch(
-            `https://backend-v1-e3bx.onrender.com/api/actifs/${id}`
+            `https://backend-v1-1.onrender.com/api/actifs/${id}`
           );
           if (response.ok) {
             const data = await response.json();
@@ -292,7 +292,7 @@ const ModelFourniture = ({ open, onClose }) => {
 
     try {
       const response = await axios.post(
-        "https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes",
+        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
         {
           name,
           region: formData.region,
@@ -342,112 +342,135 @@ const ModelFourniture = ({ open, onClose }) => {
         {error && <Alert severity="error">{error}</Alert>}
         {success && <Alert severity="success">{success}</Alert>}
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="select-label">Nom de l'Actif</InputLabel>
-          <Select
-            labelId="select-label"
-            value={formData.name}
-            onChange={handleSelectChange}
-          >
-            {names.map((actif) => (
-              <MenuItem key={actif._id} value={actif.name}>
-                {actif.name}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Technicien"
-          name="technicien"
-          value={formData.technicien}
-          onChange={handleChange}
-          disabled
-        />
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Region"
-          name="region"
-          value={formData.region}
-          onChange={handleChange}
-          disabled
-        />
+        <Grid container spacing={1}>
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="select-label">Nom de l'Actif</InputLabel>
+              <Select
+                labelId="select-label"
+                value={formData.name}
+                onChange={handleSelectChange}
+              >
+                {names.map((actif) => (
+                  <MenuItem key={actif._id} value={actif.name}>
+                    {actif.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Province"
-          name="province"
-          value={formData.province}
-          onChange={handleChange}
-          disabled
-        />
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="categorie-label">Catégorie</InputLabel>
-          <Select
-            labelId="categorie-label"
-            value={formData.categorie}
-            name="categorie"
-            onChange={handleChange}
-          >
-            {categories.map((cat) => (
-              <MenuItem key={cat} value={cat}>
-                {cat}
-              </MenuItem>
-            ))}
-          </Select>
-        </FormControl>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Technicien"
+              name="technicien"
+              value={formData.technicien}
+              onChange={handleChange}
+              disabled
+            />
+          </Grid>
 
-        <FormControl fullWidth margin="normal">
-          <InputLabel id="besoin-label">Besoin</InputLabel>
-          <Select
-            labelId="besoin-label"
-            value={formData.besoin}
-            name="besoin"
-            onChange={handleChange}
-          >
-            {besoins.map((besoin) => (
-              <MenuItem key={besoin} value={besoin}>
-                {besoin}
-              </MenuItem>
-            ))}
-            <MenuItem value="Autre">Autre</MenuItem>
-          </Select>
-        </FormControl>
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Region"
+              name="region"
+              value={formData.region}
+              onChange={handleChange}
+              disabled
+            />
+          </Grid>
 
-        {formData.besoin === "Autre" && (
-          <TextField
-            fullWidth
-            margin="normal"
-            label="Autre Besoin"
-            name="customBesoin"
-            value={formData.customBesoin}
-            onChange={handleChange}
-          />
-        )}
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Province"
+              name="province"
+              value={formData.province}
+              onChange={handleChange}
+              disabled
+            />
+          </Grid>
 
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Quantité"
-          name="quantite"
-          type="number"
-          value={formData.quantite}
-          onChange={handleChange}
-        />
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="categorie-label">Catégorie</InputLabel>
+              <Select
+                labelId="categorie-label"
+                value={formData.categorie}
+                name="categorie"
+                onChange={handleChange}
+              >
+                {categories.map((cat) => (
+                  <MenuItem key={cat} value={cat}>
+                    {cat}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Grid>
 
-        <TextField
-          fullWidth
-          margin="normal"
-          label="Commentaire"
-          name="commentaire"
-          value={formData.commentaire}
-          onChange={handleChange}
-          multiline
-          rows={4}
-        />
+          <Grid item xs={12} sm={6}>
+            <FormControl fullWidth margin="normal">
+              <InputLabel id="besoin-label">Besoin</InputLabel>
+              <Select
+                labelId="besoin-label"
+                value={formData.besoin}
+                name="besoin"
+                onChange={handleChange}
+              >
+                {besoins.map((besoin) => (
+                  <MenuItem key={besoin} value={besoin}>
+                    {besoin}
+                  </MenuItem>
+                ))}
+                <MenuItem value="Autre">Autre</MenuItem>
+              </Select>
+            </FormControl>
+          </Grid>
+
+          {formData.besoin === "Autre" && (
+            <Grid item xs={12}>
+              <TextField
+                fullWidth
+                margin="normal"
+                label="Autre Besoin"
+                name="customBesoin"
+                value={formData.customBesoin}
+                onChange={handleChange}
+              />
+            </Grid>
+          )}
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Quantité"
+              name="quantite"
+              type="number"
+              value={formData.quantite}
+              onChange={handleChange}
+            />
+          </Grid>
+
+          <Grid item xs={12} sm={6}>
+            <TextField
+              fullWidth
+              margin="normal"
+              label="Commentaire"
+              name="commentaire"
+              value={formData.commentaire}
+              onChange={handleChange}
+              multiline
+              rows={3}
+            />
+          </Grid>
+        </Grid>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose} color="primary">

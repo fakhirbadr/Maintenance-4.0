@@ -27,7 +27,7 @@ const TicketMaintenance = () => {
       if (!name) return; // Évite de faire une requête si name est vide
       try {
         const response = await axios.get(
-          `https://backend-v1-e3bx.onrender.com/api/v1/ticketMaintenance?technicien=${name}`
+          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?technicien=${name}`
         );
         setRows(response.data);
       } catch (error) {

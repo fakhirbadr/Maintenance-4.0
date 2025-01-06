@@ -17,14 +17,11 @@ const Login = () => {
 
     if (token) {
       axios
-        .get(
-          "https://maintenance-4-0-backend-9.onrender.com/api/v1/users/profile",
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        .get("https://backend-v1-1.onrender.com/api/v1/users/profile", {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        })
         .then((response) => {
           setAccounts(response.data); // Met à jour les comptes avec les données renvoyées
           console.log(response.data);
@@ -46,7 +43,7 @@ const Login = () => {
     e.preventDefault();
 
     axios
-      .post("https://backend-v1-e3bx.onrender.com/api/v1/users/login", {
+      .post("https://backend-v1-1.onrender.com/api/v1/users/login", {
         email,
         password,
       })
@@ -80,7 +77,7 @@ const Login = () => {
           // Ajouter une requête pour enregistrer l'historique des connexions
           axios
             .post(
-              "https://backend-v1-e3bx.onrender.com/api/v1/connection-history/record",
+              "https://backend-v1-1.onrender.com/api/v1/connection-history/record",
               {
                 userId: user.id,
                 email: user.email,

@@ -8,6 +8,8 @@ import {
   CssBaseline,
   Box,
   Typography,
+  Stack,
+  LinearProgress,
 } from "@mui/material";
 
 // Register Chart.js components
@@ -22,7 +24,7 @@ const CategorieBesoin = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-e3bx.onrender.com/api/v1/fournitureRoutes?${
+      let url = `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?${
         region ? `&region=${region}` : ""
       }${province ? `&province=${province}` : ""}${
         startDate ? `&startDate=${startDate}` : ""
@@ -34,8 +36,8 @@ const CategorieBesoin = ({ region, province, startDate, endDate }) => {
       console.log("API Response:", response.data);
 
       // Vérification du format de la réponse API
-      if (Array.isArray(response.data)) {
-        const tickets = response.data;
+      if (Array.isArray(response.data.fournitures)) {
+        const tickets = response.data.fournitures;
 
         // Grouper les tickets par catégorie
         const categories = tickets.reduce((acc, ticket) => {
@@ -83,7 +85,17 @@ const CategorieBesoin = ({ region, province, startDate, endDate }) => {
   });
 
   // Gestion des états (chargement, erreur, données)
-  if (loading) return <div>Chargement...</div>;
+  if (loading)
+    return (
+      <div>
+        {" "}
+        <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
+          <LinearProgress color="secondary" />
+          <LinearProgress color="success" />
+          <LinearProgress color="inherit" />
+        </Stack>
+      </div>
+    );
   if (error) return <div>{error}</div>;
   if (!data || data.length === 0) return <div>Aucune donnée disponible.</div>;
 

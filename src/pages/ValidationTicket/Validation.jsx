@@ -599,34 +599,13 @@ import {
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 
-const ListeBesoin = () => {
+const Validation = () => {
   const handleDownloadExcel = () => {
-    // Filtrer les colonnes nécessaires
-    const filteredRows = rows.map((row) => ({
-      Nom: row.name,
-      Région: row.region,
-      Province: row.province,
-      Catégorie: row.categorie,
-      Besoin: row.besoin,
-      Quantité: row.quantite,
-      "Créé par": row.technicien,
-      Status: row.status,
-      "Commentaire Responsable": row.commentaire,
-      "Date de Création": new Date(row.dateCreation).toLocaleDateString(
-        "fr-FR"
-      ),
-      "Heure de Création": new Date(row.dateCreation).toLocaleTimeString(
-        "fr-FR"
-      ),
-    }));
-
-    // Générer le fichier Excel
-    const worksheet = XLSX.utils.json_to_sheet(filteredRows);
+    const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
     XLSX.writeFile(workbook, "demande_fourniture.xlsx");
   };
-
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [closedRows, setClosedRows] = useState(new Set()); // New state to track closed rows
@@ -641,16 +620,15 @@ const ListeBesoin = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
   const [updatedStatus, setUpdatedStatus] = useState("");
   const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
-
   const fetchFournitures = async () => {
     try {
       // Effectuer les deux requêtes en parallèle
       const [source1Response, source2Response] = await Promise.all([
         axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false&status=!créé"
+          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false&status=créé"
         ),
         axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=false&status=!créé"
+          "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=false&status=créé"
         ),
       ]);
 
@@ -665,9 +643,9 @@ const ListeBesoin = () => {
         besoin: item.besoin,
         quantite: item.quantite,
         commentaire: item.commentaire,
-        dateCreation: new Date(item.dateCreation), // Convertir en objet Date
+        dateCreation: new Date(item.dateCreation), // Convertir en objet Date pour le tri
         status: item.status,
-        source: "source1",
+        source: "source1", // Marqueur d'origine
       }));
 
       console.log("Données source 1 après mapping :", source1Data);
@@ -683,9 +661,9 @@ const ListeBesoin = () => {
         quantite: item.quantite,
         besoin: item.equipement_deficitaire,
         commentaire: item.commentaire,
-        dateCreation: new Date(item.createdAt), // Convertir en objet Date
+        dateCreation: new Date(item.createdAt), // Convertir en objet Date pour le tri
         status: item.status,
-        source: "source2",
+        source: "source2", // Marqueur d'origine
         parentId: item.parentId,
       }));
 
@@ -875,34 +853,6 @@ const ListeBesoin = () => {
         );
 
         if (firstPatchResponse.status === 200) {
-          // Imprimer le ticket parent dans le console.log
-          console.log("Ticket parent clôturé:", firstPatchResponse.data);
-
-          const url = `https://backend-v1-1.onrender.com/api/actifs/${firstPatchResponse.data.selectedActifId}/categories/${firstPatchResponse.data.selectedCategoryId}/equipments/${firstPatchResponse.data.selectedEquipmentId}`;
-          const body = {
-            isFunctionel: true, // Exemple de mise à jour du statut
-          };
-
-          try {
-            // Envoyer la requête PATCH pour mettre à jour l'équipement
-            const patchResponse = await axios.put(url, body, {
-              headers: {
-                "Content-Type": "application/json", // Définir le type de contenu comme JSON
-              },
-            });
-
-            if (patchResponse.status === 200) {
-              console.log("Mise à jour réussie de l'équipement");
-            } else {
-              console.error("Erreur lors de la mise à jour de l'équipement");
-            }
-          } catch (error) {
-            console.error(
-              "Erreur lors de la requête de mise à jour:",
-              error.message
-            );
-          }
-
           // Clôturer directement le sous-ticket sans vérifier
           const subTicketId = rowData.id; // Supposons que vous avez l'ID du sous-ticket directement dans rowData
           if (subTicketId) {
@@ -1176,7 +1126,7 @@ const ListeBesoin = () => {
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>
           <MUIDataTable
-            title={"Gestion des commandes"}
+            title={"Validation des demandes"}
             data={rows}
             columns={columns}
             options={options}
@@ -1268,18 +1218,7 @@ const ListeBesoin = () => {
                 label="Status"
                 name="status"
               >
-                {[
-                  "Ouvert",
-                  "En cours",
-                  "Reçu par le support",
-                  "Expédié",
-                  "Demandé aux achats",
-                  "Demandé à Biopetra",
-                  "Demandé à la pharmacie",
-                  "En cours de livraison",
-                  "Achat sur place",
-                  "Livré",
-                ].map((status, index) => (
+                {["Ouvert"].map((status, index) => (
                   <MenuItem key={index} value={status}>
                     {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
                     {/* Capitalize first letter */}
@@ -1385,4 +1324,4 @@ const ListeBesoin = () => {
   );
 };
 
-export default ListeBesoin;
+export default Validation;
