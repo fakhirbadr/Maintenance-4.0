@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import TechnicienInterface from "./TechnicienInterface";
-import DocteursInventaire from "./docteursInventaire";
+import DocteursInventaire from "./DocteursInventaire";
 
 const Index = () => {
   const [role, setRole] = useState("");
