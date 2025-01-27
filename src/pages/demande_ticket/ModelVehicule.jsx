@@ -9,6 +9,8 @@ import {
   MenuItem,
   Grid,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const TicketForm = ({ open, onClose }) => {
   const [error, setError] = useState("");
@@ -98,16 +100,13 @@ const TicketForm = ({ open, onClose }) => {
 
     try {
       console.log(formData);
-      const response = await fetch(
-        "https://backend-v1-1.onrender.com/api/ticketvehicules",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(formData),
-        }
-      );
+      const response = await fetch(`${apiUrl}/api/ticketvehicules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
       if (!response.ok) {
         throw new Error("Une erreur s'est produite lors de l'envoi du ticket");

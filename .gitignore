@@ -1,3 +1,14 @@
+# Ignorer le dossier backend
+/backend
+
+# Ignorer le fichier de configuration des variables d'environnement
+config.env
+
+# Ignorer le dossier node_modules
+/node_modules
+
+
+
 # Logs
 logs
 *.log

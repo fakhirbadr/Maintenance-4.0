@@ -10,7 +10,10 @@ import {
   Typography,
   Stack,
   LinearProgress,
+  Skeleton,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -24,7 +27,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   const fetchData = async () => {
     try {
       // Construction de l'URL avec les filtres
-      let url = `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true`;
+      let url = `${apiUrl}/api/v1/ticketMaintenance?isClosed=true`;
 
       if (region) {
         url += `&region=${region}`;
@@ -96,11 +99,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
     return (
       <div>
         {" "}
-        <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
-          <LinearProgress color="secondary" />
-          <LinearProgress color="success" />
-          <LinearProgress color="inherit" />
-        </Stack>
+        <Skeleton variant="rounded" width="100%" height={90} />
       </div>
     );
   if (error) return <div>{error}</div>;

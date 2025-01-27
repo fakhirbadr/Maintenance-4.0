@@ -9,6 +9,8 @@ import useStore from "../../store/useUserStore.js"; // Importer le store Zustand
 import duration from "dayjs/plugin/duration"; // Pour calculer la durée
 import Button from "@mui/material/Button";
 dayjs.extend(duration);
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const HistoriqueIntervention = () => {
   const handleDownloadExcel = () => {
@@ -33,9 +35,7 @@ const HistoriqueIntervention = () => {
       try {
         const promises = userActifs.map(async (id) => {
           try {
-            const res = await axios.get(
-              `https://backend-v1-1.onrender.com/api/actifs/${id}`
-            );
+            const res = await axios.get(`${apiUrl}/api/actifs/${id}`);
             if (res.data && res.data.name) {
               return res.data.name;
             } else {
@@ -136,7 +136,7 @@ const HistoriqueIntervention = () => {
         const siteParam = actifNames.join(",");
 
         const response = await axios.get(
-          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true&site=${siteParam}&isDeleted=true`
+          `${apiUrl}/api/v1/ticketMaintenance?isClosed=true&site=${siteParam}&isDeleted=true`
         );
 
         setRows(response.data.reverse()); // Mettre à jour les lignes du tableau

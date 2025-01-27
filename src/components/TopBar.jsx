@@ -8,6 +8,8 @@ import {
   Toolbar,
   useTheme,
 } from "@mui/material";
+import { Link } from "react-router-dom";
+
 import MuiAppBar from "@mui/material/AppBar";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -18,6 +20,8 @@ import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
 import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Importer l'icône de déconnexion
 import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
+import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
+import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
 import myImage from "../../public/scx.png"; // Ajustez le chemin en fonction de votre structure
 
 const AppBar = styled(MuiAppBar, {
@@ -157,18 +161,19 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
               <DarkModeOutlinedIcon />
             </IconButton>
           )}
-
-          <IconButton color={"inherit"}>
-            <NotificationsNoneOutlinedIcon />
+          <IconButton color="inherit" component={Link} to="/homepage">
+            <HomeRoundedIcon />
           </IconButton>
 
+          <IconButton sx={{ color: "green" }} component={Link} to="/checkListe">
+            <GradingOutlinedIcon />
+          </IconButton>
           <IconButton color={"inherit"}>
             <SettingsOutlinedIcon />
           </IconButton>
           <IconButton color={"inherit"}>
             <PersonOutlineOutlinedIcon />
           </IconButton>
-
           {/* Ajouter l'icône de déconnexion */}
           <IconButton color={"error"} onClick={handleLogout}>
             <ExitToAppIcon />

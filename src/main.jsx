@@ -42,6 +42,14 @@ import ProfilUser from "./pages/ProfilUser/ProfilUser";
 import SuiviDemandeTechnicien from "./pages/SuiviTechnicien/SuiviDemandeTechnicien";
 import Alerte from "./pages/Alertes/Alerte";
 import Validation from "./pages/ValidationTicket/Validation";
+import Homepage from "./pages/Homepage/Homepage";
+import ModuleAchat from "./pages/Interface_Achat/ModuleAchat";
+import InventiaireMAJ from "./pages/Inventaire des actifs/InventiaireMAJ";
+import Hr from "./pages/HR/Hr";
+import DemandeCongé from "./pages/HR/DemandeCongé";
+import Index from "./pages/checkListe/Index";
+import ListeDemandes from "./pages/HR/ListeDemandes";
+import Reclamation from "./pages/HR/Reclamation";
 
 // Création des routes
 // const router = createBrowserRouter(
@@ -118,7 +126,7 @@ const router = createBrowserRouter([
       },
       {
         path: "Inventaire",
-        element: <ProtectedRoute element={<Inventaire />} />,
+        element: <ProtectedRoute element={<InventiaireMAJ />} />,
       },
       {
         path: "dashboard",
@@ -135,6 +143,10 @@ const router = createBrowserRouter([
       {
         path: "Validation",
         element: <ProtectedRoute element={<Validation />} />,
+      },
+      {
+        path: "Achat",
+        element: <ProtectedRoute element={<ModuleAchat />} />,
       },
       {
         path: "besoin",
@@ -172,12 +184,41 @@ const router = createBrowserRouter([
         path: "Alerte",
         element: <ProtectedRoute element={<Alerte />} />,
       },
+      {
+        path: "HomePage",
+        element: <ProtectedRoute element={<Homepage />} />,
+      },
+      {
+        path: "checkListe",
+        element: <ProtectedRoute element={<Index />} />,
+      },
     ],
   },
   {
     path: "test",
     element: <ProtectedRoute element={<Test />} />,
   },
+  {
+    path: "hr",
+    element: <ProtectedRoute element={<Hr />} />,
+  },
+  {
+    path: "DemandeCongé",
+    element: <ProtectedRoute element={<DemandeCongé />} />,
+  },
+  {
+    path: "listeDemandes",
+    element: <ProtectedRoute element={<ListeDemandes />} />,
+  },
+  {
+    path: "Reclamation",
+    element: <ProtectedRoute element={<Reclamation />} />,
+  },
+
+  // {
+  //   path: "test",
+  //   element: <ProtectedRoute element={<Test />} />,
+  // },
 ]);
 
 ReactDOM.createRoot(document.getElementById("root")).render(

@@ -17,6 +17,8 @@ import axios from "axios";
 import { MenuItem, TextField } from "@mui/material";
 import TauxDisponibilité from "./Graphe 11/TauxDisponibilité";
 import GlobalGraph from "./Graph Globale/GlobalGraph";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Dashboard = () => {
   const [regions, setRegions] = useState([]); // Liste des régions depuis l'API
@@ -44,7 +46,7 @@ const Dashboard = () => {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-1.onrender.com/api/actifs")
+      .get(`${apiUrl}/api/actifs`)
       .then((response) => {
         const fetchedRegions = response.data.map((item) => item.region); // Extraire les régions
         const uniqueRegions = [...new Set(fetchedRegions)]; // Éviter les doublons
@@ -58,9 +60,7 @@ const Dashboard = () => {
   useEffect(() => {
     if (selectedRegion) {
       axios
-        .get(
-          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}`
-        )
+        .get(`${apiUrl}/api/actifs?region=${selectedRegion}`)
         .then((response) => {
           const fetchedProvinces = response.data.map((item) => item.province); // Extract provinces
           const uniqueProvinces = [...new Set(fetchedProvinces)]; // Remove duplicates
@@ -78,7 +78,7 @@ const Dashboard = () => {
     if (selectedProvince) {
       axios
         .get(
-          `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
+          `${apiUrl}/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
         )
         .then((response) => {
           const fetchedActifs = response.data.map((item) => item.name);

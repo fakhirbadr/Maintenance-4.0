@@ -417,6 +417,9 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import Typography from "@mui/material/Typography";
 import ArrowDropDownIcon from "@mui/icons-material/ArrowDropDown";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
+
 import {
   Badge,
   Box,
@@ -480,9 +483,7 @@ const Inventaire = () => {
   useEffect(() => {
     setLoading(true); // Reset loading state before making a new request
     axios
-      .get(
-        `https://backend-v1-1.onrender.com/api/actifs?region=${selectedRegion}`
-      ) // Use selectedRegion instead of region
+      .get(`${apiUrl}/api/actifs?region=${selectedRegion}`) // Use selectedRegion instead of region
       .then((response) => {
         setActifs(response.data); // Store the fetched data in the state
         setLoading(false); // Set loading to false after fetching the data
@@ -557,7 +558,7 @@ const Inventaire = () => {
 
     // Make the POST request
     axios
-      .post("https://backend-v1-1.onrender.com/api/actifs", newActif) // Change URL if necessary
+      .post(`${apiUrl}/api/actifs`, newActif) // Change URL if necessary
       .then((response) => {
         console.log(response);
         handleClose(); // Fermer le dialogue après un ajout réussi

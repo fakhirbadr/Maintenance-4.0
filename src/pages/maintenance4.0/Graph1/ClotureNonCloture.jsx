@@ -17,6 +17,8 @@ import InboxIcon from "@mui/icons-material/MoveToInbox";
 import MailIcon from "@mui/icons-material/Mail";
 import { useTheme } from "@mui/material/styles";
 import { formatDistanceToNow } from "date-fns";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
@@ -56,12 +58,9 @@ const ClotureNonCloture = ({
     // Récupérer tous les tickets
     const fetchTickets = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance",
-          {
-            params: { region, province, startDate, endDate, site },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/api/v1/ticketMaintenance`, {
+          params: { region, province, startDate, endDate, site },
+        });
 
         const allTickets = response.data; // Tous les tickets
         setTickets(allTickets);

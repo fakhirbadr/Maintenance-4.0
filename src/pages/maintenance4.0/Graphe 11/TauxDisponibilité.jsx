@@ -7,9 +7,12 @@ import {
   createTheme,
   Stack,
   LinearProgress,
+  Skeleton,
 } from "@mui/material";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // Enregistrer les composants nécessaires de Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend);
@@ -51,7 +54,7 @@ const TauxDisponibilité = () => {
   };
 
   useEffect(() => {
-    fetch("https://backend-v1-1.onrender.com/api/actifs")
+    fetch(`${apiUrl}/api/actifs`)
       .then((response) => response.json())
       .then((data) => {
         setData(getCumulativeEquipmentsStatusCount(data));
@@ -63,11 +66,7 @@ const TauxDisponibilité = () => {
     return (
       <div>
         {" "}
-        <Stack sx={{ width: "100%", color: "grey.500" }} spacing={2}>
-          <LinearProgress color="secondary" />
-          <LinearProgress color="success" />
-          <LinearProgress color="inherit" />
-        </Stack>
+        <Skeleton variant="rounded" width="100%" height={90} />
       </div>
     );
   }

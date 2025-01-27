@@ -47,7 +47,7 @@
 //   const fetchFournitures = async () => {
 //     try {
 //       const response = await axios.get(
-//         "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false"
+//         "http://localhost:3000/api/v1/fournitureRoutes?isClosed=false"
 //       );
 //       const reversedData = response.data.fournitures.reverse(); // Inverser l'ordre des données
 //       setRows(reversedData); // Mettre à jour l'état avec les données inversées
@@ -105,7 +105,7 @@
 //   const handleUpdateFourniture = async () => {
 //     try {
 //       await axios.patch(
-//         `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+//         `http://localhost:3000/api/v1/fournitureRoutes/${selectedFourniture._id}`,
 //         {
 //           name: updatedName,
 //           categorie: updatedCategorie,
@@ -151,7 +151,7 @@
 
 //       // Send a PATCH request to update `isClosed` and `dateCloture`
 //       const response = await axios.patch(
-//         `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
+//         `http://localhost:3000/api/v1/fournitureRoutes/${rowData._id}`,
 //         {
 //           isClosed: true,
 //           dateCloture: currentDate.toISOString(), // Format ISO for the date
@@ -196,7 +196,7 @@
 //       try {
 //         // Send a DELETE request to the backend
 //         await axios.delete(
-//           `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
+//           `http://localhost:3000/api/v1/fournitureRoutes/${rowData._id}`
 //         );
 
 //         // Remove the item from the local state after successful deletion
@@ -598,6 +598,8 @@ import {
   MenuItem,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Validation = () => {
   const handleDownloadExcel = () => {
@@ -625,11 +627,9 @@ const Validation = () => {
       // Effectuer les deux requêtes en parallèle
       const [source1Response, source2Response] = await Promise.all([
         axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false&status=créé"
+          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&status=créé&isDeleted=false`
         ),
-        axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=false&status=créé"
-        ),
+        axios.get(`${apiUrl}/api/v1/subtickets?isClosed=false&status=créé`),
       ]);
 
       // Mapper les données de la première source
@@ -736,7 +736,7 @@ const Validation = () => {
         const { id: subTicketId } = selectedFourniture; // Récupérer l'ID du sous-ticket
 
         await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/sub-tickets/${subTicketId}`, // URL de mise à jour du sous-ticket
+          `${apiUrl}/api/v1/sub-tickets/${subTicketId}`, // URL de mise à jour du sous-ticket
           {
             name: updatedName,
             categorie: updatedCategorie,
@@ -768,7 +768,7 @@ const Validation = () => {
       } else if (selectedFourniture.source === "source1") {
         // Mise à jour pour source1 (URL de fournitureRoutes)
         await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${selectedFourniture.id}`,
+          `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture.id}`,
           {
             name: updatedName,
             categorie: updatedCategorie,
@@ -818,7 +818,7 @@ const Validation = () => {
       if (rowData.source === "source1") {
         // Clôturer le ticket parent pour "source1"
         const response = await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData.id}`,
+          `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
           {
             isClosed: true,
             dateCloture: currentDate.toISOString(),
@@ -841,8 +841,9 @@ const Validation = () => {
         }
       } else if (rowData.source === "source2") {
         // Clôturer directement le ticket parent
+
         const firstPatchResponse = await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData.parentId}`,
+          `${apiUrl}/api/v1/ticketMaintenance/${rowData.parentId}`,
           {
             isClosed: true,
             dateCloture: currentDate.toISOString(),
@@ -858,7 +859,7 @@ const Validation = () => {
           if (subTicketId) {
             try {
               const subTicketResponse = await axios.patch(
-                `https://backend-v1-1.onrender.com/api/v1/sub-tickets/${subTicketId}`,
+                `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
                 {
                   isClosed: true,
                   dateCloture: currentDate.toISOString(),
@@ -923,10 +924,18 @@ const Validation = () => {
     if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
       try {
         if (rowData.source === "source1") {
+          const deletedBy = JSON.parse(
+            localStorage.getItem("userInfo")
+          )?.nomComplet;
+          if (!deletedBy) {
+            alert("Erreur : utilisateur non identifié.");
+            return;
+          }
           // Suppression pour source1
           console.log(`Suppression de fourniture avec ID: ${rowData.id}`);
-          const response = await axios.delete(
-            `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData.id}` // Utilisez 'id' au lieu de '_id'
+          const response = await axios.patch(
+            `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
+            { isDeleted: true, deletedBy: deletedBy }
           );
           console.log("Réponse après suppression de source1:", response);
           alert("Fourniture supprimée avec succès.");
@@ -946,7 +955,7 @@ const Validation = () => {
             `Suppression du sous-ticket avec Parent ID: ${parentId} et Sub-ticket ID: ${subTicketId}`
           );
           const response = await axios.delete(
-            `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/tickets/${parentId}/subTickets/${subTicketId}`
+            `${apiUrl}/api/v1/ticketMaintenance/tickets/${parentId}/subTickets/${subTicketId}`
           );
           console.log("Réponse après suppression de source2:", response);
           alert("Sous-ticket supprimé avec succès.");
@@ -1063,12 +1072,12 @@ const Validation = () => {
               >
                 <Delete style={{ width: "18px", height: "18px" }} />
               </IconButton>
-              <IconButton
+              {/* <IconButton
                 onClick={async () => await handleClose(rowIndex)} // Wrap handleClose with async/await
                 color="success"
               >
                 <CheckCircle style={{ width: "18px", height: "18px" }} />
-              </IconButton>
+              </IconButton> */}
             </div>
           );
         },

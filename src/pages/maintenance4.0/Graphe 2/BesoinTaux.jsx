@@ -14,6 +14,8 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemText from "@mui/material/ListItemText";
 import { useTheme } from "@mui/material/styles";
 import { formatDistanceToNow } from "date-fns";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
@@ -43,7 +45,7 @@ const BesoinTaux = ({
     const fetchFournitures = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true",
+          `${apiUrl}/api/v1/fournitureRoutes?isClosed=true`,
           {
             params: { region, province, startDate, endDate },
           }
@@ -125,12 +127,9 @@ const BesoinTaux = ({
     // Récupérer toutes les fournitures
     const fetchFournitures = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
-          {
-            params: { region, province, startDate, endDate },
-          }
-        );
+        const response = await axios.get(`${apiUrl}/api/v1/fournitureRoutes`, {
+          params: { region, province, startDate, endDate },
+        });
 
         const allFournitures = response.data.fournitures; // Toutes les fournitures
         setFournitures(allFournitures);

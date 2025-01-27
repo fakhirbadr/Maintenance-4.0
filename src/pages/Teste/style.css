@@ -1,0 +1,13 @@
+@keyframes resizeImage {
+  0%,
+  100% {
+    transform: scale(1); /* Taille normale */
+  }
+  50% {
+    transform: scale(2); /* Agrandissement de 5px */
+  }
+}
+
+.animate-resize {
+  animation: resizeImage 2s ease-in-out infinite; /* Animation qui dure 2 secondes et se répète */
+}

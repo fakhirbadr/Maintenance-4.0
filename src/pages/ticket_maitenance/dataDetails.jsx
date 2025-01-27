@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { Box, Typography, Chip } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const DataDetails = ({ ticket }) => {
   if (!ticket) return null; // If no ticket is selected, return nothing.

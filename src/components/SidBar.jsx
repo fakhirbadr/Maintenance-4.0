@@ -36,6 +36,8 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import StarRateIcon from "@mui/icons-material/StarRate";
 import ErrorIcon from "@mui/icons-material/Error";
+import HomeIcon from "@mui/icons-material/Home";
+import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -93,6 +95,15 @@ const IconWrapper = ({ children }) => {
 };
 
 const Array1 = [
+  // {
+  //   text: "page d'accueil",
+  //   icon: (
+  //     <IconWrapper>
+  //       <HomeIcon />
+  //     </IconWrapper>
+  //   ),
+  //   path: "/Homepage",
+  // },
   {
     text: "Dashboard",
     icon: (
@@ -101,7 +112,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/dashboard",
-    roleRequired: "superviseur",
+    roleRequired: ["achat", "superviseur", "docteurs"],
   },
   {
     text: "Inventaire des actifs",
@@ -111,7 +122,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Inventaire",
-    roleRequired: ["admin", "superviseur"],
+    roleRequired: ["admin", "achat", "superviseur", "docteurs"],
   },
   {
     text: "Création ticket",
@@ -130,7 +141,17 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Validation",
-    roleRequired: ["admin"],
+    roleRequired: ["admin", "superviseur"],
+  },
+  {
+    text: "Gestion Achat",
+    icon: (
+      <IconWrapper>
+        <AttachMoneyIcon />
+      </IconWrapper>
+    ),
+    path: "/Achat",
+    roleRequired: ["admin", "achat", "superviseur"],
   },
   {
     text: "Gestion de maintenance",
@@ -220,7 +241,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: "user",
+    roleRequired: ["admin", "docteurs"],
   },
   {
     text: "Utilisateur",
@@ -231,6 +252,7 @@ const Array1 = [
     ),
     path: "/utilisateur",
   },
+
   {
     text: "Alertes",
     icon: (
@@ -239,7 +261,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Alerte",
-    roleRequired: ["superviseur"],
+    roleRequired: ["superviseur", "achat"],
   },
 ];
 
@@ -301,7 +323,7 @@ export default function SidBar({ open, handleDrawerClose }) {
           fontFamily: "fantasy",
         }}
       >
-        mr {userInfo ? userInfo.nomComplet : "Nom Complet"}{" "}
+        {userInfo ? userInfo.nomComplet : "Nom Complet"}{" "}
         {/* Affiche le nom complet ou une valeur par défaut */}
       </Typography>
 

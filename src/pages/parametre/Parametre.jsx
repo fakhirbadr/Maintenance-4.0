@@ -30,6 +30,8 @@ import {
 } from "@mui/material";
 
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const regions = {
   "Tanger-Tétouan-Al Hoceïma": [
@@ -133,9 +135,7 @@ function CreateAccountForm() {
   useEffect(() => {
     const fetchActifs = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/actifs"
-        );
+        const response = await axios.get(`${apiUrl}/api/actifs`);
         setActifs(response.data);
       } catch (error) {
         console.error("Erreur lors de la récupération des actifs :", error);
@@ -178,7 +178,7 @@ function CreateAccountForm() {
       console.log("Données envoyées :", dataToSend);
 
       const response = await axios.post(
-        "https://backend-v1-1.onrender.com/api/v1/users/register",
+        `${apiUrl}/api/v1/users/register`,
         dataToSend
       );
 
@@ -257,6 +257,7 @@ function CreateAccountForm() {
           >
             <MenuItem value="admin">Admin</MenuItem>
             <MenuItem value="user">User</MenuItem>
+            <MenuItem value="docteurs">docteurs</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -346,7 +347,7 @@ function CreateAccountForm() {
               actifs.map((actif) => (
                 <MenuItem key={actif._id} value={actif._id}>
                   <Checkbox checked={formData.actifIds.includes(actif._id)} />
-                  <ListItemText primary={actif.name} />
+                  <ListItemText primary={`${actif.name} - ${actif.province}`} />
                 </MenuItem>
               ))
             ) : (
@@ -386,7 +387,7 @@ function UpdateAccountForm() {
 
   useEffect(() => {
     axios
-      .get("https://backend-v1-1.onrender.com/api/v1/users/user")
+      .get(`${apiUrl}/api/v1/users/user`)
       .then((response) => {
         console.log(response.data); // Log the API response to inspect its structure
         if (Array.isArray(response.data)) {
@@ -419,7 +420,7 @@ function UpdateAccountForm() {
 
     // Requête pour récupérer les informations des actifs
     axios
-      .get("https://backend-v1-1.onrender.com/api/actifs", {
+      .get(`${apiUrl}/api/actifs`, {
         params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs sous forme de chaîne
       })
       .then((response) => {
@@ -459,7 +460,7 @@ function UpdateAccountForm() {
   const handleDelete = async (userId) => {
     try {
       const response = await axios.delete(
-        `https://backend-v1-1.onrender.com/api/v1/users/delete/${userId}`
+        `${apiUrl}/api/v1/users/delete/${userId}`
       );
 
       if (response.status === 200) {
@@ -481,17 +482,14 @@ function UpdateAccountForm() {
     // Exemple d'appel à une API pour mettre à jour l'utilisateur
     const { _id, ...userData } = selectedUser;
     axios
-      .put(
-        `https://backend-v1-1.onrender.com/api/v1/users/users/${_id}`,
-        userData
-      )
+      .put(`${apiUrl}/api/v1/users/users/${_id}`, userData)
       .then((response) => {
         console.log("User updated successfully:", response.data);
         alert("Utilisateur mis à jour avec succès.");
         setOpen(false);
         // Rafraîchir la liste des utilisateurs
         axios
-          .get("https://backend-v1-1.onrender.com/api/v1/users/user")
+          .get(`${apiUrl}/api/v1/users/user`)
           .then((response) => setUsers(response.data));
       })
       .catch((error) => {

@@ -19,7 +19,8 @@ import { CheckCircle, Delete, Edit, Eye } from "lucide-react";
 import MUIDataTable from "mui-datatables";
 import React, { useEffect, useState } from "react";
 import * as XLSX from "xlsx"; // Assurez-vous que XLSX est installé dans votre projet
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const BesoinVehicule = () => {
   // Données fictives pour tester le tableau
   const [rows, setRows] = useState([]);
@@ -30,7 +31,7 @@ const BesoinVehicule = () => {
   const fetchVehicule = async () => {
     try {
       const response = await axios.get(
-        "https://backend-v1-1.onrender.com/api/ticketvehicules?isClosed=false"
+        `${apiUrl}/api/ticketvehicules?isClosed=false`
       );
       console.log(response.data); // Vérifiez ici
       setRows(response.data);
@@ -67,9 +68,7 @@ const BesoinVehicule = () => {
     if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
       try {
         // Send a DELETE request to the backend
-        await axios.delete(
-          `https://backend-v1-1.onrender.com/api/ticketvehicules/${rowData._id}`
-        );
+        await axios.delete(`${apiUrl}/api/ticketvehicules/${rowData._id}`);
 
         // Remove the item from the local state after successful deletion
         setRows(rows.filter((_, index) => index !== rowIndex));
@@ -91,7 +90,7 @@ const BesoinVehicule = () => {
 
       // Send a PATCH request to update `isClosed` and `dateCloture`
       const response = await axios.put(
-        `https://backend-v1-1.onrender.com/api/ticketvehicules/${rowData._id}`,
+        `${apiUrl}/api/ticketvehicules/${rowData._id}`,
 
         {
           isClosed: true,
@@ -136,7 +135,7 @@ const BesoinVehicule = () => {
 
     try {
       const response = await axios.put(
-        `https://backend-v1-1.onrender.com/api/ticketvehicules/${selectedRow._id}`,
+        `${apiUrl}/api/ticketvehicules/${selectedRow._id}`,
         selectedRow
       );
 

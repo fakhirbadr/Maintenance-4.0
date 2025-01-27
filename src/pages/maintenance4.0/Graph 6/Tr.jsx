@@ -9,6 +9,8 @@ import {
   FormControl,
   InputLabel,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Tr = () => {
   const theme = useTheme();
@@ -54,9 +56,7 @@ const Tr = () => {
   // Effet pour récupérer les données de l'API
   useEffect(() => {
     axios
-      .get(
-        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true"
-      )
+      .get(`${apiUrl}/api/v1/fournitureRoutes?isClosed=true`)
       .then((response) => {
         console.log("Données brutes reçues de l'API:", response.data);
         const data = response.data; // Utiliser directement les données reçues

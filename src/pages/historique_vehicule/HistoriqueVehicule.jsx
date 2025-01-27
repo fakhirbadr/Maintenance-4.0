@@ -5,7 +5,8 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import Button from "@mui/material/Button";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 import dayjs from "dayjs";
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const HistoriqueVehicule = () => {
   const [rows, setRows] = useState([]); // Store data
   const [loading, setLoading] = useState(true); // Loading state
@@ -15,7 +16,7 @@ const HistoriqueVehicule = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/ticketvehicules?isClosed=true"
+          `${apiUrl}/api/ticketvehicules?isClosed=true`
         );
         setRows(response.data); // Update table rows
       } catch (error) {

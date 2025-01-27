@@ -23,6 +23,8 @@ import DialogListEquipment from "./DialogListEquipment";
 import DialogListEquipmentInfo from "./DialogListEquipmentInfo";
 import DialogListEquipmentGeneraux from "./DialogListEquipmentGeneraux";
 import DialogListEquipmentStructure from "./DialogListEquipmentStructure";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const GlobalGraph = ({ region, province, startDate, endDate }) => {
   const [data, setData] = React.useState([]); // Store the actual data
@@ -55,15 +57,16 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
   // Fonction pour convertir les millisecondes en format dd:hh:mm
   const formatTime = (milliseconds) => {
     const totalMinutes = Math.floor(milliseconds / 60000); // Convertir en minutes
-    const days = Math.floor(totalMinutes / 1440); // Nombre de jours
-    const hours = Math.floor((totalMinutes % 1440) / 60); // Nombre d'heures
+    const days = Math.floor(totalMinutes / 1440); // Nombre de jours (1440 minutes par jour)
+    const hours = Math.floor((totalMinutes % 1440) / 60); // Nombre d'heures restantes
     const minutes = totalMinutes % 60; // Nombre de minutes restantes
 
-    // Retourner le format sous forme de chaîne
-    return `${days}:${hours.toString().padStart(2, "0")}:${minutes
+    // Retourner le format avec unités
+    return `${days} j ${hours.toString().padStart(2, "0")} h ${minutes
       .toString()
-      .padStart(2, "0")}`;
+      .padStart(2, "0")} m`;
   };
+
   // Fonction pour récupérer les données sans filtres
   // Fonction pour récupérer les données avec filtres
   const fetchData = async () => {
@@ -75,10 +78,10 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
         endDate,
       };
 
-      const response = await axios.get(
-        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
-        { params } // Envoyer les filtres comme paramètres d'URL
-      );
+      // Premier appel à l'API fournitureRoutes
+      const response = await axios.get(`${apiUrl}/api/v1/fournitureRoutes`, {
+        params,
+      });
 
       // Mettez à jour l'état avec les données récupérées
       setFournitures(response.data.fournitures);
@@ -90,7 +93,13 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
       setTotalInclosed(response.data.totalInclosed);
       setClosedCategoryCounts(response.data.closedCategoryCounts);
       setData(response.data); // Store the actual response data
-      console.log("API Responsewwwwwww:", response.data.categoryCounts);
+      console.log("API Response (fournitureRoutes):", response.data);
+
+      // Deuxième appel à l'API subtickets
+      const subticketsResponse = await axios.get(`${apiUrl}/api/v1/subtickets`);
+
+      // Imprimez les données de l'API subtickets
+      console.log("API Response (subtickets):", subticketsResponse.data);
     } catch (error) {
       console.error("Erreur lors de la récupération des données :", error);
     }
@@ -110,6 +119,7 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
   const rows = [
     {
       name: "besoin exprimé",
+
       data: [
         [
           data.length,
@@ -136,6 +146,7 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
     },
     {
       name: "besoin satisfait",
+      sousName: "Delai en jours",
       data: [
         [
           formatTime(
@@ -260,11 +271,21 @@ const GlobalGraph = ({ region, province, startDate, endDate }) => {
               <TableRow key={row.name}>
                 <TableCell component="th" scope="row">
                   {row.name}
+                  <div style={{ fontSize: "0.8em", color: "white" }}>
+                    {row.sousName}
+                  </div>
                 </TableCell>
+
                 {row.data.map(([value2, value1], index) => (
                   <TableCell key={index} align="center">
                     <div>{value1}</div>
-                    <div style={{ fontSize: "0.8em", color: "gray" }}>
+                    <div
+                      style={{
+                        fontSize: "0.8em",
+                        color: "white",
+                        fontWeight: "bold",
+                      }}
+                    >
                       {value2}
                     </div>
                   </TableCell>

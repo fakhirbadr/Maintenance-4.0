@@ -14,10 +14,13 @@ import {
   Select,
 } from "@mui/material";
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const ModelFourniture = ({ open, onClose }) => {
   const [names, setNames] = useState([]);
   const [Name, setSelectedName] = useState(""); // Sélection de l'actif
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
     name: "", // Ajoutez un champ pour le nom de l'actif
@@ -65,18 +68,24 @@ const ModelFourniture = ({ open, onClose }) => {
       "POUBELLE 90L",
       "PROJECTEUR",
       "TABLE",
+      "BUREAU",
       "TABOURET",
+      "RAYONNAGE",
+      "CHAISE",
       "VASES PLANTES ARTIFICIELLES",
 
       // ... autres besoins
     ],
     "Dispositif Médicaux": [
       "BALANCE",
+      "CAPTEUR THERMIQUE",
+      "DETECTEUR DE FUMEE",
       "BOITIER MEDIOT",
       "BRASSARD TENSIOMETRE",
       "CONCENTRATEUR OXYGENE",
       "DÉBITMÈTRES D'OXYGÈNE",
       "DIVAN D'EXAMEN",
+      "CACHE CAPTEUR",
       "DOCLICK",
       "DRAP D'EXAMEN",
       "ECG 12 Deriviations",
@@ -101,6 +110,8 @@ const ModelFourniture = ({ open, onClose }) => {
     ],
     "équipement généreaux": [
       "ARMOIRE PHARMACEUTIQUE",
+      "CLIMATISEUR",
+      "REFRIGERATEUR",
       "BATTERIE GROUPE ELECTROGENE",
       "CABLE LIAISON GROUPE ELECTROGENE",
       "CAISSE OUTILLAGE TECHNICIEN",
@@ -108,6 +119,11 @@ const ModelFourniture = ({ open, onClose }) => {
       "CANON POUR LA PORTE D’UNITÉ",
       "CLE A MOULETTE",
       "GROUPE ELECTROGENE",
+      "BOITE D’ALIMENTATION 12V",
+      "GACHE ELECTRIQUE",
+      "BOUTON POUSSOIR",
+      "SERRURE INTELLIGENTE",
+      "SONDE CAPTEUR",
       "ONDULEUR",
       "RALLONGE 10M",
       "RALLONGE 4M",
@@ -130,9 +146,16 @@ const ModelFourniture = ({ open, onClose }) => {
       "SCOTCH NOIR",
       "STYLO",
       "TENUE INFIRMIER",
+      "PATCHES ECG (BOITE 50PCS)",
     ],
     "Matériel Informatique": [
       "ADAPTATEUR DISPLAY/HDMI",
+      "CABLE UTP (ETHERNET)",
+      "CABLE TORSADE",
+      "CABLE D’ALIMENTATION",
+      "DOUCHETTE SANS FIL",
+      "IMPRIMANTE A PAPIER",
+      "IMPRIMANTE D'ETIQUETTE THERMIQUE",
       "CABLE 3.0 10 M",
       "CÂBLE HDMI 10M",
       "CABLE IMPRIMANTE USB",
@@ -164,6 +187,7 @@ const ModelFourniture = ({ open, onClose }) => {
       "NVR",
       "PC PORTABLE",
       "ROUTEUR WIFI",
+      "ROUTEUR 4G",
       "SWITCH",
 
       // ... autres besoins
@@ -177,9 +201,7 @@ const ModelFourniture = ({ open, onClose }) => {
       const fetchedNames = [];
       userIds.forEach(async (id) => {
         try {
-          const response = await fetch(
-            `https://backend-v1-1.onrender.com/api/actifs/${id}`
-          );
+          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
           if (response.ok) {
             const data = await response.json();
             fetchedNames.push(data);
@@ -289,25 +311,23 @@ const ModelFourniture = ({ open, onClose }) => {
     }
 
     setError("");
+    setIsSubmitting(true); // Désactiver le bouton
 
     try {
-      const response = await axios.post(
-        "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes",
-        {
-          name,
-          region: formData.region,
-          province: formData.province,
-          categorie: selectedCategorie,
-          besoin: selectedBesoin,
-          quantite,
-          technicien,
-          commentaire, // Ajout du commentaire
-          isClosed: false, // Par défaut à false
-          status: formData.status,
-          dateCreation: new Date(),
-          dateCloture: null, // Par défaut à null
-        }
-      );
+      const response = await axios.post(`${apiUrl}/api/v1/fournitureRoutes`, {
+        name,
+        region: formData.region,
+        province: formData.province,
+        categorie: selectedCategorie,
+        besoin: selectedBesoin,
+        quantite,
+        technicien,
+        commentaire, // Ajout du commentaire
+        isClosed: false, // Par défaut à false
+        status: formData.status,
+        dateCreation: new Date(),
+        dateCloture: null, // Par défaut à null
+      });
 
       setSuccess("Ticket créé avec succès !");
       console.log("Réponse de l'API :", response.data);
@@ -333,6 +353,7 @@ const ModelFourniture = ({ open, onClose }) => {
       setError("Une erreur s'est produite lors de la création du ticket.");
       console.error("Erreur API :", err);
     }
+    setIsSubmitting(false); // Désactiver le bouton
   };
 
   return (
@@ -476,7 +497,7 @@ const ModelFourniture = ({ open, onClose }) => {
         <Button onClick={onClose} color="primary">
           Annuler
         </Button>
-        <Button onClick={handleSubmit} color="primary">
+        <Button onClick={handleSubmit} disabled={isSubmitting} color="primary">
           Soumettre
         </Button>
       </DialogActions>

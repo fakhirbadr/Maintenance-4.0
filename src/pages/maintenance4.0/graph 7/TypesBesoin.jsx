@@ -13,6 +13,9 @@ import {
   Legend,
 } from "chart.js";
 
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
+
 // Register the necessary components of Chart.js
 ChartJS.register(
   CategoryScale,
@@ -29,11 +32,12 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
   const [showAll, setShowAll] = useState(false); // État pour basculer entre top 10 et tous les éléments
 
   // Récupérer les données de l'API
+  // Récupérer les données de l'API
   useEffect(() => {
     const fetchData = async () => {
       try {
         // Construction de l'URL avec les filtres
-        let url = `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true`;
+        let url = `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&isDeleted=false`;
 
         if (region) {
           url += `&region=${region}`;
@@ -54,21 +58,19 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
 
         // Vérification que la réponse est un tableau
         if (response.data && Array.isArray(response.data.fournitures)) {
-          // Regrouper les données par label et cumuler les quantités
+          // Regrouper les données par label et compter les occurrences
           const groupedData = response.data.fournitures.reduce((acc, item) => {
             const existingItem = acc.find((i) => i.label === item.besoin);
             if (existingItem) {
-              existingItem.quantity += item.quantite; // Cumul des quantités
+              existingItem.count += 1; // Incrémenter le compteur pour ce besoin
             } else {
-              acc.push({ label: item.besoin, quantity: item.quantite });
+              acc.push({ label: item.besoin, count: 1 });
             }
             return acc;
           }, []);
 
-          // Trier par quantité décroissante
-          const sortedData = groupedData.sort(
-            (a, b) => b.quantity - a.quantity
-          );
+          // Trier par nombre de demandes décroissant
+          const sortedData = groupedData.sort((a, b) => b.count - a.count);
 
           setBesoinData(sortedData);
         }
@@ -81,19 +83,20 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
   }, [region, province, startDate, endDate]); // Dépendances mises à jour pour prendre en compte les filtres
 
   // Limiter l'affichage à 10 éléments ou tous les éléments
-  const displayedData = showAll ? besoinData : besoinData.slice(0, 10);
+  const displayedData = showAll ? besoinData : besoinData.slice(0, 15);
 
   // Préparer les données pour le graphique
+  // Préparer les données pour le graphique
   const labels = displayedData.map((item) => item.label);
-  const quantities = displayedData.map((item) => item.quantity);
+  const counts = displayedData.map((item) => item.count); // Utiliser count au lieu de quantity
 
   // Options pour le graphique avec les labels en blanc
   const chartData = {
     labels: labels,
     datasets: [
       {
-        label: "Analyse des Quantités des Besoins selon les Types",
-        data: quantities,
+        label: "Nombre de demandes",
+        data: counts, // Utiliser counts au lieu de quantities
         backgroundColor: theme.palette.primary.main,
         borderColor: theme.palette.primary.dark,
         borderWidth: 1,
@@ -135,7 +138,8 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
       }}
     >
       <Typography variant="h6" gutterBottom>
-        Analyse des Quantités des Besoins selon les Types
+        Analyse des Quantités des Besoins selon les Types (en cours de
+        traitement)
       </Typography>
       {besoinData.length > 0 ? (
         <>
@@ -157,7 +161,7 @@ const TypesBesoin = ({ region, province, startDate, endDate }) => {
               padding: "6px 12px", // Espacement interne réduit
             }}
           >
-            {showAll ? "Afficher les 10 premiers" : "Afficher tout"}
+            {showAll ? "Afficher les 15 premiers" : "Afficher tout"}
           </Button>
         </>
       ) : (

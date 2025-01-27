@@ -13,6 +13,8 @@ import {
   Alert,
   Grid,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const ModelMaintenance = ({ open, onClose }) => {
   const [name, setName] = useState("");
@@ -32,6 +34,7 @@ const ModelMaintenance = ({ open, onClose }) => {
   const [selectedCategoryId, setSelectedCategoryId] = useState("");
   const [selectedEquipmentId, setSelectedEquipmentId] = useState("");
   const [selectedRegionActif, setSelectedRegionActif] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
@@ -39,9 +42,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       const fetchedNames = [];
       userIds.forEach(async (id) => {
         try {
-          const response = await fetch(
-            `https://backend-v1-1.onrender.com/api/actifs/${id}`
-          );
+          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
           if (response.ok) {
             const data = await response.json();
             fetchedNames.push(data); // Ajoutez l'objet complet ici
@@ -140,6 +141,8 @@ const ModelMaintenance = ({ open, onClose }) => {
       setError("Certains IDs sont manquants : Actif, Catégorie ou Équipement.");
       return; // Arrêter la soumission si les IDs sont manquants
     }
+    setIsSubmitting(true); // Désactiver le bouton
+
     console.log("Actif ID:", selectedActifId);
     console.log("Category ID:", selectedCategoryId);
     console.log("Equipment ID:", selectedEquipmentId);
@@ -161,23 +164,20 @@ const ModelMaintenance = ({ open, onClose }) => {
     console.log(ticketData);
     try {
       // POST pour créer un ticket de maintenance
-      const response = await fetch(
-        "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(ticketData),
-        }
-      );
+      const response = await fetch(`${apiUrl}/api/v1/ticketMaintenance`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(ticketData),
+      });
 
       if (response.ok) {
         setSuccess("Ticket créé avec succès !");
 
         // Si le ticket a été créé avec succès, effectuer la mise à jour via PUT
         const updateResponse = await fetch(
-          `https://backend-v1-1.onrender.com/api/actifs/${selectedActifId}/categories/${selectedCategoryId}/equipments/${selectedEquipmentId}`,
+          `${apiUrl}/api/actifs/${selectedActifId}/categories/${selectedCategoryId}/equipments/${selectedEquipmentId}`,
           {
             method: "PUT",
             headers: {
@@ -212,6 +212,7 @@ const ModelMaintenance = ({ open, onClose }) => {
         "Erreur lors de la soumission de la demande de maintenance:",
         error
       );
+      setIsSubmitting(false); // Réactiver le bouton à la fin
     }
   };
 
@@ -377,7 +378,7 @@ const ModelMaintenance = ({ open, onClose }) => {
         <Button onClick={onClose} color="secondary">
           Fermer
         </Button>
-        <Button onClick={handleSubmit} color="primary">
+        <Button onClick={handleSubmit} disabled={isSubmitting} color="primary">
           Soumettre
         </Button>
       </DialogActions>

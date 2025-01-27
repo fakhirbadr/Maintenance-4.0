@@ -6,6 +6,8 @@ import { Box } from "lucide-react";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 import Button from "@mui/material/Button";
 import dayjs from "dayjs";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // Define ExcelExporter outside of the component
 
@@ -139,14 +141,8 @@ const HistoriqueBesoin = () => {
       },
     },
     {
-      name: "isClosed",
+      name: "status",
       label: "Statut",
-      options: {
-        filter: true,
-        sort: true,
-        customBodyRender: (value) => (value ? "Fermé" : "Ouvert"),
-        filterType: "dropdown",
-      },
     },
     {
       name: "tempsreponse",
@@ -181,12 +177,8 @@ const HistoriqueBesoin = () => {
       try {
         // Effectuer les deux appels d'API en parallèle
         const [fournitureResponse, subTicketResponse] = await Promise.all([
-          axios.get(
-            "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=true"
-          ),
-          axios.get(
-            "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=true"
-          ),
+          axios.get(`${apiUrl}/api/v1/fournitureRoutes?isClosed=true`),
+          axios.get(`${apiUrl}/api/v1/subtickets?isClosed=true`),
         ]);
 
         // Mapper les données de fourniture
@@ -199,6 +191,7 @@ const HistoriqueBesoin = () => {
           technicien: item.technicien,
           besoin: item.besoin,
           quantite: item.quantite,
+          status: item.status,
           commentaire: item.commentaire,
           dateCreation: new Date(item.dateCreation),
           dateCloture: new Date(item.dateCloture),
@@ -215,6 +208,7 @@ const HistoriqueBesoin = () => {
           technicien: item.technicien,
           besoin: item.equipement_deficitaire,
           quantite: item.quantite,
+          status: item.status,
           commentaire: item.commentaire,
           dateCreation: new Date(item.createdAt),
           dateCloture: new Date(item.updatedAt),

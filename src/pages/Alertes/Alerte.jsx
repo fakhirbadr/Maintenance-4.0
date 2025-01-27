@@ -4,6 +4,8 @@ import { Badge, Button, Collapse, Grid } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Alerte = () => {
   const [ticketData, setTicketData] = useState([]);
@@ -27,10 +29,14 @@ const Alerte = () => {
     const creationDate = new Date(dateCreation);
     const now = new Date();
     const diffInMilliseconds = now - creationDate;
-    const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60)); // Convertir en minutes
-    const hours = Math.floor(diffInMinutes / 60);
+
+    // Calculer les jours, heures et minutes
+    const diffInMinutes = Math.floor(diffInMilliseconds / (1000 * 60));
+    const days = Math.floor(diffInMinutes / (60 * 24));
+    const hours = Math.floor((diffInMinutes % (60 * 24)) / 60);
     const minutes = diffInMinutes % 60;
-    return `${hours}h:${minutes}min`;
+
+    return `${days}j ${hours}h ${minutes}m`;
   };
 
   // Calculer les alertes selon le rôle de l'utilisateur
@@ -53,7 +59,7 @@ const Alerte = () => {
     const fetchTicketData = async () => {
       try {
         const response = await axios.get(
-          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=false`
+          `${apiUrl}/api/v1/ticketMaintenance?isClosed=false`
         );
         const fetchedData = response.data;
 
@@ -68,7 +74,7 @@ const Alerte = () => {
     const fetchFournitureData = async () => {
       try {
         const response = await axios.get(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false`
+          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&isDeleted=false`
         );
         const fetchedData = response.data.fournitures;
 

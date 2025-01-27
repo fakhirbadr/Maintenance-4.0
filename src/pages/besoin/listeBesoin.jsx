@@ -47,7 +47,7 @@
 //   const fetchFournitures = async () => {
 //     try {
 //       const response = await axios.get(
-//         "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false"
+//         "${apiUrl}/api/v1/fournitureRoutes?isClosed=false"
 //       );
 //       const reversedData = response.data.fournitures.reverse(); // Inverser l'ordre des données
 //       setRows(reversedData); // Mettre à jour l'état avec les données inversées
@@ -105,7 +105,7 @@
 //   const handleUpdateFourniture = async () => {
 //     try {
 //       await axios.patch(
-//         `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${selectedFourniture._id}`,
+//         `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture._id}`,
 //         {
 //           name: updatedName,
 //           categorie: updatedCategorie,
@@ -151,7 +151,7 @@
 
 //       // Send a PATCH request to update `isClosed` and `dateCloture`
 //       const response = await axios.patch(
-//         `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`,
+//         `${apiUrl}/api/v1/fournitureRoutes/${rowData._id}`,
 //         {
 //           isClosed: true,
 //           dateCloture: currentDate.toISOString(), // Format ISO for the date
@@ -196,7 +196,7 @@
 //       try {
 //         // Send a DELETE request to the backend
 //         await axios.delete(
-//           `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData._id}`
+//           `${apiUrl}/api/v1/fournitureRoutes/${rowData._id}`
 //         );
 
 //         // Remove the item from the local state after successful deletion
@@ -596,8 +596,18 @@ import {
   InputLabel,
   Select,
   MenuItem,
+  List,
+  ListItem,
+  ListItemText,
+  Stepper,
+  Step,
+  StepLabel,
+  Tooltip,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
+import { ContentCopy } from "@mui/icons-material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const ListeBesoin = () => {
   const handleDownloadExcel = () => {
@@ -641,17 +651,68 @@ const ListeBesoin = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
   const [updatedStatus, setUpdatedStatus] = useState("");
   const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
+  const [statusDialogOpen, setStatusDialogOpen] = useState(false);
+  const [selectedStatus, setSelectedStatus] = useState("");
+  const [statusHistory, setStatusHistory] = useState([]);
+  const [activeStep, setActiveStep] = useState(0);
+
+  const calculateTimeDifference = (startTimestamp, endTimestamp) => {
+    const startDate = new Date(startTimestamp);
+    const endDate = new Date(endTimestamp);
+    const diffInMs = endDate - startDate;
+    const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
+    const diffInMinutes = Math.floor(
+      (diffInMs % (1000 * 60 * 60)) / (1000 * 60)
+    );
+    return `${diffInHours} h ${diffInMinutes} min`;
+  };
+  // Fonction pour ouvrir le dialog
+  const handleClickStatus = async (id, source) => {
+    console.log("ID cliqué:", id);
+    console.log("Source:", source);
+
+    try {
+      let url;
+      if (source === "source1") {
+        url = `${apiUrl}/api/v1/fournitureRoutes/${id}`;
+      } else if (source === "source2") {
+        url = `${apiUrl}/api/v1/subtickets/${id}`;
+      }
+
+      console.log("URL utilisée :", url);
+
+      const response = await axios.get(url);
+      console.log("Données de la réponse:", response.data);
+
+      if (response.data.statusHistory) {
+        setStatusHistory(response.data.statusHistory);
+      } else {
+        setStatusHistory([]);
+      }
+
+      setSelectedStatus(response.data.statusHistory);
+      setStatusDialogOpen(true);
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération de l'historique des statuts :",
+        error
+      );
+    }
+  };
+
+  // Fonction pour fermer le dialog
+  const handleCloseStatusDialog = () => {
+    setStatusDialogOpen(false);
+  };
 
   const fetchFournitures = async () => {
     try {
       // Effectuer les deux requêtes en parallèle
       const [source1Response, source2Response] = await Promise.all([
         axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?isClosed=false&status=!créé"
+          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&status=!créé`
         ),
-        axios.get(
-          "https://backend-v1-1.onrender.com/api/v1/subtickets?isClosed=false&status=!créé"
-        ),
+        axios.get(`${apiUrl}/api/v1/subtickets?isClosed=false&status=!créé`),
       ]);
 
       // Mapper les données de la première source
@@ -667,6 +728,10 @@ const ListeBesoin = () => {
         commentaire: item.commentaire,
         dateCreation: new Date(item.dateCreation), // Convertir en objet Date
         status: item.status,
+        prix: item.prix,
+        tarifLivraison: item.tarifLivraison,
+        fournisseur: item.fournisseur,
+
         source: "source1",
       }));
 
@@ -682,9 +747,13 @@ const ListeBesoin = () => {
         categorie: item.categorie,
         quantite: item.quantite,
         besoin: item.equipement_deficitaire,
-        commentaire: item.commentaire,
+        commentaire: item.description,
         dateCreation: new Date(item.createdAt), // Convertir en objet Date
         status: item.status,
+        prix: item.prix,
+        tarifLivraison: item.tarifLivraison,
+        fournisseur: item.fournisseur,
+
         source: "source2",
         parentId: item.parentId,
       }));
@@ -758,7 +827,7 @@ const ListeBesoin = () => {
         const { id: subTicketId } = selectedFourniture; // Récupérer l'ID du sous-ticket
 
         await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/sub-tickets/${subTicketId}`, // URL de mise à jour du sous-ticket
+          `${apiUrl}/api/v1/sub-tickets/${subTicketId}`, // URL de mise à jour du sous-ticket
           {
             name: updatedName,
             categorie: updatedCategorie,
@@ -790,7 +859,7 @@ const ListeBesoin = () => {
       } else if (selectedFourniture.source === "source1") {
         // Mise à jour pour source1 (URL de fournitureRoutes)
         await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${selectedFourniture.id}`,
+          `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture.id}`,
           {
             name: updatedName,
             categorie: updatedCategorie,
@@ -840,7 +909,7 @@ const ListeBesoin = () => {
       if (rowData.source === "source1") {
         // Clôturer le ticket parent pour "source1"
         const response = await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData.id}`,
+          `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
           {
             isClosed: true,
             dateCloture: currentDate.toISOString(),
@@ -864,7 +933,7 @@ const ListeBesoin = () => {
       } else if (rowData.source === "source2") {
         // Clôturer directement le ticket parent
         const firstPatchResponse = await axios.patch(
-          `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${rowData.parentId}`,
+          `${apiUrl}/api/v1/ticketMaintenance/${rowData.parentId}`,
           {
             isClosed: true,
             dateCloture: currentDate.toISOString(),
@@ -878,7 +947,7 @@ const ListeBesoin = () => {
           // Imprimer le ticket parent dans le console.log
           console.log("Ticket parent clôturé:", firstPatchResponse.data);
 
-          const url = `https://backend-v1-1.onrender.com/api/actifs/${firstPatchResponse.data.selectedActifId}/categories/${firstPatchResponse.data.selectedCategoryId}/equipments/${firstPatchResponse.data.selectedEquipmentId}`;
+          const url = `${apiUrl}/api/actifs/${firstPatchResponse.data.selectedActifId}/categories/${firstPatchResponse.data.selectedCategoryId}/equipments/${firstPatchResponse.data.selectedEquipmentId}`;
           const body = {
             isFunctionel: true, // Exemple de mise à jour du statut
           };
@@ -908,7 +977,7 @@ const ListeBesoin = () => {
           if (subTicketId) {
             try {
               const subTicketResponse = await axios.patch(
-                `https://backend-v1-1.onrender.com/api/v1/sub-tickets/${subTicketId}`,
+                `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
                 {
                   isClosed: true,
                   dateCloture: currentDate.toISOString(),
@@ -976,7 +1045,7 @@ const ListeBesoin = () => {
           // Suppression pour source1
           console.log(`Suppression de fourniture avec ID: ${rowData.id}`);
           const response = await axios.delete(
-            `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes/${rowData.id}` // Utilisez 'id' au lieu de '_id'
+            `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}` // Utilisez 'id' au lieu de '_id'
           );
           console.log("Réponse après suppression de source1:", response);
           alert("Fourniture supprimée avec succès.");
@@ -996,7 +1065,7 @@ const ListeBesoin = () => {
             `Suppression du sous-ticket avec Parent ID: ${parentId} et Sub-ticket ID: ${subTicketId}`
           );
           const response = await axios.delete(
-            `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/tickets/${parentId}/subTickets/${subTicketId}`
+            `${apiUrl}/api/v1/ticketMaintenance/tickets/${parentId}/subTickets/${subTicketId}`
           );
           console.log("Réponse après suppression de source2:", response);
           alert("Sous-ticket supprimé avec succès.");
@@ -1027,6 +1096,43 @@ const ListeBesoin = () => {
   }, []);
 
   const columns = [
+    {
+      name: "id",
+      label: "",
+      options: {
+        filter: false,
+        sort: false,
+        customBodyRender: (value) => (
+          <div className="flex items-center">
+            <Tooltip title="Copier ID">
+              <ContentCopy
+                sx={{
+                  cursor: "pointer",
+                  marginLeft: "8px",
+                  color: "#2973B2",
+                }}
+                onClick={() => {
+                  navigator.clipboard.writeText(value); // Copier l'ID dans le presse-papiers
+                }}
+              />
+            </Tooltip>
+          </div>
+        ),
+      },
+    },
+    {
+      name: "source", // Nom de la colonne pour la source des données
+      label: "Source", // Titre de la colonne
+      options: {
+        filter: true,
+        sort: false, // Si tu ne veux pas trier par la source
+        display: "excluded",
+        customBodyRender: (value) => {
+          // Afficher la source de la donnée
+          return value === "source1" ? "Source 1" : "Source 2";
+        },
+      },
+    },
     {
       name: "name",
       label: "Nom",
@@ -1065,7 +1171,59 @@ const ListeBesoin = () => {
     {
       name: "status",
       label: "Status",
-      options: { filter: true, sort: false, filterType: "dropdown" },
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRender: (value, tableMeta) => {
+          const source = tableMeta.rowData.source; // Assurez-vous que 'source' est défini dans vos données
+          return (
+            <Button
+              onClick={() =>
+                handleClickStatus(tableMeta.rowData[0], tableMeta.rowData[1])
+              }
+            >
+              {value}
+            </Button>
+          );
+        },
+      },
+    },
+    {
+      name: "prix",
+      label: "Prix",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRender: (value) => {
+          return value !== undefined ? `${value} MAD` : "-";
+        },
+      },
+    },
+    {
+      name: "tarifLivraison",
+      label: "Tarif Livraison",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRender: (value) => {
+          return value !== undefined ? `${value} MAD` : "-";
+        },
+      },
+    },
+    {
+      name: "fournisseur",
+      label: "Fournisseur",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRender: (value) => {
+          return value !== undefined ? `${value}` : "-";
+        },
+      },
     },
     {
       name: "commentaire",
@@ -1101,19 +1259,29 @@ const ListeBesoin = () => {
           const rowIndex = tableMeta.rowIndex; // Obtient l'index de la ligne
           return (
             <div style={{ display: "flex", gap: "1px" }}>
-              <IconButton onClick={() => handleView(rowIndex)} color="primary">
+              <IconButton
+                title="visualiser "
+                onClick={() => handleView(rowIndex)}
+                color="primary"
+              >
                 <Eye style={{ width: "18px", height: "18px" }} />
               </IconButton>
-              <IconButton onClick={() => handleEdit(rowIndex)} color="default">
+              <IconButton
+                title="modifier"
+                onClick={() => handleEdit(rowIndex)}
+                color="default"
+              >
                 <Edit style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
+                title="supprimer "
                 onClick={() => handleDelete(rowIndex)}
                 color="secondary"
               >
                 <Delete style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
+                title="cloturer"
                 onClick={async () => await handleClose(rowIndex)} // Wrap handleClose with async/await
                 color="success"
               >
@@ -1151,7 +1319,7 @@ const ListeBesoin = () => {
     filterType: "checkbox",
     selectableRows: "none",
 
-    rowsPerPage: 100,
+    rowsPerPage: 10,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: true,
@@ -1378,6 +1546,64 @@ const ListeBesoin = () => {
             <Button onClick={handleCloseViewDialog} color="primary">
               Fermer
             </Button>
+          </DialogActions>
+        </Dialog>
+        {/* Dialog MUI */}
+        <Dialog
+          open={statusDialogOpen}
+          fullWidth
+          onClose={handleCloseStatusDialog}
+        >
+          <DialogTitle>Historique des Statuts</DialogTitle>
+          <DialogContent>
+            {Array.isArray(statusHistory) && statusHistory.length > 0 ? (
+              <>
+                <Stepper activeStep={statusHistory.length - 1} alternativeLabel>
+                  {statusHistory.map((entry, index) => (
+                    <Step key={index}>
+                      <StepLabel>
+                        {`${entry.status}`}
+                        {index > 0 && statusHistory[index - 1].timestamp && (
+                          <Typography variant="body2" color="textSecondary">
+                            Temps écoulé :{" "}
+                            {calculateTimeDifference(
+                              statusHistory[index - 1].timestamp,
+                              entry.timestamp
+                            )}
+                          </Typography>
+                        )}
+                      </StepLabel>
+                    </Step>
+                  ))}
+                </Stepper>
+
+                {statusHistory.map((entry, index) => (
+                  <ListItem key={index}>
+                    <ListItemText
+                      primary={` ${entry.status}`}
+                      secondary={`Date : ${
+                        entry.timestamp
+                          ? new Date(entry.timestamp).toLocaleString("fr-FR", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit",
+                            })
+                          : "Date non disponible"
+                      }`}
+                    />
+                  </ListItem>
+                ))}
+              </>
+            ) : (
+              <ListItem>
+                <ListItemText primary="Aucun historique disponible." />
+              </ListItem>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseStatusDialog}>Fermer</Button>
           </DialogActions>
         </Dialog>
       </div>

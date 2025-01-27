@@ -13,6 +13,8 @@ import ListItemText from "@mui/material/ListItemText";
 import Drawer from "@mui/material/Drawer";
 import { useTheme } from "@mui/material/styles";
 import { formatDistanceToNow } from "date-fns";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const currentMonth = new Date().toLocaleString("fr-FR", { month: "long" });
 
@@ -40,9 +42,7 @@ const BesoinVehicule = () => {
   useEffect(() => {
     const fetchTicketVehicules = async () => {
       try {
-        const response = await axios.get(
-          "https://backend-v1-1.onrender.com/api/ticketvehicules"
-        );
+        const response = await axios.get(`${apiUrl}/api/ticketvehicules`);
         setTicketVehicules(response.data);
       } catch (err) {
         setError(err.message);

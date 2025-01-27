@@ -1,0 +1,17 @@
+/* Homepage.css */
+@keyframes moveLine {
+  0% {
+    stroke-dashoffset: 0;
+  }
+  100% {
+    stroke-dashoffset: -20; /* Move the dashes along the line */
+  }
+}
+
+.line {
+  stroke: #880b25;
+  stroke-width: 2;
+  stroke-dasharray: 4, 2;
+  stroke-dashoffset: 0;
+  animation: moveLine 2s linear infinite;
+}

@@ -11,6 +11,8 @@ import {
   Grid,
   Box,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const DetailsBesoin = ({
   open,
@@ -37,7 +39,7 @@ const DetailsBesoin = ({
           });
 
           const response = await fetch(
-            `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?${params.toString()}`
+            `${apiUrl}/api/v1/fournitureRoutes?${params.toString()}`
           );
           const data = await response.json();
           setRelatedData(data.fournitures || []);
@@ -70,7 +72,7 @@ const DetailsBesoin = ({
               Nom de l'équipement : {selectedEquipment.besoin}
             </Typography>
             <Typography variant="body1" gutterBottom>
-              Quantité : {selectedEquipment.count}
+              Nombre des demandes : {selectedEquipment.count}
             </Typography>
           </>
         ) : (

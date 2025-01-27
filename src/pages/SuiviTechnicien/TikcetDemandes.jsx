@@ -18,6 +18,8 @@ import MUIDataTable from "mui-datatables";
 import * as XLSX from "xlsx";
 import moment from "moment";
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const TicketDemandes = () => {
   const [name, setName] = useState("");
   const [rows, setRows] = useState([]);
@@ -27,7 +29,7 @@ const TicketDemandes = () => {
       if (!name) return; // Évite de faire une requête si name est vide
       try {
         const response = await axios.get(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?technicien=${name}`
+          `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}`
         );
         setRows(response.data.fournitures);
       } catch (error) {

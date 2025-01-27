@@ -2,7 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "./1.jpg";
 import axios from "axios"; // Assurez-vous d'installer axios si vous ne l'avez pas encore fait
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const Login = () => {
   const navigate = useNavigate();
 
@@ -17,7 +18,7 @@ const Login = () => {
 
     if (token) {
       axios
-        .get("https://backend-v1-1.onrender.com/api/v1/users/profile", {
+        .get(`${apiUrl}/api/v1/users/profile`, {
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -43,7 +44,7 @@ const Login = () => {
     e.preventDefault();
 
     axios
-      .post("https://backend-v1-1.onrender.com/api/v1/users/login", {
+      .post(`${apiUrl}/api/v1/users/login`, {
         email,
         password,
       })
@@ -64,6 +65,7 @@ const Login = () => {
               site: user.site,
               province: user.province,
               nomComplet: user.nomComplet,
+              soldeConges: user.soldeConges,
             })
           );
 
@@ -77,7 +79,7 @@ const Login = () => {
           // Ajouter une requête pour enregistrer l'historique des connexions
           axios
             .post(
-              "https://backend-v1-1.onrender.com/api/v1/connection-history/record",
+              `${apiUrl}/api/v1/connection-history/record`,
               {
                 userId: user.id,
                 email: user.email,

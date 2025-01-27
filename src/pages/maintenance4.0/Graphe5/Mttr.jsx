@@ -2,6 +2,8 @@ import React, { useState, useEffect } from "react";
 import { Grid, Typography, Box } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Mttr = ({ region, province, startDate, endDate }) => {
   const theme = useTheme();
@@ -14,8 +16,7 @@ const Mttr = ({ region, province, startDate, endDate }) => {
     setIsLoading(true);
     setHasError(false);
 
-    let url =
-      "https://backend-v1-1.onrender.com/api/v1/ticketMaintenance?isClosed=true&currentMonth=true";
+    let url = `${apiUrl}/api/v1/ticketMaintenance?isClosed=true&currentMonth=true`;
 
     // Ajouter la région et la province à l'URL si elles sont fournies
     if (region) {

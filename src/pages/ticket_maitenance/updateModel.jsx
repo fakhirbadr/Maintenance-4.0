@@ -12,6 +12,8 @@ import {
   MenuItem,
 } from "@mui/material";
 import axios from "axios"; // Assurez-vous d'importer axios
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
   // Fonction pour gérer la soumission des modifications
@@ -23,7 +25,7 @@ const UpdateModel = ({ open, onClose, ticket, onFieldChange, onSubmit }) => {
       };
       // Faites un appel PATCH pour mettre à jour le ticket sur le serveur
       const response = await axios.patch(
-        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
+        `${apiUrl}/api/v1/ticketMaintenance/${ticket._id}`,
         updatedTicketData
       );
 

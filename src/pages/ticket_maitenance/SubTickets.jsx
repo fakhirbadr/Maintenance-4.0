@@ -10,6 +10,8 @@ import {
   Typography,
 } from "@mui/material";
 import axios from "axios";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const SubTickets = ({ open, ticket, onClose, onSave }) => {
   // Initialize state for sub-ticket name and comment
@@ -57,7 +59,7 @@ const SubTickets = ({ open, ticket, onClose, onSave }) => {
   const handleAddSubTicket = async () => {
     try {
       const response = await axios.patch(
-        `https://backend-v1-1.onrender.com/api/v1/ticketMaintenance/${ticket._id}`,
+        `${apiUrl}/api/v1/ticketMaintenance/${ticket._id}`,
         {
           isVisible: false, // Update visibility status to false
           subTickets: [...ticket.subTickets, subTicketFields],

@@ -13,6 +13,8 @@ import {
   Paper,
 } from "@mui/material";
 import DetailsBesoin from "./DetailsBesoin";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const DialogListEquipmentInfo = ({
   openTwo,
@@ -41,7 +43,7 @@ const DialogListEquipmentInfo = ({
         });
 
         const response = await fetch(
-          `https://backend-v1-1.onrender.com/api/v1/fournitureRoutes?${params.toString()}`
+          `${apiUrl}/api/v1/fournitureRoutes?${params.toString()}`
         );
         const result = await response.json();
         console.log("Données brutes de l'API:", result);
@@ -82,7 +84,7 @@ const DialogListEquipmentInfo = ({
               <TableHead>
                 <TableRow>
                   <TableCell>Nom</TableCell>
-                  <TableCell align="right">Quantité</TableCell>
+                  <TableCell align="right">Nombre des demandes</TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>

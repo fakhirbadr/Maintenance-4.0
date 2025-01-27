@@ -10,6 +10,8 @@ import {
   InputLabel,
   FormControl,
 } from "@mui/material";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Item = ({ children }) => (
   <Box
@@ -56,7 +58,7 @@ const ProfilUser = () => {
     const userActifs = JSON.parse(localStorage.getItem("userActifs"));
     setUserInfo(userData);
 
-    fetch("https://backend-v1-1.onrender.com/api/actifs")
+    fetch(`${apiUrl}/api/actifs`)
       .then((response) => response.json())
       .then((data) => {
         const filteredActifs = data.filter((actif) =>
@@ -88,7 +90,7 @@ const ProfilUser = () => {
 
     try {
       const response = await fetch(
-        `https://backend-v1-1.onrender.com/api/v1/users/update-password/${userId}`,
+        `${apiUrl}/api/v1/users/update-password/${userId}`,
         {
           method: "PUT",
           headers: {
