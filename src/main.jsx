@@ -21,10 +21,7 @@ import Ticket from "./pages/ticket_maitenance/ticketMaintenance";
 import Tickets from "./pages/demande_ticket/Ticket";
 import Besoin from "./pages/besoin/listeBesoin";
 import HistoriqueIntervention from "./pages/historique_Intervention/historiqueIntervention";
-import TempReel from "./pages/IOT/TempReel";
-import Capteur from "./pages/IOT/Capteur";
-import HomePageCapteur from "./pages/IOT/HomePageCapteur";
-import Livraison from "./pages/IOT/Livraison/Livraison";
+
 import Formations from "./pages/Formations/Formations";
 import Presentation from "./pages/Formations/FormationFils/Presentation";
 import ChatBot from "./pages/ChatBot/ChatBot";
