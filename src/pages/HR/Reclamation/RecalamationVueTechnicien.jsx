@@ -6,15 +6,29 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import React from "react";
+import React, { useEffect, useState } from "react";
 
 const RecalamationVueTechnicien = () => {
+  const [technicien, setTechnicien] = useState("");
   const reclamationTypes = [
     { value: "dysfonctionnement", label: "Dysfonctionnement technique" },
 
     { value: "conditions", label: "Conditions de travail non conformes" },
     { value: "autre", label: "Autre" },
   ];
+
+  useEffect(() => {
+    const storedUserInfo = localStorage.getItem("userInfo");
+    if (storedUserInfo) {
+      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
+      // if (userInfo.province) {
+      //   setProvince(userInfo.province); // Mise à jour de province
+      // }
+      if (userInfo.nomComplet) {
+        setTechnicien(userInfo.nomComplet); // Mise à jour du technicien
+      }
+    }
+  }, []);
 
   return (
     <div className="px-24">
@@ -92,9 +106,11 @@ const RecalamationVueTechnicien = () => {
             <TextField
               fullWidth
               label="Nom complet"
+              value={technicien}
               variant="outlined"
               margin="normal"
               required
+              disabled
             />
 
             {/* Type de réclamation */}

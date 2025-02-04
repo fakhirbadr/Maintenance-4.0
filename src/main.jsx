@@ -149,6 +149,7 @@ const router = createBrowserRouter([
         path: "besoin",
         element: <ProtectedRoute element={<Besoin />} />,
       },
+
       {
         path: "BesoinVehicule",
         element: <ProtectedRoute element={<BesoinVehicule />} />,
@@ -168,6 +169,10 @@ const router = createBrowserRouter([
       {
         path: "parametres",
         element: <ProtectedRoute element={<Parametre />} />,
+      },
+      {
+        path: "chatbot",
+        element: <ProtectedRoute element={<ChatBot />} />,
       },
       {
         path: "SuiviDemande",

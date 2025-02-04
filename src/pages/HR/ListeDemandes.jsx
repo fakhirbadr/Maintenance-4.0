@@ -195,48 +195,48 @@ const ListeDemandes = () => {
         ),
       },
     },
-    // {
-    //   name: "Action",
-    //   options: {
-    //     customBodyRender: (_, tableMeta) => {
-    //       const rowData = tableMeta.rowData; // Données de la ligne
-    //       const historiqueIndex = tableMeta.rowIndex; // Index de l'historique
-    //       const id = rowData[0]; // Supposons que l'ID est dans la première colonne
+    {
+      name: "Action",
+      options: {
+        customBodyRender: (_, tableMeta) => {
+          const rowData = tableMeta.rowData; // Données de la ligne
+          const historiqueIndex = tableMeta.rowIndex; // Index de l'historique
+          const id = rowData[0]; // Supposons que l'ID est dans la première colonne
 
-    //       return (
-    //         <div>
-    //           <button
-    //             onClick={() => handleAction("validé", historiqueIndex, id)}
-    //             style={{
-    //               backgroundColor: "#4CAF50",
-    //               color: "white",
-    //               border: "none",
-    //               padding: "5px 10px",
-    //               cursor: "pointer",
-    //               marginRight: "5px",
-    //               borderRadius: "5px",
-    //             }}
-    //           >
-    //             Validé
-    //           </button>
-    //           <button
-    //             onClick={() => handleAction("rejeté", historiqueIndex, id)}
-    //             style={{
-    //               backgroundColor: "#F44336",
-    //               color: "white",
-    //               border: "none",
-    //               padding: "5px 10px",
-    //               cursor: "pointer",
-    //               borderRadius: "5px",
-    //             }}
-    //           >
-    //             Rejeté
-    //           </button>
-    //         </div>
-    //       );
-    //     },
-    //   },
-    // },
+          return (
+            <div>
+              <button
+                onClick={() => handleAction("validé", historiqueIndex, id)}
+                style={{
+                  backgroundColor: "#4CAF50",
+                  color: "white",
+                  border: "none",
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                  marginRight: "5px",
+                  borderRadius: "5px",
+                }}
+              >
+                Validé
+              </button>
+              <button
+                onClick={() => handleAction("rejeté", historiqueIndex, id)}
+                style={{
+                  backgroundColor: "#F44336",
+                  color: "white",
+                  border: "none",
+                  padding: "5px 10px",
+                  cursor: "pointer",
+                  borderRadius: "5px",
+                }}
+              >
+                Rejeté
+              </button>
+            </div>
+          );
+        },
+      },
+    },
   ];
 
   const options = {

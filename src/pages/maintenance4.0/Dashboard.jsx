@@ -17,6 +17,7 @@ import axios from "axios";
 import { MenuItem, TextField } from "@mui/material";
 import TauxDisponibilité from "./Graphe 11/TauxDisponibilité";
 import GlobalGraph from "./Graph Globale/GlobalGraph";
+import Index from "./Table kpi v2/index";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -222,12 +223,13 @@ const Dashboard = () => {
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} lg={12}>
-            <GlobalGraph
+            {/* <GlobalGraph
               region={selectedRegion} // Already passing selectedRegion
               province={selectedProvince} // Passing selectedProvince to ClotureNonCloture
               startDate={startDate} // Passing startDate
               endDate={endDate}
-            />
+            /> */}
+            <Index />
           </Grid>
           <Grid item xs={12} lg={4}>
             <div>

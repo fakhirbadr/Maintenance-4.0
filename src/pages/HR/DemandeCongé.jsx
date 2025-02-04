@@ -66,37 +66,36 @@ const DemandeCongé = () => {
     }
   }, []);
 
-  // useEffect(() => {
-  //   const userIds = JSON.parse(localStorage.getItem("userActifs"));
-  //   if (userIds && Array.isArray(userIds)) {
-  //     const fetchedNames = [];
-  //     userIds.forEach(async (id) => {
-  //       try {
-  //         const response = await fetch(
-  //           `${apiUrl}/api/actifs/${id}`
-  //         );
-  //         if (response.ok) {
-  //           const data = await response.json();
-  //           fetchedNames.push(data); // Ajoutez l'objet complet ici
-  //           if (fetchedNames.length === userIds.length) {
-  //             setNames(fetchedNames); // Mettez à jour avec les objets complets
-  //             if (fetchedNames.length > 0) {
-  //               setSelectedName(fetchedNames[0].name); // Utilisez le premier nom
-  //             }
-  //           }
-  //           console.log(setSelectedName);
-  //         } else {
-  //           console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
-  //         }
-  //       } catch (error) {
-  //         console.error(
-  //           `Erreur lors de la récupération des données pour l'ID ${id}:`,
-  //           error
-  //         );
-  //       }
-  //     });
-  //   }
-  // }, []);
+  useEffect(() => {
+    const userIds = JSON.parse(localStorage.getItem("userActifs"));
+    if (userIds && Array.isArray(userIds)) {
+      const fetchedNames = [];
+      userIds.forEach(async (id) => {
+        try {
+          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+          if (response.ok) {
+            const data = await response.json();
+            fetchedNames.push(data); // Ajoutez l'objet complet ici
+            if (fetchedNames.length === userIds.length) {
+              setNames(fetchedNames); // Mettez à jour avec les objets complets
+              if (fetchedNames.length > 0) {
+                setSelectedName(fetchedNames[0].name); // Utilisez le premier nom
+              }
+            }
+            console.log(setSelectedName);
+            console.log(selectedName);
+          } else {
+            console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
+          }
+        } catch (error) {
+          console.error(
+            `Erreur lors de la récupération des données pour l'ID ${id}:`,
+            error
+          );
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
     const fetchAbsences = async () => {
@@ -218,6 +217,7 @@ const DemandeCongé = () => {
         role={role}
         onClose={handleDialogClose}
         province={province}
+        selectedName={selectedName}
       />
     </div>
   );

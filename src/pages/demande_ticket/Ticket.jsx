@@ -5,157 +5,208 @@ import CardContent from "@mui/material/CardContent";
 import CardMedia from "@mui/material/CardMedia";
 import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
-import ModelMaintenance from "./ModelMaintenance.jsx"; // Modal for maintenance
-import ModelFourniture from "./ModelFourniture.jsx"; // Modal for fourniture
-import myImage from "./4.jpg"; // Adjust the path according to where the image is located.
-import myImage2 from "./3.jpg"; // Adjust the path according to where the image is located.
-import myImage5 from "./5.jpg"; // Adjust the path according to where the image is located.
+import ModelMaintenance from "./ModelMaintenance.jsx";
+import ModelFourniture from "./ModelFourniture.jsx";
+import myImage from "./4.jpg";
+import myImage2 from "./3.jpg";
+import myImage5 from "./5.jpg";
 import ModelVehicule from "./ModelVehicule";
-import { Grid } from "@mui/material";
+import ModelRetour from "./ModelRetour"; // Nouveau composant modal
+import { Grid, useTheme } from "@mui/material";
+import { alpha } from "@mui/material/styles";
 
 const Ticket = () => {
-  const [openMaintenance, setOpenMaintenance] = useState(false); // State to handle maintenance modal
-  const [openFourniture, setOpenFourniture] = useState(false); // State to handle fourniture modal
+  const theme = useTheme();
+  const [openMaintenance, setOpenMaintenance] = useState(false);
+  const [openFourniture, setOpenFourniture] = useState(false);
   const [openVehicule, setOpenVehicule] = useState(false);
+  const [openRetour, setOpenRetour] = useState(false); // État pour le nouveau modal
 
-  // Function to handle opening the behicule modal
-  const handleOpenvehiculee = () => {
-    setOpenVehicule(true);
-  };
-
-  // Function to handle opening the maintenance modal
-  const handleOpenMaintenance = () => {
-    setOpenMaintenance(true);
-  };
-
-  // Function to handle opening the fourniture modal
-  const handleOpenFourniture = () => {
-    setOpenFourniture(true);
-  };
-
-  // Function to handle closing the modals
-  const handleClose = () => {
-    setOpenMaintenance(false);
-    setOpenFourniture(false);
-    setOpenVehicule(false);
+  // Styles cohérents avec le dark mode
+  const cardStyles = {
+    maxWidth: "100%",
+    height: "100%",
+    bgcolor: theme.palette.background.paper,
+    transition: "transform 0.2s",
+    "&:hover": {
+      transform: "scale(1.02)",
+      boxShadow: `0 4px 12px ${alpha(theme.palette.common.black, 0.3)}`,
+    },
   };
 
   return (
     <>
       <Location />
       <div className="h-[calc(100dvh-var(--upbar-height))] px-7 flex justify-center space-x-4 flex-col gap-y-5 md:flex-col w-full">
-        {/* Card Grid */}
         <Grid container spacing={3} justifyContent="center">
-          {/* Maintenance Ticket */}
+          {/* Intervention Technique */}
           <Grid item xs={12} sm={8} md={3}>
-            <Card sx={{ maxWidth: "100%", height: "100%" }}>
-              <CardActionArea onClick={handleOpenMaintenance}>
+            <Card sx={cardStyles}>
+              <CardActionArea onClick={() => setOpenMaintenance(true)}>
                 <CardMedia
                   component="img"
                   image={myImage2}
-                  alt="Création d'un ticket de maintenance"
+                  alt="Demande d'intervention technique"
                   sx={{
-                    height: { xs: 100, md: 200 }, // Responsive height for the image
+                    height: { xs: 100, md: 200 },
                     objectFit: "cover",
+                    filter: "brightness(0.8)",
                   }}
                 />
                 <CardContent>
-                  <Typography gutterBottom variant="h6" component="div">
-                    Création d'un ticket de maintenance
+                  <Typography
+                    gutterBottom
+                    variant="h6"
+                    component="div"
+                    sx={{ color: theme.palette.primary.light }}
+                  >
+                    Intervention Technique
                   </Typography>
-                  {/* Responsive text visibility */}
                   <Typography
                     variant="body2"
                     sx={{
-                      display: { xs: "none", md: "block" }, // Hide on small screens
-                      color: "text.secondary",
+                      display: { xs: "none", md: "block" },
+                      color: theme.palette.text.secondary,
                     }}
                   >
-                    Veuillez remplir le formulaire ci-dessous afin de soumettre
-                    une demande de maintenance.
-                    <br /> Cette procédure permet de garantir un suivi efficace
-                    et rapide pour résoudre tout problème lié à l'équipement.
+                    Signalement de panne ou demande de maintenance préventive
+                    pour équipements industriels.
                   </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>
           </Grid>
 
-          {/* Supplies Ticket */}
+          {/* Commande Matériel */}
           <Grid item xs={12} sm={8} md={3}>
-            <Card sx={{ maxWidth: "100%", height: "100%" }}>
-              <CardActionArea onClick={handleOpenFourniture}>
+            <Card sx={cardStyles}>
+              <CardActionArea onClick={() => setOpenFourniture(true)}>
                 <CardMedia
                   component="img"
                   image={myImage}
-                  alt="Création d'un ticket commande"
+                  alt="Commande de matériel"
                   sx={{
                     height: { xs: 100, md: 200 },
                     objectFit: "cover",
+                    filter: "brightness(0.8)",
                   }}
                 />
                 <CardContent>
-                  <Typography gutterBottom variant="h6" component="div">
-                    Création d'un ticket commande
+                  <Typography
+                    gutterBottom
+                    variant="h6"
+                    component="div"
+                    sx={{ color: theme.palette.primary.light }}
+                  >
+                    Commande Matériel
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
                       display: { xs: "none", md: "block" },
-                      color: "text.secondary",
+                      color: theme.palette.text.secondary,
                     }}
                   >
-                    Pour une demande de matériel industriel ou informatique, ou
-                    n'importe quelle autre demande, veuillez remplir le
-                    formulaire. Si vous avez des doutes concernant la procédure
-                    ou si la demande n'est pas nécessaire, n'hésitez pas à
-                    contacter notre support technique.
+                    Demande d'achat de fournitures, pièces détachées ou
+                    équipements spécifiques.
                   </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>
           </Grid>
 
-          {/* Vehicle Ticket */}
+          {/* Service Véhicule */}
           <Grid item xs={12} sm={8} md={3}>
-            <Card sx={{ maxWidth: "100%", height: "100%" }}>
-              <CardActionArea onClick={handleOpenvehiculee}>
+            <Card sx={cardStyles}>
+              <CardActionArea onClick={() => setOpenVehicule(true)}>
                 <CardMedia
                   component="img"
                   image={myImage5}
-                  alt="Création d'un ticket pour véhicule"
+                  alt="Gestion de véhicule"
                   sx={{
                     height: { xs: 100, md: 200 },
                     objectFit: "cover",
+                    filter: "brightness(0.8)",
                   }}
                 />
                 <CardContent>
-                  <Typography gutterBottom variant="h6" component="div">
-                    Création d'un ticket pour véhicule
+                  <Typography
+                    gutterBottom
+                    variant="h6"
+                    component="div"
+                    sx={{ color: theme.palette.primary.light }}
+                  >
+                    Service Véhicule
                   </Typography>
                   <Typography
                     variant="body2"
                     sx={{
                       display: { xs: "none", md: "block" },
-                      color: "text.secondary",
+                      color: theme.palette.text.secondary,
                     }}
                   >
-                    Pour toute demande de matériel industriel, informatique, ou
-                    autre, veuillez remplir le formulaire ci-dessous. En cas de
-                    doute sur la procédure ou si vous n'êtes pas sûr de la
-                    nécessité de la demande, n'hésitez pas à demander de l'aide.
+                    Réservation de véhicule ou demande d'intervention mécanique
+                    d'urgence.
                   </Typography>
                 </CardContent>
               </CardActionArea>
             </Card>
           </Grid>
+
+          {/* Retour d'Équipement - Nouvelle carte */}
+          {/* <Grid item xs={12} sm={8} md={3}>
+            <Card sx={cardStyles}>
+              <CardActionArea onClick={() => setOpenRetour(true)}>
+                <CardMedia
+                  component="img"
+                  image={myImage2}
+                  alt="Retour d'équipement"
+                  sx={{
+                    height: { xs: 100, md: 200 },
+                    objectFit: "cover",
+                    filter: "brightness(0.8)",
+                  }}
+                />
+                <CardContent>
+                  <Typography
+                    gutterBottom
+                    variant="h6"
+                    component="div"
+                    sx={{ color: theme.palette.primary.light }}
+                  >
+                    Retour d'Équipement
+                  </Typography>
+                  <Typography
+                    variant="body2"
+                    sx={{
+                      display: { xs: "none", md: "block" },
+                      color: theme.palette.text.secondary,
+                    }}
+                  >
+                    Signalement d'un équipement défectueux ou demande de retour
+                    de matériel en fin d'utilisation.
+                  </Typography>
+                </CardContent>
+              </CardActionArea>
+            </Card>
+          </Grid> */}
         </Grid>
       </div>
 
-      {/* Use separate modals for each ticket */}
-      <ModelMaintenance open={openMaintenance} onClose={handleClose} />
-      <ModelFourniture open={openFourniture} onClose={handleClose} />
-      <ModelVehicule open={openVehicule} onClose={handleClose} />
+      {/* Modals */}
+      <ModelMaintenance
+        open={openMaintenance}
+        onClose={() => setOpenMaintenance(false)}
+      />
+      <ModelFourniture
+        open={openFourniture}
+        onClose={() => setOpenFourniture(false)}
+      />
+      <ModelVehicule
+        open={openVehicule}
+        onClose={() => setOpenVehicule(false)}
+      />
+      <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
     </>
   );
 };

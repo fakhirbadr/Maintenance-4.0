@@ -258,6 +258,7 @@ function CreateAccountForm() {
             <MenuItem value="admin">Admin</MenuItem>
             <MenuItem value="user">User</MenuItem>
             <MenuItem value="docteurs">docteurs</MenuItem>
+            <MenuItem value="chargé de stock">chargé de stock</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>
@@ -528,13 +529,25 @@ function UpdateAccountForm() {
                   </TableCell>{" "}
                   {/* Affiche un message par défaut si nomComplet est vide ou manquant */}
                   <TableCell>
-                    {user.actifIds && user.actifIds.length > 0
-                      ? user.actifIds.map((actifId) => (
-                          <span key={actifId}>
-                            {actifs[actifId] || "Actif inconnu"}{" "}
-                          </span>
-                        ))
-                      : "Aucun actif"}
+                    <Box
+                      sx={{
+                        display: "-webkit-box",
+                        WebkitLineClamp: 2,
+                        WebkitBoxOrient: "vertical",
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        lineHeight: "1.5rem",
+                        maxHeight: "3rem", // 2 lignes × 1.5rem
+                      }}
+                    >
+                      {user.actifIds && user.actifIds.length > 0
+                        ? user.actifIds.map((actifId) => (
+                            <span key={actifId}>
+                              {actifs[actifId] || "Actif inconnu"}{" "}
+                            </span>
+                          ))
+                        : "Aucun actif"}
+                    </Box>
                   </TableCell>
                   {/* Affiche "Aucun actif" si actifIds est vide ou manquant */}
                   <TableCell>{user.role}</TableCell>

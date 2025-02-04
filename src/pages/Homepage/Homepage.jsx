@@ -29,7 +29,7 @@ const Homepage = () => {
           y1="0"
           x2="90%"
           y2="0"
-          className="line" // Add class for the animation
+          className="line floating" // Add class for the animation
         />
       </svg>
 
@@ -72,7 +72,11 @@ const Homepage = () => {
 
       {/* Card with explanation */}
       {hoveredButton && (
-        <div className="absolute bottom-20 left-1/2 transform -translate-x-1/2 w-72 bg-white p-4 rounded-lg shadow-xl">
+        <div
+          className={`card absolute bottom-20 left-1/2 transform -translate-x-1/2 w-72 bg-white p-4 rounded-lg shadow-xl ${
+            hoveredButton ? "visible" : ""
+          }`}
+        >
           <h3 className="text-lg font-semibold text-black">
             {hoveredButton.title}
           </h3>

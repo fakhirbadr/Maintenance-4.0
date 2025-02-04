@@ -16,65 +16,119 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 // Divided categories of items
 const categories = {
-  medical: [
-    "BALANCE",
-    "BOITIER MEDIOT",
-    "BRASSARD TENSIOMETRE",
-    "CONCENTRATEUR OXYGENE",
-    "DÉBITMÈTRES D'OXYGÈNE",
-    "DIVAN D'EXAMEN",
-    "DOCLICK",
-    "DRAP D'EXAMEN",
-    "ECG 12 Deriviations",
-    "LUNETTE OXYGÈNE",
-    "NÉBULISEUR",
-    "OTOSCOPE CONNECTÉ",
-    "OTOSCOPE MANUEL",
-    "OXYMÈTRE CONNECTÉ",
-    "OXYMÈTRE MANUEL",
-    "PÈSE BÉBÉ",
-    "STÉTHOSCOPE MANUEL",
-    "TENSIOMETRE CONNECTE",
-    "TENSIOMETRE DIGITALE",
-    "TENSIOMETRE MANUEL",
-    "THERMOMÈTRE",
-  ],
   electrical: [
-    "BATTERIE GROUPE ELECTROGENE",
-    "CABLE LIAISON GROUPE ELECTROGENE",
-    "GROUPE ELECTROGENE",
-    "ONDULEUR",
-    "RALLONGE 10M",
-    "RALLONGE 4M",
-    "TÉLÉRUPTEUR",
-    "ADAPTATEUR DISPLAY/HDMI",
-    "CÂBLE HDMI 10M",
-    "CABLE TENSIOMETRE",
-    "CÂBLE USB 10M MALE/FEMELLE",
+    "Ecran tactile 32 pouces ( BOX 1 )",
+    "Ecran tactile 32 pouces ( BOX 2 )",
+    "Mini-ordinateur ( BOX 1 )",
+    "Mini-ordinateur ( BOX 2 )",
+    "Ordinateur portable ( BOX 1 )",
+    "Ordinateur portable ( BOX 2 )",
+    "Tablette",
+    "Haut-parleur multimédia ( BOX 1 )",
+    "Haut-parleur multimédia ( BOX 2 )",
+    "Caméra web ( BOX 1 )",
+    "Caméra web ( BOX 2 )",
+    "Interrupteur ( BOX 1 )",
+    "Interrupteur ( BOX 2 )",
+    "Climatiseur ( BOX 1 )",
+    "Climatiseur ( BOX 2 )",
+    "Chauffe-eau électrique",
+    "Réfrigérateur",
+    "Switch",
+    "Caméra de vidéosurveillance ( BOX 1 )",
+    "Caméra de vidéosurveillance ( BOX 2 )",
+    "Routeur 4G",
+    "NVR",
+    "Clavier Logitech ( BOX 1 )",
+    "Clavier Logitech ( BOX 2 )",
+    "Prise réseau RJ45 ( BOX 1 )",
+    "Prise réseau RJ45 ( BOX 2 )",
+    "Rallonge",
   ],
-  tools: [
-    "CAISSE OUTILLAGE TECHNICIEN",
-    "CAMERA SURVEILLANCE",
-    "CANON POUR LA PORTE D’UNITÉ",
-    "EXTINCTEUR",
-    "Fluxible mélangeur 1/2f pour lavabo",
-    "GAZON ARTIFICIEL",
-    "MARTEAU REFLEXE",
-    "MECANISME CHASSE D'EAU (TOILETTE)",
-    "MÉLANGEUR",
-    "MINI-REFRIGERATEUR",
+  medical: [
+    "Boitier Mediot ( BOX 1 )",
+    "Boitier Mediot ( BOX 2 )",
+    "Doclick",
+    "Hub USB alimenté ( BOX 1 )",
+    "Hub USB alimenté ( BOX 2 )",
+    "Tensiomètre ( BOX 1 )",
+    "Tensiomètre ( BOX 2 )",
+    "Oxymètre ( BOX 1 )",
+    "Oxymètre ( BOX 2 )",
+    "ECG ( BOX 1 )",
+    "ECG ( BOX 2 )",
+    "Irisscope ( BOX 1 )",
+    "Irisscope ( BOX 2 )",
+    "Dermoscope ( BOX 1 )",
+    "Dermoscope ( BOX 2 )",
+    "Echographe",
+    "Otoscope ( BOX 1 )",
+    "Otoscope ( BOX 2 )",
+    "Caméra mobile ( BOX 1 )",
+    "Caméra mobile ( BOX 2 )",
+    "Stéthoscope ( BOX 1 )",
+    "Stéthoscope ( BOX 2 )",
+    "Glucomètre ( BOX 1 )",
+    "Glucomètre ( BOX 2 )",
+    "Thermomètre ( BOX 1 )",
+    "Thermomètre ( BOX 2 )",
+    "Balance ( BOX 1 )",
+    "Balance ( BOX 2 )",
+    "Toise ( BOX 1 )",
+    "Toise ( BOX 2 )",
+    "Fauteuil médical ( BOX 1 )",
+    "Fauteuil médical ( BOX 2 )",
   ],
-  accessories: [
-    "CLAVIER",
-    "CLAVIER PC PROTABLE",
-    "CLE WIFI 5 G",
-    "CONNECTEUR RJ45",
-    "DISQUE DUR PC PORTABLE",
-    "ÉCRAN",
-    "MIC JABRA",
-    "MINI PC",
-    "ROUTEUR WIFI",
-    "SWITCH",
+  cabling: [
+    "Câble HDMI ( BOX 1 )",
+    "Câble HDMI ( BOX 2 )",
+    "Câble UTP (Ethernet ) ( BOX 1 )",
+    "Câble UTP (Ethernet) ( BOX 2 )",
+    "Câble tactile ( BOX 1 )",
+    "Câble tactile ( BOX 2 )",
+    "Câble USB ( BOX 1 )",
+    "Câble USB ( BOX 2 )",
+    "Câble jack Mâle-Mâle ( BOX 1 )",
+    "Câble jack Mâle-Mâle ( BOX 2 )",
+  ],
+  stock_management: [
+    "Chariot métallique ( BOX 1 )",
+    "Chariot métallique ( BOX 2 )",
+    "Armoire",
+    "Ciseau ( BOX 1 )",
+    "Ciseau ( BOX 2 )",
+    "Haricot ( BOX 1 )",
+    "Haricot ( BOX 2 )",
+    "Escabeau ( BOX 1 )",
+    "Escabeau ( BOX 2 )",
+    "Table ( BOX 1 )",
+    "Table ( BOX 2 )",
+    "Tabouret ( BOX 1 )",
+    "Tabouret ( BOX 2 )",
+    "Poubelle jaune ( BOX 1 )",
+    "Poubelle jaune ( BOX 2 )",
+    "Poubelle grise ( BOX 1 )",
+    "Poubelle grise ( BOX 2 )",
+    "Poubelle 120 L ",
+    "Portrait",
+    "Canapé",
+  ],
+  installation_material: [
+    "Pergola montée en 2 parties ( BOX 1 )",
+    "Pergola montée en 2 parties ( BOX 2 )",
+    "Bâche avec structure",
+    "Bâche beige",
+    "banc",
+    "Pot",
+    "Gazon artificielle",
+    "Extincteur CO2",
+    "Extincteur liquide",
+    "Plot",
+    "Plaque d’Etain",
+    "Morceau d’Alucobond",
+    "Groupe électrogène",
+    "Piquet terre",
+    "Projecteur",
   ],
 };
 
@@ -147,8 +201,7 @@ const Formulaire = () => {
     }));
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const handleSubmit = async () => {
     try {
       const requestData = {
         selectedUnite,
@@ -171,6 +224,11 @@ const Formulaire = () => {
       if (response.ok) {
         const data = await response.json();
         console.log("Réponse de l'API :", data);
+
+        // Affiche un message de succès
+        alert("Soumission réussie !");
+        // Recharge la page
+        window.location.reload();
       } else {
         const errorData = await response.json();
         alert(
@@ -186,10 +244,11 @@ const Formulaire = () => {
   };
 
   const steps = [
-    "Équipement Médical",
-    "Équipement Électrique",
-    "Outils",
-    "Accessoires",
+    "Équipements médicaux",
+    "Alimentation électrique",
+    "Câblage",
+    "Gestion de stock et déchets",
+    "Matériel d'installation",
   ];
 
   return (
@@ -323,13 +382,15 @@ const Formulaire = () => {
             Précédent
           </Button>
           <Button
-            type="submit"
+            type="button" // Type "button" pour éviter la soumission automatique du formulaire
             variant="contained"
             color="primary"
-            onClick={() => {
+            onClick={async () => {
               if (activeStep === steps.length - 1) {
-                handleSubmit();
+                // Si c'est la dernière étape, appelle handleSubmit
+                await handleSubmit();
               } else {
+                // Sinon, passe simplement à l'étape suivante
                 setActiveStep((prevStep) => prevStep + 1);
               }
             }}

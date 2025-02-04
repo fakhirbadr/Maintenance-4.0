@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
@@ -15,55 +15,79 @@ import {
 import { DatePicker } from "@mui/x-date-pickers/DatePicker";
 import { LocalizationProvider } from "@mui/x-date-pickers";
 import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import dayjs from "dayjs";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const DemandeCongeDialog = ({ open, onClose, nomComplet, role, province }) => {
-  const [typeConge, setTypeConge] = React.useState("");
-  const [dateDebut, setDateDebut] = React.useState(null);
-  const [dateFin, setDateFin] = React.useState(null);
-  const [justification, setJustification] = React.useState("");
+  const [typeConge, setTypeConge] = useState("");
+  const [dateDebut, setDateDebut] = useState(null);
+  const [dateFin, setDateFin] = useState(null);
+  const [justification, setJustification] = useState("");
+  const [names, setNames] = useState([]);
+  const [selectedName, setSelectedName] = useState(""); // Nouvel état
 
-  const formatDate = (date) => {
-    return date ? date.format("DD/MM/YYYY") : ""; // Formater la date en "DD/MM/YYYY"
+  useEffect(() => {
+    const userIds = JSON.parse(localStorage.getItem("userActifs"));
+    if (userIds && Array.isArray(userIds)) {
+      const fetchedNames = [];
+      userIds.forEach(async (id) => {
+        try {
+          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+          if (response.ok) {
+            const data = await response.json();
+            fetchedNames.push(data);
+            if (fetchedNames.length === userIds.length) {
+              setNames(fetchedNames);
+            }
+          } else {
+            console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
+          }
+        } catch (error) {
+          console.error(`Erreur lors de la récupération des données:`, error);
+        }
+      });
+    }
+  }, []);
+
+  const handleSelectChange = (event) => {
+    setSelectedName(event.target.value);
   };
 
   const handleSubmit = async () => {
-    // Convertir les dates en objets Date valides (ISO format)
-    const formattedDateDebut = dayjs(dateDebut).toISOString(); // Convertir la date en format ISO
-    const formattedDateFin = dayjs(dateFin).toISOString(); // Convertir la date en format ISO
+    const formattedDateDebut = dayjs(dateDebut).toISOString();
+    const formattedDateFin = dayjs(dateFin).toISOString();
 
-    // Préparer les données pour le POST
     const requestData = {
       nomComplet,
       role,
       province,
+      actif: selectedName, // Nom de l'actif sélectionné
       historique: [
         {
           dateDebut: formattedDateDebut,
           dateFin: formattedDateFin,
           typeAbsence: typeConge,
           justification,
-          isValidated: false, // À ajuster en fonction de la validation côté serveur
+          isValidated: false,
         },
       ],
     };
 
     try {
-      // Envoi de la requête POST vers l'API
       const response = await axios.post(
         `${apiUrl}/api/v1/absences`,
         requestData
       );
-      console.log("Réponse du serveur:", response.data); // Affiche la réponse complète
+      console.log("Réponse du serveur:", response.data);
       console.log("Demande de congé soumise avec succès");
-      onClose(); // Fermer la boîte de dialogue après l'envoi
+      onClose();
     } catch (error) {
       console.error("Erreur lors de l'envoi de la demande de congé:", error);
       if (error.response) {
-        console.error("Détails de la réponse:", error.response.data); // Affiche la réponse détaillée
+        console.error("Détails de la réponse:", error.response.data);
       }
     }
   };
@@ -84,10 +108,29 @@ const DemandeCongeDialog = ({ open, onClose, nomComplet, role, province }) => {
                 disabled
               />
             </Grid>
+            <Grid item xs={12} sm={6}>
+              <FormControl variant="standard" fullWidth>
+                <InputLabel id="demo-simple-select-standard-label">
+                  Nom de l'Actif
+                </InputLabel>
+                <Select
+                  labelId="demo-simple-select-standard-label"
+                  id="demo-simple-select-standard"
+                  value={selectedName}
+                  onChange={handleSelectChange}
+                >
+                  {names.map((actif) => (
+                    <MenuItem key={actif._id} value={actif.name}>
+                      {actif.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
+            </Grid>
             <Grid item xs={4}>
               <TextField
                 id="province"
-                label="province"
+                label="Province"
                 value={province}
                 variant="standard"
                 fullWidth
@@ -97,7 +140,7 @@ const DemandeCongeDialog = ({ open, onClose, nomComplet, role, province }) => {
             <Grid item xs={4}>
               <TextField
                 id="role"
-                label="role"
+                label="Rôle"
                 value={role === "user" ? "Technicien" : role}
                 variant="standard"
                 fullWidth

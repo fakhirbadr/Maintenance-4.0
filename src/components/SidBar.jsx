@@ -241,7 +241,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: ["admin", "docteurs"],
+    roleRequired: ["admin", "docteurs", "user"],
   },
   {
     text: "Utilisateur",
