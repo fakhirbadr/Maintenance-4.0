@@ -80,28 +80,41 @@ const EquipmentModal = ({ open, onClose, category, data }) => {
   );
 };
 
-const Index = () => {
+const Index = ({ region, province, startDate, endDate, onTotalClosed }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === "dark";
 
   const [apiData, setApiData] = useState(null);
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [regions, setRegions] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const response = await fetch(
-          `${apiUrl}/api/v1/merged-data?isDeleted=false`
-        );
+        const url = new URL(`${apiUrl}/api/v1/merged-data`);
+        url.searchParams.append("isDeleted", "false");
+
+        if (region) url.searchParams.append("region", region);
+        if (province) url.searchParams.append("province", province);
+        if (startDate) url.searchParams.append("startDate", startDate);
+        if (endDate) url.searchParams.append("endDate", endDate);
+
+        const response = await fetch(url.toString());
         const data = await response.json();
         setApiData(data);
+
+        // Appeler la fonction de rappel pour passer totalClosed au parent
+        if (data.globalStats && onTotalClosed) {
+          onTotalClosed(data.globalStats.totalClosed);
+        }
       } catch (error) {
         console.error("Error fetching data:", error);
       }
     };
+
     fetchData();
-  }, []);
+  }, [region, province, startDate, endDate, onTotalClosed]);
 
   const formatValue = (value, isPercentage = false) => {
     if (typeof value === "string") return value;
@@ -300,11 +313,11 @@ const Index = () => {
       <DialogListEquipmentStructure
         openFour={isModalOpen}
         hundleCloseFour={() => setIsModalOpen(false)}
-        category={selectedCategory} // Passer la catégorie sélectionnée
-        region="" // Ajouter si nécessaire
-        province="" // Ajouter si nécessaire
-        startDate="" // Ajouter si nécessaire
-        endDate="" // Ajouter si nécessaire
+        categorie={selectedCategory} // Passer la catégorie sélectionnée
+        region={region} // Already passing selectedRegion
+        province={province} // Passing selectedProvince to ClotureNonCloture
+        startDate={startDate} // Passing startDate
+        endDate={endDate}
       />
     </Box>
   );

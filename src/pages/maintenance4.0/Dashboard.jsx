@@ -36,6 +36,11 @@ const Dashboard = () => {
   const handleActifChange = (event) => {
     setSelectedActif(event.target.value); // Mettez à jour l'actif sélectionné
   };
+  const [totalClosed, setTotalClosed] = useState(null);
+
+  const handleTotalClosed = (value) => {
+    setTotalClosed(value);
+  };
 
   const handleTicketsClosedUpdate = (value) => {
     setClosedTicketsCount(value);
@@ -132,7 +137,7 @@ const Dashboard = () => {
           </span>
           <span className="text-center text-base  bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
             Total des livraisons :{" "}
-            <span className="font-semibold">{fournituresClosed}</span>
+            <span className="font-semibold">{totalClosed}</span>
           </span>
         </div>
       </div>
@@ -229,7 +234,13 @@ const Dashboard = () => {
               startDate={startDate} // Passing startDate
               endDate={endDate}
             /> */}
-            <Index />
+            <Index
+              region={selectedRegion}
+              province={selectedProvince}
+              startDate={startDate}
+              endDate={endDate}
+              onTotalClosed={handleTotalClosed}
+            />
           </Grid>
           <Grid item xs={12} lg={4}>
             <div>

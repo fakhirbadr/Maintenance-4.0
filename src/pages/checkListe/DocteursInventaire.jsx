@@ -9,7 +9,17 @@ import Paper from "@mui/material/Paper";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axios from "axios";
-import { Button, CircularProgress, Typography } from "@mui/material";
+import {
+  Button,
+  CircularProgress,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
+  Grid,
+  Box,
+} from "@mui/material";
 import EquipmentDialog from "./EquipmentDialog";
 import { useEffect, useState } from "react";
 
@@ -21,11 +31,13 @@ const DocteursInventaire = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const [dynamicActifs, setDynamicActifs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
-  const [loadingRows, setLoadingRows] = useState({}); // État pour le chargement par ligne
-  const [page, setPage] = useState(1); // Pagination
-  const [rowsPerPage, setRowsPerPage] = useState(10); // Nombre de lignes par page
+  const [loadingRows, setLoadingRows] = useState({});
+  const [page, setPage] = useState(1);
+  const [rowsPerPage, setRowsPerPage] = useState(10);
+  const [allUnits, setAllUnits] = useState([]);
+  const [statisticsDialogOpen, setStatisticsDialogOpen] = useState(false);
+  const [statisticsByDate, setStatisticsByDate] = useState([]);
 
-  // Récupérer les noms des actifs depuis le cache ou l'API
   useEffect(() => {
     const fetchActifNames = async () => {
       const cachedNames = localStorage.getItem("cachedActifNames");
@@ -56,7 +68,6 @@ const DocteursInventaire = () => {
     fetchActifNames();
   }, []);
 
-  // Récupérer les données paginées depuis l'API
   useEffect(() => {
     if (dynamicActifs.length > 0) {
       const fetchData = async () => {
@@ -78,7 +89,67 @@ const DocteursInventaire = () => {
     }
   }, [dynamicActifs, page, rowsPerPage]);
 
-  // Transformer les données pour le tableau
+  const fetchAllUnits = async () => {
+    try {
+      const response = await axios.get("http://localhost:3000/api/actifs");
+      setAllUnits(response.data.map((unit) => unit.name));
+    } catch (error) {
+      console.error("Erreur lors de la récupération des unités", error);
+    }
+  };
+
+  const normalizeUnitName = (name) => {
+    return name.trim().toLowerCase();
+  };
+
+  const groupInventoriesByDate = (data) => {
+    const groupedData = {};
+
+    data.forEach((item) => {
+      const date = new Date(item.date).toISOString().split("T")[0]; // Format YYYY-MM-DD
+      if (!groupedData[date]) {
+        groupedData[date] = new Set();
+      }
+      groupedData[date].add(normalizeUnitName(item.selectedUnite));
+    });
+
+    return groupedData;
+  };
+
+  const calculateStatisticsByDate = (groupedData, allUnits) => {
+    const statistics = [];
+
+    // Normaliser la liste complète des unités
+    const normalizedAllUnits = allUnits.map((unit) => normalizeUnitName(unit));
+
+    Object.keys(groupedData).forEach((date) => {
+      const unitsWithInventory = groupedData[date];
+      const unitsWithoutInventory = normalizedAllUnits.filter(
+        (unit) => !unitsWithInventory.has(unit)
+      );
+
+      statistics.push({
+        date,
+        unitsWithInventory: Array.from(unitsWithInventory),
+        unitsWithoutInventory,
+      });
+    });
+
+    return statistics;
+  };
+
+  const handleOpenStatisticsDialog = () => {
+    fetchAllUnits();
+    const groupedData = groupInventoriesByDate(data);
+    const stats = calculateStatisticsByDate(groupedData, allUnits);
+    setStatisticsByDate(stats);
+    setStatisticsDialogOpen(true);
+  };
+
+  const handleCloseStatisticsDialog = () => {
+    setStatisticsDialogOpen(false);
+  };
+
   const rows = data.map((item) => ({
     id: item._id,
     date: new Date(item.date).toLocaleDateString(),
@@ -94,26 +165,22 @@ const DocteursInventaire = () => {
     validation: item.validation,
   }));
 
-  // Trier les lignes par date puis par unité
   const sortedRows = rows.sort((a, b) => {
     if (a.date < b.date) return -1;
     if (a.date > b.date) return 1;
     return a.unite.localeCompare(b.unite);
   });
 
-  // Gérer l'ouverture du dialogue
   const handleOpenDialog = (item) => {
     setSelectedItem(item.action);
     setOpenDialog(true);
   };
 
-  // Gérer la fermeture du dialogue
   const handleCloseDialog = () => {
     setOpenDialog(false);
     setSelectedItem(null);
   };
 
-  // Gérer la validation d'une ligne
   const handleValidation = async (id) => {
     setLoadingRows((prev) => ({ ...prev, [id]: true }));
     try {
@@ -137,7 +204,14 @@ const DocteursInventaire = () => {
       <div className="mb-4 text-3xl font-extrabold leading-none tracking-tight md:text-4xl uppercase text-orange-500">
         Inventaire hebdomadaire
       </div>
-      {/* Indicateur de chargement global */}
+      <Button
+        variant="contained"
+        color="primary"
+        onClick={handleOpenStatisticsDialog}
+        style={{ marginBottom: 20 }}
+      >
+        Statistiques
+      </Button>
       {isLoading && (
         <div style={{ display: "flex", justifyContent: "center", margin: 20 }}>
           <CircularProgress />
@@ -146,7 +220,6 @@ const DocteursInventaire = () => {
           </Typography>
         </div>
       )}
-      {/* Tableau de données */}
       {!isLoading && (
         <TableContainer component={Paper}>
           <Table sx={{ minWidth: 650 }} size="small" aria-label="tableau dense">
@@ -197,32 +270,109 @@ const DocteursInventaire = () => {
           </Table>
         </TableContainer>
       )}
-      {/* Pagination
-      <div style={{ display: "flex", justifyContent: "center", marginTop: 20 }}>
-        <Button
-          variant="outlined"
-          onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-          disabled={page === 1}
-        >
-          Précédent
-        </Button>
-        <Typography variant="body1" style={{ margin: "0 20px" }}>
-          Page {page}
-        </Typography>
-        <Button
-          variant="outlined"
-          onClick={() => setPage((prev) => prev + 1)}
-          disabled={data.length < rowsPerPage}
-        >
-          Suivant
-        </Button>
-      </div> */}
-      {/* Dialogue d'équipement */}
       <EquipmentDialog
         open={openDialog}
         onClose={handleCloseDialog}
         equipmentData={selectedItem}
       />
+      <Dialog
+        open={statisticsDialogOpen}
+        onClose={handleCloseStatisticsDialog}
+        maxWidth="md"
+        fullWidth
+      >
+        <DialogTitle>Statistiques des inventaires par date</DialogTitle>
+        <DialogContent>
+          {statisticsByDate.map((stat, index) => (
+            <Box
+              key={index}
+              sx={{
+                marginBottom: 4,
+                borderBottom: "1px solid #ccc",
+                paddingBottom: 2,
+              }}
+            >
+              {/* Titre de date centré en haut */}
+              <Typography
+                variant="h6"
+                sx={{
+                  fontWeight: "bold",
+                  textAlign: "center",
+                  mb: 2,
+                  textTransform: "uppercase",
+                }}
+              >
+                {stat.date}
+              </Typography>
+
+              <Grid container spacing={2}>
+                {/* Colonne de gauche */}
+                <Grid item xs={6}>
+                  <Typography
+                    variant="h6" // Augmentation de la taille
+                    sx={{
+                      color: "whait", // Changement en noir
+                      fontWeight: "bold",
+                      mb: 1, // Marge sous le titre
+                    }}
+                  >
+                    Unités ayant fait l'inventaire :
+                  </Typography>
+                  <ul style={{ listStyleType: "none", padding: 0 }}>
+                    {stat.unitsWithInventory.map((unit, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          color: "green",
+                          fontWeight: "bold",
+                          textTransform: "uppercase",
+                          fontSize: "1rem", // Taille légèrement réduite
+                        }}
+                      >
+                        {unit}
+                      </li>
+                    ))}
+                  </ul>
+                </Grid>
+
+                {/* Colonne de droite */}
+                <Grid item xs={6}>
+                  <Typography
+                    variant="h6" // Augmentation de la taille
+                    sx={{
+                      color: "whait", // Changement en noir
+                      fontWeight: "bold",
+                      mb: 1, // Marge sous le titre
+                    }}
+                  >
+                    Unités n'ayant pas fait l'inventaire :
+                  </Typography>
+                  <ul style={{ listStyleType: "none", padding: 0 }}>
+                    {stat.unitsWithoutInventory.map((unit, idx) => (
+                      <li
+                        key={idx}
+                        style={{
+                          color: "red",
+                          fontWeight: "bold",
+                          textTransform: "uppercase",
+                          fontSize: "1rem", // Taille légèrement réduite
+                        }}
+                      >
+                        {unit}
+                      </li>
+                    ))}
+                  </ul>
+                </Grid>
+              </Grid>
+            </Box>
+          ))}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseStatisticsDialog} color="primary">
+            Fermer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

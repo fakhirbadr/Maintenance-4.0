@@ -18,7 +18,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const DialogListEquipmentStructure = ({
   openFour,
-  category,
+  categorie,
   hundleCloseFour,
   region,
   province,
@@ -30,45 +30,52 @@ const DialogListEquipmentStructure = ({
 
   const [dataFormatted, setDataFormatted] = useState([]);
   const [selectedEquipment, setSelectedEquipment] = useState(null);
-  const [selectedBesoin, setSelectedBesoin] = useState(null); // State to hold the selected 'besoin'
-  const handleOpen = () => setOpenDetail(true);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
         const params = new URLSearchParams({
-          categorie: category, // Utilisation de la prop category
+          isDeleted: "false",
+          isClosed: "false",
+          categorie: categorie || "",
           region: region || "",
           province: province || "",
           startDate: startDate || "",
           endDate: endDate || "",
         });
 
-        const response = await fetch(
-          `${apiUrl}/api/v1/fournitureRoutes?isDeleted=false&isClosed=false&${params.toString()}`
-        );
+        const url = `${apiUrl}/api/v1/merged-data?${params.toString()}`;
+        const response = await fetch(url);
         const result = await response.json();
 
-        // Utilisation dynamique de la catégorie
-        const categoryData =
-          result.nonClosedByNeedAndCategory?.[category] || [];
-        setDataFormatted(categoryData);
+        // Grouper les données par "description" et compter les occurrences
+        const groupedData = result.mergedData.reduce((acc, item) => {
+          const description = item.description || "Non spécifié";
+          if (!acc[description]) {
+            acc[description] = { ...item, count: 0 }; // Ajouter la propriété "count"
+          }
+          acc[description].count += 1; // Incrémenter le compteur
+          return acc;
+        }, {});
+
+        // Convertir l'objet en tableau
+        const formattedData = Object.values(groupedData);
+        setDataFormatted(formattedData);
       } catch (error) {
         console.error("Erreur lors de la récupération des données:", error);
       }
     };
 
     if (openFour) {
-      // Correction du nom de la prop
       fetchData();
     }
-  }, [openFour, category, region, province, startDate, endDate]);
+  }, [openFour, categorie, region, province, startDate, endDate]);
+
   return (
     <>
-      {" "}
       <Dialog
         open={openFour}
-        hundleCloseFour={hundleCloseFour}
+        onClose={hundleCloseFour}
         PaperProps={{
           sx: {
             maxWidth: "50%",
@@ -97,9 +104,8 @@ const DialogListEquipmentStructure = ({
                     <TableRow
                       key={index}
                       onClick={() => {
-                        console.log("Ligne cliquée:", item.besoin);
-                        setSelectedEquipment(item); // Met à jour l'équipement sélectionné
-                        handleOpen(); // Ouvre le modal
+                        setSelectedEquipment(item);
+                        setOpenDetail(true);
                       }}
                       sx={{
                         "&:nth-of-type(odd)": {
@@ -113,10 +119,10 @@ const DialogListEquipmentStructure = ({
                       }}
                     >
                       <TableCell component="th" scope="row">
-                        {item.besoin || "Non spécifié"}
+                        {item.description}
                       </TableCell>
                       <TableCell align="right">
-                        {item.count !== undefined ? item.count : "N/A"}
+                        {item.count} {/* Affiche le nombre de demandes */}
                       </TableCell>
                     </TableRow>
                   ))
@@ -137,15 +143,15 @@ const DialogListEquipmentStructure = ({
           </Button>
         </DialogActions>
       </Dialog>
-      {/* Pass props to DetailsBesoin to open/close */}
+
       <DetailsBesoin
         selectedEquipment={selectedEquipment}
         open={openDetail}
         handleCloseModel={handleCloseModel}
         region={region}
         province={province}
-        startDate={startDate} // Passing startDate
-        endDate={endDate} // Passing endDate
+        startDate={startDate}
+        endDate={endDate}
       />
     </>
   );

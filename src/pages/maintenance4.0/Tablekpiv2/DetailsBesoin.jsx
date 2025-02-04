@@ -31,18 +31,18 @@ const DetailsBesoin = ({
         try {
           const params = new URLSearchParams({
             isClosed: "false",
-            besoin: selectedEquipment.besoin,
-            region: region || "", // Inclure la région si spécifiée
-            province: province || "", // Inclure la province si spécifiée
-            startDate: startDate || "", // Inclure la date de début si spécifiée
-            endDate: endDate || "", // Inclure la date de fin si spécifiée
+            description: selectedEquipment.description, // Utilisez "description" au lieu de "besoin"
+            region: region || "",
+            province: province || "",
+            startDate: startDate || "",
+            endDate: endDate || "",
           });
 
           const response = await fetch(
-            `${apiUrl}/api/v1/fournitureRoutes?isDeleted=false&${params.toString()}`
+            `${apiUrl}/api/v1/merged-data?isDeleted=false&${params.toString()}`
           );
           const data = await response.json();
-          setRelatedData(data.fournitures || []);
+          setRelatedData(data.mergedData || []); // Utilisez "mergedData" au lieu de "fournitures"
         } catch (error) {
           console.error("Erreur lors de la récupération des données :", error);
         }
@@ -56,10 +56,10 @@ const DetailsBesoin = ({
     <Dialog open={open} onClose={handleCloseModel} maxWidth="md" fullWidth>
       <DialogTitle
         sx={{
-          textAlign: "center", // Centrer le texte
-          fontWeight: "bold", // Police en gras
-          color: "#FF5A1F", // Couleur bleue
-          textTransform: "uppercase", // Texte en majuscules
+          textAlign: "center",
+          fontWeight: "bold",
+          color: "#FF5A1F",
+          textTransform: "uppercase",
         }}
       >
         Détails des besoins
@@ -69,7 +69,7 @@ const DetailsBesoin = ({
         {selectedEquipment ? (
           <>
             <Typography variant="h6" gutterBottom>
-              Nom de l'équipement : {selectedEquipment.besoin}
+              Nom de l'équipement : {selectedEquipment.description}
             </Typography>
             <Typography variant="body1" gutterBottom>
               Nombre des demandes : {selectedEquipment.count}
@@ -88,7 +88,7 @@ const DetailsBesoin = ({
           {relatedData.length > 0 ? (
             <Grid container spacing={2}>
               {relatedData.map((item) => (
-                <Grid item xs={12} sm={6} key={item._id}>
+                <Grid item xs={12} sm={6} key={item.id}>
                   <Card sx={{ boxShadow: 3 }}>
                     <CardContent>
                       <Typography variant="h6">{item.name}</Typography>
@@ -102,13 +102,7 @@ const DetailsBesoin = ({
                         Province : {item.province}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
-                        Besoin : {item.besoin}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Quantité : {item.quantite}
-                      </Typography>
-                      <Typography variant="body2" color="textSecondary">
-                        Technicien : {item.technicien || "Non spécifié"}
+                        Description : {item.description}
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
                         Statut : {item.status}
@@ -118,7 +112,7 @@ const DetailsBesoin = ({
                       </Typography>
                       <Typography variant="body2" color="textSecondary">
                         Date de création :{" "}
-                        {new Date(item.dateCreation).toLocaleDateString()}
+                        {new Date(item.createdAt).toLocaleDateString()}
                       </Typography>
                     </CardContent>
                   </Card>
