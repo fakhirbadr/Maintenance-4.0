@@ -449,12 +449,11 @@ const ModelFourniture = ({ open, onClose }) => {
                     {besoin}
                   </MenuItem>
                 ))}
-                <MenuItem value="Autre">Autre</MenuItem>
               </Select>
             </FormControl>
           </Grid>
 
-          {formData.besoin === "Autre" && (
+          {/* {formData.besoin === "Autre" && (
             <Grid item xs={12}>
               <TextField
                 fullWidth
@@ -465,7 +464,7 @@ const ModelFourniture = ({ open, onClose }) => {
                 onChange={handleChange}
               />
             </Grid>
-          )}
+          )} */}
 
           <Grid item xs={12} sm={6}>
             <TextField
