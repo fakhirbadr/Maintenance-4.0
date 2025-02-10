@@ -34,9 +34,43 @@ const NetworkPatientData = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [province, setProvince] = useState("");
+  const [dynamicActifs, setDynamicActifs] = useState([]);
+  const [actifsData, setActifsData] = useState({});
+  const [selectedUnite, setSelectedUnite] = useState("");
 
   const handleTimeChange = (event) => {
     setSelectedTime(event.target.value);
+  };
+  useEffect(() => {
+    const fetchActifs = async () => {
+      const userIds = JSON.parse(localStorage.getItem("userActifs")) || [];
+      try {
+        const fetchedActifs = await Promise.all(
+          userIds.map(async (id) => {
+            const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+            return response.json();
+          })
+        );
+        setDynamicActifs(fetchedActifs.filter((a) => a)); // Filtre les résultats null
+      } catch (error) {
+        console.error("Error fetching actifs:", error);
+      }
+    };
+
+    fetchActifs();
+  }, []);
+
+  const handleInputChange = (event, actif) => {
+    const { name, value } = event.target;
+
+    // Initialisation sécurisée de l'objet actif
+    setActifsData((prevState) => ({
+      ...prevState,
+      [actif]: {
+        ...prevState[actif],
+        [name]: value || "", // Valeur par défaut pour éviter les erreurs
+      },
+    }));
   };
 
   // Charger les données de localStorage au montage du composant
@@ -46,7 +80,7 @@ const NetworkPatientData = () => {
     setActifNames(cachedActifNames);
   }, []);
   const handleSelectChange = (event) => {
-    setSelectedActif(event.target.value);
+    setSelectedActif(event.target.value); // Utiliser le nom de l'actif
   };
 
   useEffect(() => {
@@ -86,21 +120,6 @@ const NetworkPatientData = () => {
   useEffect(() => {
     console.log("testSpeedNetworks mis à jour:", testSpeedNetworks); // Vérifiez la mise à jour des données
   }, [testSpeedNetworks]);
-
-  const testConnectionSpeed = async () => {
-    setIsTesting(true);
-    try {
-      const mockDownload = (Math.random() * (36 - 30) + 30).toFixed(2);
-      const mockUpload = (Math.random() * (17 - 10) + 10).toFixed(2);
-      await new Promise((resolve) => setTimeout(resolve, 2000));
-      setDownloadSpeed(mockDownload);
-      setUploadSpeed(mockUpload);
-    } catch (error) {
-      console.error("Erreur de test de vitesse:", error);
-    } finally {
-      setIsTesting(false);
-    }
-  };
 
   // Fonction pour comparer deux heures et vérifier si elles sont proches
   const isWithin3Hours = (targetTime, dataTime) => {
@@ -204,16 +223,13 @@ const NetworkPatientData = () => {
 
     try {
       // Send POST request
-      const response = await fetch(
-        "http://localhost:3000/api/v1/testSpeedNetwork",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataToSend),
-        }
-      );
+      const response = await fetch(`${apiUrl}/api/v1/testSpeedNetwork`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
 
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -236,7 +252,7 @@ const NetworkPatientData = () => {
         const hours = ["10h", "12h", "16h"];
         const promises = hours.map(async (hour) => {
           const response = await fetch(
-            `http://localhost:3000/api/v1/testSpeedNetwork?nomComplet=${technicien}&testHoraire=${hour}`
+            `${apiUrl}/api/v1/testSpeedNetwork?nomComplet=${technicien}&testHoraire=${hour}`
           );
           if (!response.ok)
             throw new Error("Erreur lors de la récupération des données");
@@ -510,7 +526,7 @@ const NetworkPatientData = () => {
                 Choisir un Actif
               </InputLabel>
               <Select
-                value={selectedActif}
+                value={selectedActif} // Utilisez selectedActif (nom de l'actif)
                 onChange={handleSelectChange}
                 label="Choisir un Actif"
                 sx={{
@@ -520,9 +536,11 @@ const NetworkPatientData = () => {
                   },
                 }}
               >
-                {actifNames.map((actif, index) => (
-                  <MenuItem key={index} value={actif} sx={{ py: 1 }}>
-                    {actif}
+                {dynamicActifs.map((actif) => (
+                  <MenuItem key={actif._id} value={actif.name}>
+                    {" "}
+                    {/* Utilisez le nom ici */}
+                    {actif.name}
                   </MenuItem>
                 ))}
               </Select>

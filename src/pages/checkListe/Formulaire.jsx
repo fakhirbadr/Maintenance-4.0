@@ -138,6 +138,7 @@ const Formulaire = () => {
   const [selectedUnite, setSelectedUnite] = useState("");
   const [technicien, setTechnicien] = useState("");
   const [activeStep, setActiveStep] = useState(0);
+  const [selectedActif, setSelectedActif] = useState("");
 
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
@@ -181,6 +182,9 @@ const Formulaire = () => {
         [name]: value || "", // Valeur par défaut pour éviter les erreurs
       },
     }));
+  };
+  const handleSelectChange = (event) => {
+    setSelectedActif(event.target.value);
   };
 
   const handleCheckboxChange = (event, actif) => {

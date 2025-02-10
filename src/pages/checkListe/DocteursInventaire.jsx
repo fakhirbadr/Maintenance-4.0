@@ -19,9 +19,10 @@ import {
   DialogActions,
   Grid,
   Box,
+  Skeleton,
 } from "@mui/material";
 import EquipmentDialog from "./EquipmentDialog";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useCallback } from "react";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -32,11 +33,39 @@ const DocteursInventaire = () => {
   const [dynamicActifs, setDynamicActifs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadingRows, setLoadingRows] = useState({});
-  const [page, setPage] = useState(1);
-  const [rowsPerPage, setRowsPerPage] = useState(10);
   const [allUnits, setAllUnits] = useState([]);
   const [statisticsDialogOpen, setStatisticsDialogOpen] = useState(false);
   const [statisticsByDate, setStatisticsByDate] = useState([]);
+
+  // Fetch all necessary data in one go
+  const fetchAllData = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const [actifsResponse, inventoryResponse] = await Promise.all([
+        axios.get(`${apiUrl}/api/actifs`),
+        axios.get(
+          `${apiUrl}/api/v1/inventaire/actifsInventaire?selectedUnite=${dynamicActifs.join(
+            ","
+          )}`
+        ),
+      ]);
+
+      const allUnits = actifsResponse.data.map((unit) => unit.name);
+      const allInventoryData = inventoryResponse.data;
+
+      setAllUnits(allUnits);
+      setData(allInventoryData);
+
+      // Group by week and calculate statistics
+      const groupedData = groupInventoriesByWeek(allInventoryData);
+      const stats = calculateStatisticsByWeek(groupedData, allUnits);
+      setStatisticsByDate(stats);
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dynamicActifs]);
 
   useEffect(() => {
     const fetchActifNames = async () => {
@@ -70,66 +99,53 @@ const DocteursInventaire = () => {
 
   useEffect(() => {
     if (dynamicActifs.length > 0) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        try {
-          const url = `${apiUrl}/api/v1/inventaire/actifsInventaire?selectedUnite=${dynamicActifs.join(
-            ","
-          )}&page=${page}&limit=${rowsPerPage}`;
-          const response = await axios.get(url);
-          setData(response.data);
-        } catch (error) {
-          console.error("Erreur lors de la récupération des données !", error);
-        } finally {
-          setIsLoading(false);
-        }
-      };
-
-      fetchData();
+      fetchAllData();
     }
-  }, [dynamicActifs, page, rowsPerPage]);
-
-  const fetchAllUnits = async () => {
-    try {
-      const response = await axios.get("http://localhost:3000/api/actifs");
-      setAllUnits(response.data.map((unit) => unit.name));
-    } catch (error) {
-      console.error("Erreur lors de la récupération des unités", error);
-    }
-  };
+  }, [dynamicActifs, fetchAllData]);
 
   const normalizeUnitName = (name) => {
     return name.trim().toLowerCase();
   };
 
-  const groupInventoriesByDate = (data) => {
+  const groupInventoriesByWeek = (data) => {
     const groupedData = {};
 
     data.forEach((item) => {
-      const date = new Date(item.date).toISOString().split("T")[0]; // Format YYYY-MM-DD
-      if (!groupedData[date]) {
-        groupedData[date] = new Set();
+      const date = new Date(item.date);
+      const day = date.getDay(); // 0 (Sunday) to 6 (Saturday)
+      const diff = day === 0 ? 6 : day - 1;
+      const monday = new Date(date);
+      monday.setDate(date.getDate() - diff);
+      monday.setHours(0, 0, 0, 0);
+
+      const weekKey = monday.toISOString().split("T")[0];
+
+      if (!groupedData[weekKey]) {
+        groupedData[weekKey] = new Set();
       }
-      groupedData[date].add(normalizeUnitName(item.selectedUnite));
+      groupedData[weekKey].add(normalizeUnitName(item.selectedUnite));
     });
 
     return groupedData;
   };
 
-  const calculateStatisticsByDate = (groupedData, allUnits) => {
+  const calculateStatisticsByWeek = (groupedData, allUnits) => {
     const statistics = [];
-
-    // Normaliser la liste complète des unités
     const normalizedAllUnits = allUnits.map((unit) => normalizeUnitName(unit));
 
-    Object.keys(groupedData).forEach((date) => {
-      const unitsWithInventory = groupedData[date];
+    Object.keys(groupedData).forEach((weekStart) => {
+      const unitsWithInventory = groupedData[weekStart];
       const unitsWithoutInventory = normalizedAllUnits.filter(
         (unit) => !unitsWithInventory.has(unit)
       );
 
+      const startDate = new Date(weekStart);
+      const endDate = new Date(startDate);
+      endDate.setDate(startDate.getDate() + 6);
+
       statistics.push({
-        date,
+        startDate: weekStart,
+        endDate: endDate.toISOString().split("T")[0],
         unitsWithInventory: Array.from(unitsWithInventory),
         unitsWithoutInventory,
       });
@@ -139,49 +155,62 @@ const DocteursInventaire = () => {
   };
 
   const handleOpenStatisticsDialog = () => {
-    fetchAllUnits();
-    const groupedData = groupInventoriesByDate(data);
-    const stats = calculateStatisticsByDate(groupedData, allUnits);
-    setStatisticsByDate(stats);
     setStatisticsDialogOpen(true);
+  };
+
+  const formatWeekRange = (startDateStr, endDateStr) => {
+    const startDate = new Date(startDateStr);
+    const endDate = new Date(endDateStr);
+    const options = { month: "short", day: "numeric" };
+    return `${startDate.toLocaleDateString(
+      "fr-FR",
+      options
+    )} - ${endDate.toLocaleDateString(
+      "fr-FR",
+      options
+    )} ${startDate.getFullYear()}`;
   };
 
   const handleCloseStatisticsDialog = () => {
     setStatisticsDialogOpen(false);
   };
 
-  const rows = data.map((item) => ({
-    id: item._id,
-    date: new Date(item.date).toLocaleDateString(),
-    technicien: item.technicien,
-    unite: item.selectedUnite,
-    action: item.equipment
-      ? Object.keys(item.equipment).map((key) => ({
-          name: key,
-          quantite: item.equipment[key].quantite || "Inconnu",
-          fonctionnel: item.equipment[key].fonctionnel || "Inconnu",
-        }))
-      : [],
-    validation: item.validation,
-  }));
+  const rows = useMemo(() => {
+    return data.map((item) => ({
+      id: item._id,
+      date: new Date(item.date).toLocaleDateString(),
+      technicien: item.technicien,
+      unite: item.selectedUnite,
+      action: item.equipment
+        ? Object.keys(item.equipment).map((key) => ({
+            name: key,
+            quantite: item.equipment[key].quantite || "Inconnu",
+            fonctionnel: item.equipment[key].fonctionnel || "Inconnu",
+          }))
+        : [],
+      validation: item.validation,
+    }));
+  }, [data]);
 
-  const sortedRows = rows.sort((a, b) => {
-    if (a.date < b.date) return -1;
-    if (a.date > b.date) return 1;
-    return a.unite.localeCompare(b.unite);
-  });
+  const sortedRows = useMemo(() => {
+    return rows.sort((a, b) => {
+      if (a.date < b.date) return -1;
+      if (a.date > b.date) return 1;
+      return a.unite.localeCompare(b.unite);
+    });
+  }, [rows]);
 
-  const handleOpenDialog = (item) => {
+  const handleOpenDialog = useCallback((item) => {
     setSelectedItem(item.action);
     setOpenDialog(true);
-  };
+  }, []);
 
-  const handleCloseDialog = () => {
+  const handleCloseDialog = useCallback(() => {
     setOpenDialog(false);
     setSelectedItem(null);
-  };
+  }, []);
 
-  const handleValidation = async (id) => {
+  const handleValidation = useCallback(async (id) => {
     setLoadingRows((prev) => ({ ...prev, [id]: true }));
     try {
       await axios.patch(`${apiUrl}/api/v1/inventaire/actifsInventaire/${id}`, {
@@ -197,7 +226,7 @@ const DocteursInventaire = () => {
     } finally {
       setLoadingRows((prev) => ({ ...prev, [id]: false }));
     }
-  };
+  }, []);
 
   return (
     <>
@@ -214,9 +243,8 @@ const DocteursInventaire = () => {
       </Button>
       {isLoading && (
         <div style={{ display: "flex", justifyContent: "center", margin: 20 }}>
-          <CircularProgress />
           <Typography variant="body1" style={{ marginLeft: 10 }}>
-            Chargement en cours...
+            <Skeleton width={800} height={400} />
           </Typography>
         </div>
       )}
@@ -279,97 +307,130 @@ const DocteursInventaire = () => {
       <Dialog
         open={statisticsDialogOpen}
         onClose={handleCloseStatisticsDialog}
-        maxWidth="md"
         fullWidth
+        maxWidth="lg"
       >
-        <DialogTitle>Statistiques des inventaires par date</DialogTitle>
+        <DialogTitle
+          sx={{ bgcolor: "primary.main", color: "white", textAlign: "center" }}
+        >
+          Statistiques par Semaine
+        </DialogTitle>
         <DialogContent>
-          {statisticsByDate.map((stat, index) => (
+          {statisticsByDate.map((weekStats) => (
             <Box
-              key={index}
+              key={weekStats.startDate}
               sx={{
-                marginBottom: 4,
-                borderBottom: "1px solid #ccc",
-                paddingBottom: 2,
+                mb: 3,
+                p: 2,
+                border: "1px solid #e0e0e0",
+                borderRadius: 2,
+                bgcolor: "background.paper",
+                boxShadow: 1,
               }}
             >
-              {/* Titre de date centré en haut */}
               <Typography
                 variant="h6"
-                sx={{
-                  fontWeight: "bold",
-                  textAlign: "center",
-                  mb: 2,
-                  textTransform: "uppercase",
-                }}
+                sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}
               >
-                {stat.date}
+                Semaine du{" "}
+                {formatWeekRange(weekStats.startDate, weekStats.endDate)}
               </Typography>
-
               <Grid container spacing={2}>
-                {/* Colonne de gauche */}
                 <Grid item xs={6}>
-                  <Typography
-                    variant="h6" // Augmentation de la taille
+                  <Box
                     sx={{
-                      color: "whait", // Changement en noir
-                      fontWeight: "bold",
-                      mb: 1, // Marge sous le titre
+                      p: 2,
+                      borderRight: "1px solid #e0e0e0",
+                      height: "100%",
                     }}
                   >
-                    Unités ayant fait l'inventaire : ✅
-                  </Typography>
-                  <ul style={{ listStyleType: "none", padding: 0 }}>
-                    {stat.unitsWithInventory.map((unit, idx) => (
-                      <li
-                        key={idx}
-                        style={{
-                          color: "#a6ff4d",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          fontSize: "1rem", // Taille légèrement réduite
+                    <Typography
+                      variant="body1"
+                      sx={{ color: "error.main", fontWeight: "bold", mb: 1 }}
+                    >
+                      Unités sans inventaire
+                    </Typography>
+                    {weekStats.unitsWithoutInventory.map((unit, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "inline-block",
+                          p: 1,
+                          m: 0.5,
+                          border: "1px solid rgba(0, 0, 0, 0.1)",
+                          borderRadius: 1,
+                          bgcolor: "rgba(0, 0, 0, 0.05)",
+                          opacity: 0.8,
                         }}
                       >
-                        {unit}
-                      </li>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {unit}
+                        </Typography>
+                      </Box>
                     ))}
-                  </ul>
+                    {weekStats.unitsWithoutInventory.length === 0 && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        Aucune
+                      </Typography>
+                    )}
+                  </Box>
                 </Grid>
-
-                {/* Colonne de droite */}
                 <Grid item xs={6}>
-                  <Typography
-                    variant="h6" // Augmentation de la taille
-                    sx={{
-                      color: "whait", // Changement en noir
-                      fontWeight: "bold",
-                      mb: 1, // Marge sous le titre
-                    }}
-                  >
-                    Unités n'ayant pas fait l'inventaire : ❌
-                  </Typography>
-                  <ul style={{ listStyleType: "none", padding: 0 }}>
-                    {stat.unitsWithoutInventory.map((unit, idx) => (
-                      <li
-                        key={idx}
-                        style={{
-                          color: "#ff80b3",
-                          fontWeight: "bold",
-                          textTransform: "uppercase",
-                          fontSize: "1rem", // Taille légèrement réduite
+                  <Box sx={{ p: 2 }}>
+                    <Typography
+                      variant="body1"
+                      sx={{ color: "success.main", fontWeight: "bold", mb: 1 }}
+                    >
+                      Unités avec inventaire
+                    </Typography>
+                    {weekStats.unitsWithInventory.map((unit, index) => (
+                      <Box
+                        key={index}
+                        sx={{
+                          display: "inline-block",
+                          p: 1,
+                          m: 0.5,
+                          border: "1px solid rgba(0, 0, 0, 0.1)",
+                          borderRadius: 1,
+                          bgcolor: "rgba(0, 0, 0, 0.05)",
+                          opacity: 0.8,
                         }}
                       >
-                        {unit}
-                      </li>
+                        <Typography
+                          variant="body2"
+                          sx={{ color: "text.secondary" }}
+                        >
+                          {unit}
+                        </Typography>
+                      </Box>
                     ))}
-                  </ul>
+                    {weekStats.unitsWithInventory.length === 0 && (
+                      <Typography
+                        variant="body2"
+                        sx={{ color: "text.secondary" }}
+                      >
+                        Aucune
+                      </Typography>
+                    )}
+                  </Box>
                 </Grid>
               </Grid>
             </Box>
           ))}
         </DialogContent>
-        <DialogActions>
-          <Button onClick={handleCloseStatisticsDialog} color="primary">
+        <DialogActions sx={{ p: 2, bgcolor: "background.default" }}>
+          <Button
+            onClick={handleCloseStatisticsDialog}
+            variant="contained"
+            color="primary"
+            sx={{ borderRadius: 2 }}
+          >
             Fermer
           </Button>
         </DialogActions>
