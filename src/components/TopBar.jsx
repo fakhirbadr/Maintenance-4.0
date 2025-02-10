@@ -22,6 +22,7 @@ import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Importer l'icône 
 import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
+import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
 import myImage from "../../public/scx.png"; // Ajustez le chemin en fonction de votre structure
 
 const AppBar = styled(MuiAppBar, {
@@ -165,6 +166,13 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             <HomeRoundedIcon />
           </IconButton>
 
+          <IconButton
+            sx={{ color: "blue" }}
+            component={Link}
+            to="/NetworkPatient"
+          >
+            <SpeedRoundedIcon sx={{ fontSize: 25 }} />
+          </IconButton>
           <IconButton sx={{ color: "green" }} component={Link} to="/checkListe">
             <GradingOutlinedIcon />
           </IconButton>

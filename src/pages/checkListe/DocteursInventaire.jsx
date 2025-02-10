@@ -270,6 +270,7 @@ const DocteursInventaire = () => {
           </Table>
         </TableContainer>
       )}
+
       <EquipmentDialog
         open={openDialog}
         onClose={handleCloseDialog}
@@ -316,14 +317,14 @@ const DocteursInventaire = () => {
                       mb: 1, // Marge sous le titre
                     }}
                   >
-                    Unités ayant fait l'inventaire :
+                    Unités ayant fait l'inventaire : ✅
                   </Typography>
                   <ul style={{ listStyleType: "none", padding: 0 }}>
                     {stat.unitsWithInventory.map((unit, idx) => (
                       <li
                         key={idx}
                         style={{
-                          color: "green",
+                          color: "#a6ff4d",
                           fontWeight: "bold",
                           textTransform: "uppercase",
                           fontSize: "1rem", // Taille légèrement réduite
@@ -345,14 +346,14 @@ const DocteursInventaire = () => {
                       mb: 1, // Marge sous le titre
                     }}
                   >
-                    Unités n'ayant pas fait l'inventaire :
+                    Unités n'ayant pas fait l'inventaire : ❌
                   </Typography>
                   <ul style={{ listStyleType: "none", padding: 0 }}>
                     {stat.unitsWithoutInventory.map((unit, idx) => (
                       <li
                         key={idx}
                         style={{
-                          color: "red",
+                          color: "#ff80b3",
                           fontWeight: "bold",
                           textTransform: "uppercase",
                           fontSize: "1rem", // Taille légèrement réduite

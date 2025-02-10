@@ -21,7 +21,14 @@ import dayjs from "dayjs";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const DemandeCongeDialog = ({ open, onClose, nomComplet, role, province }) => {
+const DemandeCongeDialog = ({
+  open,
+  onClose,
+  nomComplet,
+  role,
+  province,
+  id,
+}) => {
   const [typeConge, setTypeConge] = useState("");
   const [dateDebut, setDateDebut] = useState(null);
   const [dateFin, setDateFin] = useState(null);
@@ -63,6 +70,7 @@ const DemandeCongeDialog = ({ open, onClose, nomComplet, role, province }) => {
     const requestData = {
       nomComplet,
       role,
+      cle: id,
       province,
       actif: selectedName, // Nom de l'actif sélectionné
       historique: [

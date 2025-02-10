@@ -4,12 +4,8 @@ import MUIDataTable from "mui-datatables";
 import Layout from "./Layout";
 import { Typography } from "@mui/material";
 import axios from "axios";
-import VueCoordinateur from "./VueCoordinateur";
-import VueRh from "./VueRh"; // Importez VueRh
-
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
-
 const getMuiTheme = () =>
   createTheme({
     typography: { fontFamily: "sans-serif" },
@@ -31,29 +27,36 @@ const getMuiTheme = () =>
     },
   });
 
-const ListeDemandes = () => {
+const VueRh = () => {
   const [role, setRole] = useState("");
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [nomComplet, setNomComplet] = useState("");
 
   const handleAction = async (action, historiqueIndex, id) => {
-    const isValidated = action === "validé";
+    // Déterminer la valeur de isValidated
+    const isValidated = action === "validé"; // true si "validé", false si "rejeté"
+
+    // Préparer le corps de la requête
     const payload = {
-      isValidated: isValidated,
-      historiqueIndex: 0,
+      isValidated: isValidated, // true ou false
+      historiqueIndex: 0, // Index de l'historique
     };
 
+    console.log("Payload envoyé :", payload); // Vérifier les données envoyées
+    console.log("ID envoyé :", id);
+
     try {
+      // Effectuer la requête HTTP
       const response = await fetch(`${apiUrl}/api/v1/absences/${id}`, {
-        method: "PATCH",
+        method: "PATCH", // PATCH pour mettre à jour une ressource
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(payload),
+        body: JSON.stringify(payload), // Convertir le corps en JSON
       });
 
+      // Gérer la réponse
       if (response.ok) {
         const data = await response.json();
         console.log("Succès :", data);
@@ -70,42 +73,16 @@ const ListeDemandes = () => {
       );
     }
   };
-  useEffect(() => {
-    const userInfo = localStorage.getItem("userInfo");
-    if (userInfo) {
-      try {
-        const parsedUserInfo = JSON.parse(userInfo);
-        setRole(parsedUserInfo.role || "");
-        setNomComplet(parsedUserInfo.nomComplet || "");
-        console.log("Rôle récupéré :", parsedUserInfo.role);
-      } catch (error) {
-        console.error("Erreur lors de l'analyse de userInfo :", error);
-      }
-    }
-  }, []);
-  useEffect(() => {
-    console.log("Valeur de nomComplet avant requête :", nomComplet);
-  }, [nomComplet]);
 
   useEffect(() => {
-    if (!nomComplet) return; // Si nomComplet est vide, ne pas exécuter la requête
-
     const fetchAbsences = async () => {
       try {
-        const response = await axios.get(
-          `${apiUrl}/api/v1/absences?nomComplet=${nomComplet}`
-        );
+        const response = await axios.get("${apiUrl}/api/v1/absences");
 
-        const filteredData =
-          role === "user"
-            ? response.data.filter((item) => item.nomComplet === nomComplet)
-            : response.data;
-
-        console.log("Données filtrées :", filteredData);
-
-        const transformedData = filteredData.flatMap((item) =>
+        // Transformation des données
+        const transformedData = response.data.flatMap((item) =>
           item.historique.map((historique, index) => ({
-            id: `${item._id}`,
+            id: `${item._id}`, // Ajoute un identifiant unique basé sur l'index et le nom
             nomComplet: item.nomComplet,
             dateDebut: new Date(historique.dateDebut).toLocaleDateString(),
             dateFin: new Date(historique.dateFin).toLocaleDateString(),
@@ -113,12 +90,14 @@ const ListeDemandes = () => {
             justification: historique.justification,
             nombreJours: historique.nombreJours,
             isValidated: historique.isValidated,
+
             role: item.role,
             province: item.province,
           }))
         );
 
         setData(transformedData);
+        console.log(data);
         setLoading(false);
       } catch (err) {
         setError(err.message);
@@ -127,13 +106,25 @@ const ListeDemandes = () => {
     };
 
     fetchAbsences();
-  }, [nomComplet, role]); // Attend que `nomComplet` soit défini
+  }, []);
+
+  useEffect(() => {
+    const userInfo = localStorage.getItem("userInfo");
+    if (userInfo) {
+      try {
+        const parsedUserInfo = JSON.parse(userInfo);
+        setRole(parsedUserInfo.role || "");
+      } catch (error) {
+        console.error("Erreur lors de l'analyse de userInfo :", error);
+      }
+    }
+  }, []);
 
   const columns = [
     {
       name: "id",
       options: {
-        display: false,
+        display: false, // Empêche l'affichage de la colonne
       },
     },
     { name: "nomComplet", label: "Nom Complet" },
@@ -151,14 +142,16 @@ const ListeDemandes = () => {
     { name: "dateFin", label: "Date Fin" },
     { name: "typeAbsence", label: "Type d'Absence" },
     { name: "justification", label: "Justification" },
+
     {
       name: "nombreJours",
       label: "Nb des Jours",
       options: {
         customBodyRender: (value, tableMeta) => {
-          const dateDebutString = tableMeta.rowData[4];
-          const dateFinString = tableMeta.rowData[5];
+          const dateDebutString = tableMeta.rowData[4]; // Index de la colonne 'dateDebut'
+          const dateFinString = tableMeta.rowData[5]; // Index de la colonne 'dateFin'
 
+          // Parse les dates au format DD/MM/YYYY
           const [dayDebut, monthDebut, yearDebut] = dateDebutString
             .split("/")
             .map(Number);
@@ -166,9 +159,10 @@ const ListeDemandes = () => {
             .split("/")
             .map(Number);
 
-          const dateDebut = new Date(yearDebut, monthDebut - 1, dayDebut);
+          const dateDebut = new Date(yearDebut, monthDebut - 1, dayDebut); // Mois commence à 0
           const dateFin = new Date(yearFin, monthFin - 1, dayFin);
 
+          // Calcul de la différence en jours
           const diffTime = Math.abs(dateFin - dateDebut);
           const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
@@ -176,9 +170,18 @@ const ListeDemandes = () => {
         },
       },
     },
+    // {
+    //   name: "nombreJours",
+    //   label: "Nb des Jours",
+    //   options: {
+    //     customBodyRender: (value) => (
+    //       <span style={{ color: "#000000" }}>{value}</span>
+    //     ),
+    //   },
+    // },
     {
       name: "isValidated",
-      label: "Validation responsable",
+      label: "Validation Coordinateur",
       options: {
         customBodyRender: (value) => (
           <span style={{ color: value ? "green" : "red" }}>
@@ -191,9 +194,9 @@ const ListeDemandes = () => {
       name: "Action",
       options: {
         customBodyRender: (_, tableMeta) => {
-          const rowData = tableMeta.rowData;
-          const historiqueIndex = tableMeta.rowIndex;
-          const id = rowData[0];
+          const rowData = tableMeta.rowData; // Données de la ligne
+          const historiqueIndex = tableMeta.rowIndex; // Index de l'historique
+          const id = rowData[0]; // Supposons que l'ID est dans la première colonne
 
           return (
             <div>
@@ -239,58 +242,29 @@ const ListeDemandes = () => {
     search: true,
     download: true,
   };
-
   return (
-    <>
-      <Layout />
-      <div
-        className={`bg-[#d1dffa] w-full h-full ${
-          role === "user" || role === "superviseur" || role === "admin"
-            ? "px-14 pt-44"
-            : "px-6 w-full "
-        }`}
-      >
-        {role === "user" || role === "admin" || role === "superviseur" ? (
-          <ThemeProvider theme={getMuiTheme()}>
-            {loading ? (
-              <Typography variant="h6" color="text.secondary">
-                Chargement des données...
-              </Typography>
-            ) : error ? (
-              <Typography variant="h6" color="error">
-                Une erreur est survenue : {error}
-              </Typography>
-            ) : (
-              <MUIDataTable
-                title={"Gestion des Demandes"}
-                data={data}
-                columns={columns}
-                options={options}
-              />
-            )}
-          </ThemeProvider>
-        ) : role === "coordinateur" ? (
-          <div className="flex justify-center items-center h-full">
-            <Typography variant="h5" color="text.secondary">
-              <VueCoordinateur />
-            </Typography>
-          </div>
-        ) : role === "rh" ? (
-          <div className="flex justify-center items-center h-full">
-            <Typography variant="h5" color="text.secondary">
-              <VueRh />
-            </Typography>
-          </div>
+    <div className="bg-[#d1dffa] w-[100%] h-full  ">
+      {" "}
+      <ThemeProvider theme={getMuiTheme()}>
+        {loading ? (
+          <Typography variant="h6" color="text.secondary">
+            Chargement des données...
+          </Typography>
+        ) : error ? (
+          <Typography variant="h6" color="error">
+            Une erreur est survenue : {error}
+          </Typography>
         ) : (
-          <div className="flex justify-center items-center h-full">
-            <Typography variant="h5" color="text.secondary">
-              Rôle inconnu ou non autorisé.
-            </Typography>
-          </div>
+          <MUIDataTable
+            title={"Gestion des Demandes"}
+            data={data}
+            columns={columns}
+            options={options}
+          />
         )}
-      </div>
-    </>
+      </ThemeProvider>
+    </div>
   );
 };
 
-export default ListeDemandes;
+export default VueRh;

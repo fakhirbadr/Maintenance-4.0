@@ -13,10 +13,11 @@ import Tooltip from "@mui/material/Tooltip";
 import MenuItem from "@mui/material/MenuItem";
 
 const pages = [
+  { label: "page d'accueil", path: "/hr" },
   { label: "Demande d'absence", path: "/DemandeCongé" },
   { label: "liste des demandes", path: "/listeDemandes" },
   { label: "reclamation", path: "/reclamation" },
-  { label: "page d'accueil", path: "/homepage" },
+  { label: "SCX master data", path: "/homepage" },
 ];
 const settings = ["Profile", "Account", "Dashboard", "Logout"];
 

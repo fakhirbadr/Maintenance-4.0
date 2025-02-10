@@ -47,6 +47,8 @@ import DemandeCongé from "./pages/HR/DemandeCongé";
 import Index from "./pages/checkListe/Index";
 import ListeDemandes from "./pages/HR/ListeDemandes";
 import Reclamation from "./pages/HR/Reclamation";
+import NetworkPatientData from "./pages/NetworkPatientData/NetworkPatientData";
+import NetworkPatient from "./pages/NetworkPatientData/NetworkPatient";
 
 // Création des routes
 // const router = createBrowserRouter(
@@ -193,6 +195,14 @@ const router = createBrowserRouter([
       {
         path: "checkListe",
         element: <ProtectedRoute element={<Index />} />,
+      },
+      {
+        path: "NetworkPatientData",
+        element: <ProtectedRoute element={<NetworkPatientData />} />,
+      },
+      {
+        path: "NetworkPatient",
+        element: <ProtectedRoute element={<NetworkPatient />} />,
       },
     ],
   },

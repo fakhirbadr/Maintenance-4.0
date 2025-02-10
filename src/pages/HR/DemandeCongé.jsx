@@ -34,6 +34,7 @@ const DemandeCongé = () => {
   const [dialogOpen, setDialogOpen] = React.useState(false); // État pour le Dialog
   const [role, setRole] = useState("");
   const [nomComplet, setNomComplet] = useState("");
+  const [id, setID] = useState("");
   const [province, setProvince] = useState("");
   const [soldeConges, setSoldeConges] = useState(0);
   const [absences, setAbsences] = useState([]);
@@ -53,12 +54,14 @@ const DemandeCongé = () => {
         const parsedUserInfo = JSON.parse(userInfo); // Convertir en objet
         setRole(parsedUserInfo.role || "");
         setNomComplet(parsedUserInfo.nomComplet || "");
+        setID(parsedUserInfo.id || "");
         setSoldeConges(parsedUserInfo.soldeConges || 0);
         setProvince(parsedUserInfo.province || "");
 
         console.log(nomComplet);
         console.log(province);
         console.log(soldeConges);
+        console.log(id);
         console.log(role); // Récupérer le rôle ou une valeur par défaut
       } catch (error) {
         console.error("Erreur lors de l'analyse de userInfo :", error);
@@ -82,8 +85,6 @@ const DemandeCongé = () => {
                 setSelectedName(fetchedNames[0].name); // Utilisez le premier nom
               }
             }
-            console.log(setSelectedName);
-            console.log(selectedName);
           } else {
             console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
           }
@@ -215,6 +216,7 @@ const DemandeCongé = () => {
         open={dialogOpen}
         nomComplet={nomComplet}
         role={role}
+        id={id}
         onClose={handleDialogClose}
         province={province}
         selectedName={selectedName}
