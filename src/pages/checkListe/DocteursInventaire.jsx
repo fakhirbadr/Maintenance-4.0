@@ -70,8 +70,11 @@ const DocteursInventaire = () => {
   useEffect(() => {
     const fetchActifNames = async () => {
       const cachedNames = localStorage.getItem("cachedActifNames");
-      if (cachedNames) {
+      const cachedData = localStorage.getItem("cachedActifData"); // Nouveau cache
+
+      if (cachedNames && cachedData) {
         setDynamicActifs(JSON.parse(cachedNames));
+        // Pas besoin de setter pour les données complètes ici
       } else {
         const userIds = JSON.parse(localStorage.getItem("userActifs"));
         if (userIds && Array.isArray(userIds)) {
@@ -79,13 +82,21 @@ const DocteursInventaire = () => {
             const responses = await Promise.all(
               userIds.map((id) => axios.get(`${apiUrl}/api/actifs/${id}`))
             );
+
             const fetchedNames = responses.map(
               (response) => response.data.name
             );
+            const fetchedData = responses.map((response) => response.data); // Nouvelles données
+
             localStorage.setItem(
               "cachedActifNames",
               JSON.stringify(fetchedNames)
             );
+            localStorage.setItem(
+              "cachedActifData",
+              JSON.stringify(fetchedData)
+            ); // Stockage des données complètes
+
             setDynamicActifs(fetchedNames);
           } catch (error) {
             console.error("Erreur lors de la récupération des actifs", error);
@@ -98,9 +109,18 @@ const DocteursInventaire = () => {
   }, []);
 
   useEffect(() => {
-    if (dynamicActifs.length > 0) {
-      fetchAllData();
-    }
+    const fetchData = async () => {
+      if (dynamicActifs.length > 0) {
+        await fetchAllData();
+        // Rafraîchir le cache après mise à jour
+        const actifsResponse = await axios.get(`${apiUrl}/api/actifs`);
+        localStorage.setItem(
+          "cachedActifData",
+          JSON.stringify(actifsResponse.data)
+        );
+      }
+    };
+    fetchData();
   }, [dynamicActifs, fetchAllData]);
 
   const normalizeUnitName = (name) => {
@@ -181,7 +201,7 @@ const DocteursInventaire = () => {
 
     if (cachedActifData && Array.isArray(cachedActifData)) {
       cachedActifData.forEach((unit) => {
-        const region = unit.region;
+        const region = unit.region || "Région non spécifiée"; // Fallback pour sécurité
         if (!unitsByRegion[region]) {
           unitsByRegion[region] = [];
         }
