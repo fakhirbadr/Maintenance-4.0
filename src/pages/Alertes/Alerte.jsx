@@ -59,7 +59,7 @@ const Alerte = () => {
     const fetchTicketData = async () => {
       try {
         const response = await axios.get(
-          `${apiUrl}/api/v1/ticketMaintenance?isClosed=false`
+          `${apiUrl}/api/v1/ticketMaintenance?isClosed=false&isDeleted=false`
         );
         const fetchedData = response.data;
 

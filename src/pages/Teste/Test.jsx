@@ -29,6 +29,8 @@ import { ShareIcon } from "lucide-react";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 import ExcelModel from "./ExcelModel";
+import TauxDeCompletude from "./nonMedical/TauxDeCompletude/TauxDeCompletude";
+import Index from "./nonMedical/Index";
 
 const actions = [{ icon: <ShareIcon />, name: "Share" }];
 // Liste des régions et provinces
@@ -105,6 +107,7 @@ const Test = () => {
   const [totalPriseEnCharge, setTotalPriseEnCharge] = useState(0);
   const [totalEffectifOperationnel, setTotalEffectifOperationnel] = useState(0);
   const [totalUMMCInstallees, setTotalUMMCInstallees] = useState(0);
+  const [data, setData] = useState("");
 
   const [openModelExcel, setOpenModelExcel] = useState(false);
   const [selectedAction, setSelectedAction] = useState("");
@@ -128,22 +131,8 @@ const Test = () => {
           throw new Error("Erreur lors de la récupération des données");
         }
         const data = await response.json();
-
-        // Calculer les totaux
-        const totalPriseEnCharge = data.reduce((acc, item) => {
-          return (
-            acc + (isNaN(item.totalPriseEnCharge) ? 0 : item.totalPriseEnCharge)
-          );
-        }, 0);
-
-        const totalEffectifOperationnel = data.reduce((acc, item) => {
-          return (
-            acc +
-            (isNaN(item.effectifTotalOperationnel)
-              ? 0
-              : item.effectifTotalOperationnel)
-          );
-        }, 0);
+        setData(data);
+        console.log(data);
 
         const totalUMMCInstallees = data.reduce((acc, item) => {
           return (
@@ -153,9 +142,19 @@ const Test = () => {
         }, 0);
 
         // Mettre à jour les états
-        setTotalPriseEnCharge(totalPriseEnCharge);
-        setTotalEffectifOperationnel(totalEffectifOperationnel);
-        setTotalUMMCInstallees(totalUMMCInstallees);
+        setTotalPriseEnCharge(data.totalPriseEnCharge);
+        setTotalEffectifOperationnel(
+          data.data.reduce(
+            (acc, item) => acc + (item.effectifTotalOperationnel || 0),
+            0
+          )
+        );
+        setTotalUMMCInstallees(
+          data.data.reduce(
+            (acc, item) => acc + (item.totalUMMCInstallees || 0),
+            0
+          )
+        );
       } catch (error) {
         setError(error.message);
       } finally {
@@ -307,7 +306,7 @@ const Test = () => {
               <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
                 <CardInfo
                   title="TOTAL DES PRISES EN CHARGE"
-                  value={isNaN(totalPriseEnCharge) ? 0 : totalPriseEnCharge}
+                  value={data.totalPriseEnCharge}
                   icon={PersonAddAltOutlinedIcon}
                 />
               </Item>
@@ -369,17 +368,7 @@ const Test = () => {
             </Box>
           </div>
         )}
-        {value === 1 && (
-          <div>
-            <h2 className="text-2xl font-bold text-[#880B25]">
-              Dossier Patient
-            </h2>
-            <p>
-              Contenu de l'onglet Dossier Patient : Gestion des dossiers
-              médicaux.
-            </p>
-          </div>
-        )}
+        {value === 1 && <Index />}
       </div>
     </div>
   );

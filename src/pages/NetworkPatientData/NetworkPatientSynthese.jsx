@@ -128,68 +128,137 @@ const NetworkPatientSynthese = () => {
   const exportToPDF = () => {
     const doc = new jsPDF();
 
-    // Titre
+    // Configuration du titre
+    const title = "Synthèse File d'Attente Patients";
     doc.setFontSize(18);
     doc.setFont("helvetica", "bold");
-    doc.setTextColor(40, 53, 147); // Couleur bleue
-    doc.text("Synthèse Surveillance Réseau & File d'Attente", 14, 20);
+    doc.setTextColor(40, 53, 147);
 
-    // Boucle pour ajouter les données à partir de structuredData
+    // Calcul de la position X pour centrer le titre
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const textWidth = doc.getTextWidth(title);
+    const xCenter = (pageWidth - textWidth) / 2;
+
+    doc.text(title, xCenter, 20);
+
     let yOffset = 30;
-    Object.entries(structuredData).forEach(([region, provinces]) => {
+
+    Object.entries(structuredData).forEach(([region, provinces], index) => {
+      if (index > 0) {
+        doc.addPage(); // Ajouter une nouvelle page pour chaque région sauf la première
+        yOffset = 20; // Réinitialiser yOffset pour la nouvelle page
+      }
+
+      // Entête région
       doc.setFontSize(14);
       doc.setFont("helvetica", "bold");
-      doc.setTextColor(0, 0, 0); // Couleur noire
-      doc.text(`Region: ${region}`, 14, yOffset);
+      doc.setTextColor(139, 0, 0);
+      const regionText = `Région: ${region}`;
+      const textWidthRegion = doc.getTextWidth(regionText);
+      const xCenterRegion = (pageWidth - textWidthRegion) / 2;
+
+      doc.text(regionText, xCenterRegion, yOffset);
+
+      doc.setTextColor(156, 27, 51);
       yOffset += 10;
 
+      // Préparation des données
+      const leftColumn = []; // Unités avec <10 patients
+      const rightColumn = []; // Unités avec >=10 patients
+
       Object.entries(provinces).forEach(([province, users]) => {
-        doc.setFontSize(12);
-        doc.setFont("helvetica", "bold");
-        doc.text(`Province: ${province}`, 14, yOffset);
-        yOffset += 10;
-
         Object.entries(users).forEach(([user, horaires]) => {
-          doc.setFontSize(10);
-          doc.setFont("helvetica", "normal");
-          doc.text(`Unité: ${user}`, 14, yOffset);
-          yOffset += 10;
+          // Calcul du maximum de patients
+          let maxPatients = Math.max(
+            ...Object.values(horaires).map((h) => h.patientsWaiting || 0)
+          );
 
-          // Création d'un tableau pour les horaires
-          const headers = [
-            "Heure",
-            "Download (Mbps)",
-            "Upload (Mbps)",
-            "Patients en attente",
-          ];
-          const data = ["10h", "12h", "16h"].map((time) => {
-            const { download, upload, patientsWaiting } = horaires[time] || {};
-            return [
-              time,
-              download ? `${download}` : "N/A",
-              upload ? `${upload}` : "N/A",
-              patientsWaiting ? `${patientsWaiting}` : "N/A",
-            ];
-          });
-
-          // Ajout du tableau
-          doc.autoTable({
-            startY: yOffset,
-            head: [headers],
-            body: data,
-            theme: "striped", // Thème du tableau
-            headStyles: { fillColor: [40, 53, 147] }, // Couleur d'en-tête
-            alternateRowStyles: { fillColor: [245, 245, 245] }, // Couleur des lignes alternées
-            margin: { left: 14 }, // Marge gauche
-          });
-
-          yOffset = doc.autoTable.previous.finalY + 10; // Ajuster l'offset après le tableau
+          // Tri dans les colonnes
+          if (maxPatients >= 10) {
+            rightColumn.push({ province, user, horaires, maxPatients });
+          } else {
+            leftColumn.push({ province, user, horaires, maxPatients });
+          }
         });
       });
+
+      // Affichage en deux colonnes côte à côte
+      let maxLength = Math.max(leftColumn.length, rightColumn.length); // Nombre maximal d'unités dans les deux colonnes
+
+      for (let i = 0; i < maxLength; i++) {
+        let currentY = yOffset;
+
+        // Afficher l'unité de gauche (si elle existe)
+        if (leftColumn[i]) {
+          const unit = leftColumn[i];
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            `• ${unit.province} - ${unit.user} (Max: ${unit.maxPatients})`,
+            14,
+            currentY
+          );
+          currentY += 7;
+
+          const data = Object.entries(unit.horaires).map(([heure, data]) => [
+            heure,
+            data.patientsWaiting ?? "N/A",
+          ]);
+
+          doc.autoTable({
+            startY: currentY,
+            startX: 14,
+            head: [["Heure", "Patients"]],
+            body: data,
+            theme: "striped",
+            margin: { left: 14, top: 2, bottom: 2 },
+            tableWidth: 80,
+            styles: { fontSize: 8, cellPadding: 1 },
+          });
+          currentY = doc.autoTable.previous.finalY + 5;
+        }
+
+        // Afficher l'unité de droite (si elle existe)
+        if (rightColumn[i]) {
+          const unit = rightColumn[i];
+          doc.setFontSize(10);
+          doc.setFont("helvetica", "bold");
+          doc.text(
+            `• ${unit.province} - ${unit.user} (Max: ${unit.maxPatients})`,
+            110,
+            yOffset
+          );
+          let rightColumnY = yOffset + 7;
+
+          const data = Object.entries(unit.horaires).map(([heure, data]) => [
+            heure,
+            data.patientsWaiting ?? "N/A",
+          ]);
+
+          doc.autoTable({
+            startY: rightColumnY,
+            startX: 110,
+            head: [["Heure", "Patients"]],
+            body: data,
+            theme: "striped",
+            margin: { left: 110, top: 2, bottom: 2 },
+            tableWidth: 80,
+            styles: { fontSize: 8, cellPadding: 1 },
+          });
+          rightColumnY = doc.autoTable.previous.finalY + 5;
+
+          // Synchroniser la hauteur des deux colonnes
+          if (rightColumnY > currentY) {
+            currentY = rightColumnY;
+          }
+        }
+
+        // Mettre à jour yOffset pour la prochaine paire d'unités
+        yOffset = currentY + 10;
+      }
     });
 
-    // Enregistrement du PDF
-    doc.save("Synthese_Surveillance_Réseau.pdf");
+    doc.save("Synthese_File_Attente.pdf");
   };
 
   const toggleRegion = (regionName) => {

@@ -132,6 +132,15 @@ const DocteursInventaire = () => {
   const calculateStatisticsByWeek = (groupedData, allUnits) => {
     const statistics = [];
     const normalizedAllUnits = allUnits.map((unit) => normalizeUnitName(unit));
+    const cachedActifData = JSON.parse(localStorage.getItem("cachedActifData"));
+
+    // Créer un objet pour mapper les noms d'unités à leurs régions
+    const unitToRegionMap = {};
+    if (cachedActifData && Array.isArray(cachedActifData)) {
+      cachedActifData.forEach((unit) => {
+        unitToRegionMap[normalizeUnitName(unit.name)] = unit.region;
+      });
+    }
 
     Object.keys(groupedData).forEach((weekStart) => {
       const unitsWithInventory = groupedData[weekStart];
@@ -143,15 +152,44 @@ const DocteursInventaire = () => {
       const endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
 
+      // Ajouter la région aux unités avec et sans inventaire
+      const unitsWithInventoryData = Array.from(unitsWithInventory).map(
+        (unit) => ({
+          name: unit,
+          region: unitToRegionMap[unit] || "Région inconnue",
+        })
+      );
+
+      const unitsWithoutInventoryData = unitsWithoutInventory.map((unit) => ({
+        name: unit,
+        region: unitToRegionMap[unit] || "Région inconnue",
+      }));
+
       statistics.push({
         startDate: weekStart,
         endDate: endDate.toISOString().split("T")[0],
-        unitsWithInventory: Array.from(unitsWithInventory),
-        unitsWithoutInventory,
+        unitsWithInventory: unitsWithInventoryData,
+        unitsWithoutInventory: unitsWithoutInventoryData,
       });
     });
 
     return statistics;
+  };
+  const getUnitsByRegion = () => {
+    const cachedActifData = JSON.parse(localStorage.getItem("cachedActifData"));
+    const unitsByRegion = {};
+
+    if (cachedActifData && Array.isArray(cachedActifData)) {
+      cachedActifData.forEach((unit) => {
+        const region = unit.region;
+        if (!unitsByRegion[region]) {
+          unitsByRegion[region] = [];
+        }
+        unitsByRegion[region].push(unit.name);
+      });
+    }
+
+    return unitsByRegion;
   };
 
   const handleOpenStatisticsDialog = () => {
@@ -209,6 +247,48 @@ const DocteursInventaire = () => {
     setOpenDialog(false);
     setSelectedItem(null);
   }, []);
+  // const groupByRegion = (unitsWithInventory, unitsWithoutInventory) => {
+  //   const cachedActifData = JSON.parse(localStorage.getItem("cachedActifData"));
+  //   const groupedByRegion = {};
+
+  //   // Créer un objet pour mapper les noms d'unités à leurs régions
+  //   const unitToRegionMap = {};
+  //   if (cachedActifData && Array.isArray(cachedActifData)) {
+  //     cachedActifData.forEach((unit) => {
+  //       unitToRegionMap[normalizeUnitName(unit.name)] = unit.region;
+  //     });
+  //   }
+
+  //   // Grouper les unités avec inventaire par région
+  //   unitsWithInventory.forEach((unit) => {
+  //     const region = unitToRegionMap[unit] || "Région inconnue";
+  //     if (!groupedByRegion[region]) {
+  //       groupedByRegion[region] = { withInventory: [], withoutInventory: [] };
+  //     }
+  //     groupedByRegion[region].withInventory.push(unit);
+  //   });
+
+  //   // Grouper les unités sans inventaire par région
+  //   unitsWithoutInventory.forEach((unit) => {
+  //     const region = unitToRegionMap[unit] || "Région inconnue";
+  //     if (!groupedByRegion[region]) {
+  //       groupedByRegion[region] = { withInventory: [], withoutInventory: [] };
+  //     }
+  //     groupedByRegion[region].withoutInventory.push(unit);
+  //   });
+
+  //   return groupedByRegion;
+  // };
+  const groupByRegion = (units) => {
+    return units.reduce((acc, unit) => {
+      const region = unit.region;
+      if (!acc[region]) {
+        acc[region] = [];
+      }
+      acc[region].push(unit);
+      return acc;
+    }, {});
+  };
 
   const handleValidation = useCallback(async (id) => {
     setLoadingRows((prev) => ({ ...prev, [id]: true }));
@@ -316,113 +396,213 @@ const DocteursInventaire = () => {
           Statistiques par Semaine
         </DialogTitle>
         <DialogContent>
-          {statisticsByDate.map((weekStats) => (
-            <Box
-              key={weekStats.startDate}
-              sx={{
-                mb: 3,
-                p: 2,
-                border: "1px solid #e0e0e0",
-                borderRadius: 2,
-                bgcolor: "background.paper",
-                boxShadow: 1,
-              }}
-            >
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}
-              >
-                Semaine du{" "}
-                {formatWeekRange(weekStats.startDate, weekStats.endDate)}
-              </Typography>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <Box
-                    sx={{
-                      p: 2,
-                      borderRight: "1px solid #e0e0e0",
-                      height: "100%",
-                    }}
+          {statisticsByDate
+            .sort((a, b) => new Date(b.startDate) - new Date(a.startDate)) // Tri par ordre décroissant
+            .map((weekStats) => {
+              const unitsWithoutInventoryByRegion = groupByRegion(
+                weekStats.unitsWithoutInventory
+              );
+              const unitsWithInventoryByRegion = groupByRegion(
+                weekStats.unitsWithInventory
+              );
+
+              // Étape 1 : Extraire toutes les régions
+              const allRegions = [
+                ...new Set([
+                  ...Object.keys(unitsWithoutInventoryByRegion),
+                  ...Object.keys(unitsWithInventoryByRegion),
+                ]),
+              ];
+
+              // Étape 2 : Trier les régions par ordre alphabétique
+              const sortedRegions = allRegions.sort((a, b) =>
+                a.localeCompare(b)
+              );
+
+              return (
+                <Box
+                  key={weekStats.startDate}
+                  sx={{
+                    mb: 3,
+                    p: 2,
+                    border: "1px solid #e0e0e0",
+                    borderRadius: 2,
+                    bgcolor: "background.paper",
+                    boxShadow: 1,
+                  }}
+                >
+                  <Typography
+                    variant="h6"
+                    sx={{ fontWeight: "bold", mb: 2, textAlign: "center" }}
                   >
-                    <Typography
-                      variant="body1"
-                      sx={{ color: "error.main", fontWeight: "bold", mb: 1 }}
-                    >
-                      Unités sans inventaire
-                    </Typography>
-                    {weekStats.unitsWithoutInventory.map((unit, index) => (
+                    Semaine du{" "}
+                    {formatWeekRange(weekStats.startDate, weekStats.endDate)}
+                  </Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={6}>
                       <Box
-                        key={index}
                         sx={{
-                          display: "inline-block",
-                          p: 1,
-                          m: 0.5,
-                          border: "1px solid rgba(0, 0, 0, 0.1)",
-                          borderRadius: 1,
-                          bgcolor: "rgba(0, 0, 0, 0.05)",
-                          opacity: 0.8,
+                          p: 2,
+                          borderRight: "1px solid #e0e0e0",
+                          height: "100%",
                         }}
                       >
                         <Typography
-                          variant="body2"
-                          sx={{ color: "text.secondary" }}
+                          variant="body1"
+                          sx={{
+                            color: "error.main",
+                            fontWeight: "bold",
+                            mb: 1,
+                          }}
                         >
-                          {unit}
+                          Unités sans inventaire
                         </Typography>
+                        {sortedRegions.map((region) => (
+                          <Box key={region} sx={{ mb: 2 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: "text.primary",
+                                mb: 1,
+                              }}
+                            >
+                              {region}{" "}
+                              <span style={{ color: "", fontSize: "0.8rem" }}>
+                                (
+                                {
+                                  (unitsWithoutInventoryByRegion[region] || [])
+                                    .length
+                                }{" "}
+                                unités)
+                              </span>
+                            </Typography>
+                            <Grid container spacing={1}>
+                              {(
+                                unitsWithoutInventoryByRegion[region] || []
+                              ).map((unit, index) => (
+                                <Grid item key={index} xs={4}>
+                                  <Box
+                                    sx={{
+                                      display: "block",
+                                      p: 1,
+                                      m: 0.5,
+                                      border: "1px solid rgba(0, 0, 0, 0.1)",
+                                      borderRadius: 1,
+                                      bgcolor: "rgba(255, 51, 51, 0.2)", // Rouge clair pour les unités sans inventaire
+                                      opacity: 0.8,
+                                      transition:
+                                        "transform 0.2s, box-shadow 0.2s",
+                                      "&:hover": {
+                                        transform: "scale(1.02)",
+                                        boxShadow:
+                                          "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                                      },
+                                    }}
+                                  >
+                                    <Typography
+                                      variant="body2"
+                                      sx={{ color: "text.secondary" }}
+                                    >
+                                      {unit.name}
+                                    </Typography>
+                                  </Box>
+                                </Grid>
+                              ))}
+                            </Grid>
+                          </Box>
+                        ))}
+                        {weekStats.unitsWithoutInventory.length === 0 && (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            Aucune unité sans inventaire
+                          </Typography>
+                        )}
                       </Box>
-                    ))}
-                    {weekStats.unitsWithoutInventory.length === 0 && (
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        Aucune
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
-                <Grid item xs={6}>
-                  <Box sx={{ p: 2 }}>
-                    <Typography
-                      variant="body1"
-                      sx={{ color: "success.main", fontWeight: "bold", mb: 1 }}
-                    >
-                      Unités avec inventaire
-                    </Typography>
-                    {weekStats.unitsWithInventory.map((unit, index) => (
-                      <Box
-                        key={index}
-                        sx={{
-                          display: "inline-block",
-                          p: 1,
-                          m: 0.5,
-                          border: "1px solid rgba(0, 0, 0, 0.1)",
-                          borderRadius: 1,
-                          bgcolor: "rgba(0, 0, 0, 0.05)",
-                          opacity: 0.8,
-                        }}
-                      >
+                    </Grid>
+                    <Grid item xs={6}>
+                      <Box sx={{ p: 2 }}>
                         <Typography
-                          variant="body2"
-                          sx={{ color: "text.secondary" }}
+                          variant="body1"
+                          sx={{
+                            color: "success.main",
+                            fontWeight: "bold",
+                            mb: 1,
+                          }}
                         >
-                          {unit}
+                          Unités avec inventaire
                         </Typography>
+                        {sortedRegions.map((region) => (
+                          <Box key={region} sx={{ mb: 2 }}>
+                            <Typography
+                              variant="body2"
+                              sx={{
+                                fontWeight: "bold",
+                                color: "text.primary",
+                                mb: 1,
+                              }}
+                            >
+                              {region}{" "}
+                              <span style={{ color: "", fontSize: "0.8rem" }}>
+                                (
+                                {
+                                  (unitsWithInventoryByRegion[region] || [])
+                                    .length
+                                }{" "}
+                                unités)
+                              </span>
+                            </Typography>
+                            <Grid container spacing={1}>
+                              {(unitsWithInventoryByRegion[region] || []).map(
+                                (unit, index) => (
+                                  <Grid item key={index} xs={4}>
+                                    <Box
+                                      sx={{
+                                        display: "block",
+                                        p: 1,
+                                        m: 0.5,
+                                        border: "1px solid rgba(0, 0, 0, 0.1)",
+                                        borderRadius: 1,
+                                        bgcolor: "rgba(133, 255, 214, 0.2)", // Vert clair pour les unités avec inventaire
+                                        opacity: 0.8,
+                                        transition:
+                                          "transform 0.2s, box-shadow 0.2s",
+                                        "&:hover": {
+                                          transform: "scale(1.02)",
+                                          boxShadow:
+                                            "0px 4px 8px rgba(0, 0, 0, 0.1)",
+                                        },
+                                      }}
+                                    >
+                                      <Typography
+                                        variant="body2"
+                                        sx={{ color: "text.secondary" }}
+                                      >
+                                        {unit.name}
+                                      </Typography>
+                                    </Box>
+                                  </Grid>
+                                )
+                              )}
+                            </Grid>
+                          </Box>
+                        ))}
+                        {weekStats.unitsWithInventory.length === 0 && (
+                          <Typography
+                            variant="body2"
+                            sx={{ color: "text.secondary" }}
+                          >
+                            Aucune unité avec inventaire
+                          </Typography>
+                        )}
                       </Box>
-                    ))}
-                    {weekStats.unitsWithInventory.length === 0 && (
-                      <Typography
-                        variant="body2"
-                        sx={{ color: "text.secondary" }}
-                      >
-                        Aucune
-                      </Typography>
-                    )}
-                  </Box>
-                </Grid>
-              </Grid>
-            </Box>
-          ))}
+                    </Grid>
+                  </Grid>
+                </Box>
+              );
+            })}
         </DialogContent>
         <DialogActions sx={{ p: 2, bgcolor: "background.default" }}>
           <Button

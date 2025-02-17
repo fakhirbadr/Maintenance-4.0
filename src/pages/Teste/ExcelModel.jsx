@@ -35,17 +35,51 @@ const ExcelModel = ({ open, handleCloseModal, selectedAction }) => {
         // Supposons que les données sont dans la première feuille
         const sheetName = workbook.SheetNames[0];
         const sheet = workbook.Sheets[sheetName];
-        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        const jsonData = XLSX.utils.sheet_to_json(sheet, { header: 1 }); // Convertir en tableau 2D
 
-        // Envoyer les données à l'API
-        const response = await axios.post(
+        if (jsonData.length === 0) {
+          alert("Le fichier est vide ou mal formaté.");
+          return;
+        }
+
+        // Récupérer les en-têtes (première ligne du fichier)
+        const headers = jsonData[0];
+        const fullData = jsonData
+          .slice(1)
+          .map((row) =>
+            Object.fromEntries(headers.map((key, i) => [key, row[i]]))
+          );
+
+        // Vérifier s'il y a au moins 5 colonnes
+        if (headers.length < 5) {
+          alert("Le fichier ne contient pas assez de colonnes.");
+          return;
+        }
+
+        // Extraire la 5ᵉ colonne uniquement
+        const column5Key = headers[4]; // Nom de la colonne
+        const column5Data = fullData.map((row) => ({
+          [column5Key]: row[column5Key],
+        }));
+
+        // Envoyer toutes les données à l'API principale
+        await axios.post(
           "http://localhost:3000/api/v1/ummcperformance",
-          jsonData
+          fullData
         );
-        console.log("Données envoyées avec succès :", response.data);
+        console.log("Toutes les données envoyées avec succès.");
+
+        // Envoyer uniquement la 5ᵉ colonne à une autre API
+        await axios.post(
+          "http://localhost:3000/api/v1/anotherEndpoint",
+          column5Data
+        );
+        console.log("Données de la 5ᵉ colonne envoyées avec succès.");
+
         alert("Les données ont été envoyées avec succès.");
         handleCloseModal();
       };
+
       reader.readAsArrayBuffer(file);
     } catch (error) {
       console.error("Erreur lors de l'envoi des données :", error);
