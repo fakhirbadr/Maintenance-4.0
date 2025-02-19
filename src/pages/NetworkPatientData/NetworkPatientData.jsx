@@ -456,7 +456,8 @@ const NetworkPatientData = () => {
                           fontWeight="bold"
                           color="#2e7d32"
                         >
-                          {item.download.toFixed(2)} Mbps
+                          {item.download ? item.download.toFixed(2) : "--.-"}{" "}
+                          Mbps
                           <ArrowDownwardIcon
                             sx={{ ml: 1, fontSize: "1.2rem" }}
                           />
@@ -466,7 +467,7 @@ const NetworkPatientData = () => {
                           color="#1565c0"
                           sx={{ mt: 0.5 }}
                         >
-                          {item.upload?.toFixed(2) || "--.-"} Mbps
+                          {item.upload ? item.upload.toFixed(2) : "--.-"} Mbps
                           <ArrowUpwardIcon sx={{ ml: 1, fontSize: "1.2rem" }} />
                         </Typography>
                       </Box>
