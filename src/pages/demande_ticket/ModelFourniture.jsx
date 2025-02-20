@@ -151,6 +151,7 @@ const ModelFourniture = ({ open, onClose }) => {
     ],
     "Matériel Informatique": [
       "ADAPTATEUR DISPLAY/HDMI",
+      "IMPRIMANTE",
       "CABLE UTP (ETHERNET)",
       "CABLE TORSADE",
       "CABLE D’ALIMENTATION",
