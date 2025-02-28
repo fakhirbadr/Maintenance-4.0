@@ -24,7 +24,7 @@
     "@mui/styled-engine-sc": "^6.0.0-alpha.18",
     "@mui/x-charts": "^7.23.2",
     "@mui/x-data-grid": "^7.13.0",
-    "@mui/x-date-pickers": "^7.23.6",
+    "@mui/x-date-pickers": "^7.27.1",
     "@vitejs/plugin-react": "^4.3.4",
     "ag-charts-react": "^10.2.0",
     "apexcharts": "^3.54.0",
@@ -60,6 +60,7 @@
     "styled-components": "^6.1.12",
     "swiper": "^11.1.14",
     "xlsx": "^0.18.5",
+    "xlsx-style": "^0.8.13",
     "zustand": "^5.0.1"
   },
   "devDependencies": {

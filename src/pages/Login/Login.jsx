@@ -1,18 +1,18 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "./1.jpg";
-import axios from "axios"; // Assurez-vous d'installer axios si vous ne l'avez pas encore fait
-// @ts-ignore
+import axios from "axios";
+
 const apiUrl = import.meta.env.VITE_API_URL;
+
 const Login = () => {
   const navigate = useNavigate();
 
-  const [accounts, setAccounts] = useState([]); // Pour stocker les comptes récupérés
+  const [accounts, setAccounts] = useState([]);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
 
-  // Récupérer les comptes depuis l'API
   useEffect(() => {
     const token = localStorage.getItem("authToken");
 
@@ -24,21 +24,36 @@ const Login = () => {
           },
         })
         .then((response) => {
-          setAccounts(response.data); // Met à jour les comptes avec les données renvoyées
+          setAccounts(response.data);
           console.log(response.data);
           navigate("/");
         })
-
         .catch((error) => {
           console.error("Erreur lors de la récupération des comptes:", error);
           setErrorMessage(
             "Token expiré ou invalide. Veuillez vous reconnecter."
           );
-
-          localStorage.removeItem("authToken"); // Supprimer un token invalide
+          localStorage.removeItem("authToken");
         });
     }
   }, []);
+
+  const fetchActifNames = async (actifIds) => {
+    try {
+      const actifNames = await Promise.all(
+        actifIds.map(async (id) => {
+          const response = await axios.get(`${apiUrl}/api/actifs/${id}`);
+          return response.data.name;
+        })
+      );
+      localStorage.setItem("nameActifUser", JSON.stringify(actifNames));
+    } catch (error) {
+      console.error(
+        "Erreur lors de la récupération des noms des actifs:",
+        error
+      );
+    }
+  };
 
   const handleLogin = (e) => {
     e.preventDefault();
@@ -49,13 +64,11 @@ const Login = () => {
         password,
       })
       .then((response) => {
-        // Si la connexion est réussie, stocke le token et les données utilisateur
         const { token, user } = response.data;
         console.log(response.data);
         if (token && user) {
           localStorage.setItem("authToken", token);
 
-          // Stocker les informations utilisateur
           localStorage.setItem(
             "userInfo",
             JSON.stringify({
@@ -63,20 +76,20 @@ const Login = () => {
               email: user.email,
               role: user.role,
               site: user.site,
+              region: user.region,
               province: user.province,
               nomComplet: user.nomComplet,
               soldeConges: user.soldeConges,
             })
           );
 
-          // Stocker les actifs s'ils existent
           if (user.actifIds && Array.isArray(user.actifIds)) {
             localStorage.setItem("userActifs", JSON.stringify(user.actifIds));
+            fetchActifNames(user.actifIds); // Récupérer les noms des actifs
           } else {
-            localStorage.setItem("userActifs", JSON.stringify([])); // Valeur par défaut si aucun actif
+            localStorage.setItem("userActifs", JSON.stringify([]));
           }
 
-          // Ajouter une requête pour enregistrer l'historique des connexions
           axios
             .post(
               `${apiUrl}/api/v1/connection-history/record`,
@@ -86,7 +99,7 @@ const Login = () => {
               },
               {
                 headers: {
-                  Authorization: `Bearer ${token}`, // Inclure le token pour sécuriser la requête
+                  Authorization: `Bearer ${token}`,
                 },
               }
             )
@@ -100,23 +113,19 @@ const Login = () => {
               );
             });
 
-          // Redirige vers la page tickets après la connexion
           navigate("/");
         }
       })
       .catch((error) => {
         if (error.response) {
-          // Le serveur a renvoyé une réponse mais avec un code d'erreur (par exemple 401)
           setErrorMessage(
             error.response.data.message || "Erreur de connexion."
           );
         } else if (error.request) {
-          // Aucune réponse du serveur
           setErrorMessage(
             "Pas de réponse du serveur. Vérifiez votre connexion."
           );
         } else {
-          // Autre erreur
           setErrorMessage("Une erreur est survenue lors de la connexion.");
         }
         console.error("Erreur lors de la connexion:", error);
@@ -192,15 +201,6 @@ const Login = () => {
                 >
                   Sign in
                 </button>
-                {/* <p className="text-sm font-light text-gray-500 dark:text-gray-400">
-                  Don’t have an account yet?{" "}
-                  <a
-                    href="/signup"
-                    className="font-medium text-primary-600 hover:underline dark:text-primary-500"
-                  >
-                    Sign up
-                  </a>
-                </p> */}
               </form>
             </div>
           </div>

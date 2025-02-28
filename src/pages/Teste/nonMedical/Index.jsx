@@ -11,12 +11,38 @@ import React, { useState, useEffect, useMemo } from "react";
 import TauxDeCompletude from "./TauxDeCompletude/TauxDeCompletude";
 import TauxDeCompletudeAdministratif from "./TauxDeCompletudeAdministratif/TauxDeCompletudeAministratif";
 import TauxDeCompletudeDeDossierComplet from "./TauxDeCompletudeDeDossierComplet/TauxDeCompletudeDeDossierComplet";
+import TauxDeCompletudeDesPrescriptions from "./TauxDeCompletudeDesPrescriptions/TauxDeCompletudeDesPrescriptions";
+import TauxDeSaisie from "./TauxDeSaisie/TauxDeSaisie";
+import FluxPatients from "./FluxPatient/FluxPatients";
+import TeleExpertise from "./teleMedcine/TeleExpertise";
 
 const Index = () => {
+  const userInfo = JSON.parse(localStorage.getItem("userInfo")) || {};
+  const nameActifUser = JSON.parse(localStorage.getItem("nameActifUser")) || [];
+
+  // Vérifier si c'est un tableau et récupérer le premier élément
+  const name =
+    Array.isArray(nameActifUser) && nameActifUser.length > 0
+      ? nameActifUser[0].replace(/['"]+/g, "")
+      : null;
+
+  const { role, region, province } = userInfo;
+
+  const isDocteur = role === "docteurs";
+
+  console.log("Role:", role);
+  console.log("Region:", region);
+  console.log("Province:", province);
+  console.log("nameActifUser:", name);
+
   // États des filtres
-  const [selectedRegion, setSelectedRegion] = useState("Toutes les régions");
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [selectedActif, setSelectedActif] = useState("");
+  const [selectedRegion, setSelectedRegion] = useState(
+    isDocteur ? region : "Toutes les régions"
+  );
+  const [selectedProvince, setSelectedProvince] = useState(
+    isDocteur ? province : ""
+  );
+  const [selectedActif, setSelectedActif] = useState(isDocteur ? name : "");
   const [selectedComparison, setSelectedComparison] = useState("");
 
   // États des données
@@ -24,33 +50,51 @@ const Index = () => {
   const [adminData, setAdminData] = useState([]);
   const [regions, setRegions] = useState([]);
   const [dossierData, setDossierData] = useState([]); // Ajoutez cette ligne
+  const [prescriptionsData, setPrescriptionsData] = useState([]);
+  const [tauxDeSaisieData, setTauxDeSaisieData] = useState([]);
 
   // Chargement des structures hiérarchiques
   useEffect(() => {
     const fetchHierarchy = async () => {
       try {
-        const [medicalRes, adminRes, dossierRes] = await Promise.all([
+        const [
+          medicalRes,
+          adminRes,
+          dossierRes,
+          prescriptionsRes,
+          tauxDeSaisieRes,
+        ] = await Promise.all([
           fetch("http://localhost:3000/api/v1/tauxDeCompletudeMedical"),
           fetch("http://localhost:3000/api/v1/tauxDeCompletudeAdministratif"),
           fetch(
             "http://localhost:3000/api/v1/tauxDeCompletudeDeDossierComplet"
           ),
+          fetch(
+            "http://localhost:3000/api/v1/TauxDeCompletudeDesPrescriptions"
+          ),
+          fetch("http://localhost:3000/api/v1/TauxDeSaisie"),
         ]);
 
         const medicalJson = await medicalRes.json();
         const adminJson = await adminRes.json();
         const dossierJson = await dossierRes.json();
+        const prescriptionsJson = await prescriptionsRes.json();
+        const saisieJson = await tauxDeSaisieRes.json();
 
         setMedicalData(medicalJson.tauxHierarchiques);
         setAdminData(adminJson.tauxHierarchiques);
-        setDossierData(dossierJson.tauxHierarchiques); // Stockez les données du dossier
+        setDossierData(dossierJson.tauxHierarchiques);
+        setPrescriptionsData(prescriptionsJson.tauxHierarchiques); // Stockez les données du dossier
+        setTauxDeSaisieData(saisieJson.tauxHierarchiques);
 
         // Fusionnez toutes les régions
         const allRegions = [
           { region: "Toutes les régions", provinces: [] },
           ...medicalJson.tauxHierarchiques,
           ...adminJson.tauxHierarchiques,
-          ...dossierJson.tauxHierarchiques, // Incluez les régions du dossier
+          ...dossierJson.tauxHierarchiques,
+          ...prescriptionsJson.tauxHierarchiques, // Incluez les régions du dossier
+          ...saisieJson.tauxHierarchiques,
         ].filter((v, i, a) => a.findIndex((t) => t.region === v.region) === i);
 
         setRegions(allRegions);
@@ -72,8 +116,19 @@ const Index = () => {
       ...(adminData.find((r) => r.region === selectedRegion)?.provinces || []),
       ...(dossierData.find((r) => r.region === selectedRegion)?.provinces ||
         []), // Ajoutez cette ligne
+      ...(prescriptionsData.find((r) => r.region === selectedRegion)
+        ?.provinces || []),
+      ...(tauxDeSaisieData.find((r) => r.region === selectedRegion)
+        ?.provinces || []),
     ].filter((v, i, a) => a.findIndex((t) => t.province === v.province) === i);
-  }, [selectedRegion, medicalData, adminData, dossierData]); // Ajoutez dossierData aux dépendances
+  }, [
+    selectedRegion,
+    medicalData,
+    adminData,
+    dossierData,
+    prescriptionsData,
+    tauxDeSaisieData,
+  ]); // Ajoutez dossierData aux dépendances
   // Calcul des unités
   const actifs = useMemo(() => {
     if (!selectedProvince) return [];
@@ -89,9 +144,19 @@ const Index = () => {
     return [
       ...findUnits(medicalData),
       ...findUnits(adminData),
-      ...findUnits(dossierData), // Ajoutez cette ligne
+      ...findUnits(dossierData),
+      ...findUnits(prescriptionsData), // Ajoutez cette ligne
+      ...findUnits(tauxDeSaisieData),
     ].filter((v, i, a) => a.findIndex((t) => t.unite === v.unite) === i);
-  }, [selectedRegion, selectedProvince, medicalData, adminData, dossierData]); // Ajoutez dossierData aux dépendances
+  }, [
+    selectedRegion,
+    selectedProvince,
+    medicalData,
+    adminData,
+    dossierData,
+    prescriptionsData,
+    tauxDeSaisieData,
+  ]); // Ajoutez dossierData aux dépendances
 
   return (
     <div>
@@ -187,17 +252,36 @@ const Index = () => {
       </Box>
 
       <Box sx={{ mt: 4 }}>
-        <Typography variant="h4" fontWeight="bold" color="#880B25">
-          Dossier Patient
+        <Typography
+          variant="h4"
+          fontWeight="bold"
+          color="#880B25"
+          className=" uppercase"
+        >
+          Performance non medical
         </Typography>
-        <Typography variant="body1" sx={{ mb: 3 }}>
-          Analyse des taux de complétude des dossiers patients
-        </Typography>
+        <Typography variant="body1" sx={{ mb: 3 }}></Typography>
 
         <Grid container spacing={3}>
           <Grid item xs={12}>
             <Box sx={{ p: 3, border: "1px solid #ddd", borderRadius: 2 }}>
               <Grid container spacing={3}>
+                <Grid item xs={12} md={12}>
+                  <FluxPatients
+                    selectedRegion={selectedRegion}
+                    selectedProvince={selectedProvince}
+                    selectedActif={selectedActif}
+                    selectedComparison={selectedComparison}
+                  />
+                </Grid>
+                <Grid item xs={12} md={12}>
+                  <TeleExpertise
+                    selectedRegion={selectedRegion}
+                    selectedProvince={selectedProvince}
+                    selectedActif={selectedActif}
+                    selectedComparison={selectedComparison}
+                  />
+                </Grid>
                 <Grid item xs={12} md={6}>
                   <TauxDeCompletude
                     selectedRegion={selectedRegion}
@@ -225,6 +309,24 @@ const Index = () => {
                     selectedActif={selectedActif}
                     selectedComparison={selectedComparison}
                     apiUrl="http://localhost:3000/api/v1/tauxDeCompletudeDeDossierComplet"
+                  />
+                </Grid>
+                <Grid item xs={12} md={6}>
+                  <TauxDeCompletudeDesPrescriptions
+                    selectedRegion={selectedRegion} // Décommentez cette ligne
+                    selectedProvince={selectedProvince}
+                    selectedActif={selectedActif}
+                    selectedComparison={selectedComparison}
+                    apiUrl="http://localhost:3000/api/v1/TauxDeCompletudeDesPrescriptions"
+                  />
+                </Grid>
+                <Grid item xs={12} md={12}>
+                  <TauxDeSaisie
+                    selectedRegion={selectedRegion} // Décommentez cette ligne
+                    selectedProvince={selectedProvince}
+                    selectedActif={selectedActif}
+                    selectedComparison={selectedComparison}
+                    apiUrl="http://localhost:3000/api/v1/TauxDeSaisie"
                   />
                 </Grid>
               </Grid>

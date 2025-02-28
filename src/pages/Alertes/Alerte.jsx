@@ -4,6 +4,8 @@ import { Badge, Button, Collapse, Grid } from "@mui/material";
 import { styled } from "@mui/material/styles";
 import Paper from "@mui/material/Paper";
 import axios from "axios";
+import * as XLSX from "xlsx"; // Import de la bibliothèque xlsx
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -90,10 +92,77 @@ const Alerte = () => {
     fetchFournitureData();
   }, []);
 
-  // Fonction pour calculer le total des alertes
-  const totalAlert = (ticketData, fournitureData) => {
-    const total = ticketData.length + fournitureData.length;
-    console.log(total);
+  // Fonction pour exporter les données en Excel
+  // Fonction pour exporter les données en Excel avec un en-tête coloré
+  const exportToExcel = (data, fileName) => {
+    const filteredData = data.map((item) => {
+      const elapsedTime = calculateElapsedTime(item.dateCreation);
+      return {
+        name: item.name,
+        region: item.region,
+        province: item.province,
+        besoin: item.besoin,
+        quantite: item.quantite,
+        technicien: item.technicien,
+        commentaire: item.commentaire,
+        status: item.status,
+        dateCreation: item.dateCreation,
+        tempsEcoule: elapsedTime,
+      };
+    });
+
+    // Créer une feuille Excel
+    const worksheet = XLSX.utils.json_to_sheet(filteredData, {
+      skipHeader: true,
+    }); // Ne pas ajouter d'en-tête automatique
+
+    // Ajouter un en-tête personnalisé
+    const header = [
+      "Nom",
+      "Région",
+      "Province",
+      "Besoin",
+      "Quantité",
+      "Technicien",
+      "Commentaire",
+      "Statut",
+      "Date Création",
+      "Temps Écoulé",
+    ];
+    XLSX.utils.sheet_add_aoa(worksheet, [header], { origin: "A1" });
+
+    // Appliquer le style à l'en-tête
+    const headerStyle = {
+      fill: {
+        patternType: "solid",
+        fgColor: { rgb: "0000FF" }, // Fond bleu
+      },
+      font: {
+        color: { rgb: "FFFFFF" }, // Texte blanc
+        bold: true, // Texte en gras
+      },
+      alignment: {
+        horizontal: "center", // Centrer le texte
+      },
+    };
+
+    // Appliquer le style à chaque cellule de l'en-tête
+    for (let C = 0; C < header.length; C++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: C }); // Ligne 0, colonne C
+      if (!worksheet[cellAddress]) worksheet[cellAddress] = {};
+      worksheet[cellAddress].s = headerStyle;
+    }
+
+    // Ajuster la largeur des colonnes
+    const colWidths = header.map((h) => ({ wch: h.length + 5 })); // Ajuster la largeur en fonction de la longueur du texte
+    worksheet["!cols"] = colWidths;
+
+    // Créer un nouveau classeur et ajouter la feuille
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Données");
+
+    // Exporter le fichier Excel
+    XLSX.writeFile(workbook, `${fileName}.xlsx`);
   };
 
   return (
@@ -250,6 +319,16 @@ const Alerte = () => {
                     </div>
                   ))}
                 </Collapse>
+                {/* Bouton pour exporter en Excel */}
+                <Button
+                  onClick={() => exportToExcel(fournitureData, "commandes")}
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  style={{ marginTop: "10px" }}
+                >
+                  Exporter en Excel
+                </Button>
               </div>
             </Item>
           </Grid>

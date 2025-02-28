@@ -1,4 +1,10 @@
-import React, { useEffect, useState } from "react";
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  useMemo,
+  useRef,
+} from "react";
 import Location from "../../components/Location";
 import ClotureNonCloture from "./Graph1/ClotureNonCloture";
 import { styled } from "@mui/material/styles";
@@ -18,6 +24,7 @@ import { MenuItem, TextField } from "@mui/material";
 import TauxDisponibilité from "./Graphe 11/TauxDisponibilité";
 import GlobalGraph from "./Graph Globale/GlobalGraph";
 import Index from "./Tablekpiv2/Index";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -33,53 +40,89 @@ const Dashboard = () => {
   const [closedTicketsCount, setClosedTicketsCount] = useState(0);
   const [fournituresClosed, setFournituresClosed] = useState(0);
   const [selectedActif, setSelectedActif] = useState("");
-  const handleActifChange = (event) => {
-    setSelectedActif(event.target.value); // Mettez à jour l'actif sélectionné
-  };
   const [totalClosed, setTotalClosed] = useState(null);
+  const hasFetchedRegionsRef = useRef(false); // Référence pour suivre si les régions ont déjà été chargées
 
-  const handleTotalClosed = (value) => {
-    setTotalClosed(value);
-  };
-
-  const handleTicketsClosedUpdate = (value) => {
+  // Callback pour mettre à jour le nombre de tickets fermés
+  const handleTicketsClosedUpdate = useCallback((value) => {
     setClosedTicketsCount(value);
-  };
-  // Callback function to update the state in the parent component
-  const handleFournituresClosedUpdate = (closedCount) => {
-    setFournituresClosed(closedCount);
-  };
+  }, []);
 
+  // Callback pour mettre à jour le nombre de fournitures fermées
+  const handleFournituresClosedUpdate = useCallback((closedCount) => {
+    setFournituresClosed(closedCount);
+  }, []);
+
+  // Callback pour mettre à jour le total des tickets fermés
+  const handleTotalClosed = useCallback((value) => {
+    setTotalClosed(value);
+  }, []);
+
+  // Gérer la sélection de la région
+  const handleRegionChange = useCallback((event) => {
+    setSelectedRegion(event.target.value);
+    setSelectedProvince(""); // Reset province selection when region changes
+  }, []);
+
+  // Gérer la sélection de la province
+  const handleProvinceChange = useCallback((event) => {
+    setSelectedProvince(event.target.value);
+  }, []);
+
+  // Gérer la sélection de la date de début
+  const handleStartDateChange = useCallback((e) => {
+    setStartDate(e.target.value);
+  }, []);
+
+  // Gérer la sélection de la date de fin
+  const handleEndDateChange = useCallback((e) => {
+    setEndDate(e.target.value);
+  }, []);
+
+  // Gérer la sélection de l'actif
+  const handleActifChange = useCallback((event) => {
+    setSelectedActif(event.target.value);
+  }, []);
+
+  // Récupérer les régions depuis l'API
   useEffect(() => {
+    if (hasFetchedRegionsRef.current) return; // Ne pas relancer la requête si les régions ont déjà été chargées
+
     axios
       .get(`${apiUrl}/api/actifs`)
       .then((response) => {
         const fetchedRegions = response.data.map((item) => item.region); // Extraire les régions
         const uniqueRegions = [...new Set(fetchedRegions)]; // Éviter les doublons
         setRegions(uniqueRegions);
+        hasFetchedRegionsRef.current = true; // Marquer les régions comme chargées
       })
       .catch((error) => {
         console.error("Erreur lors de la récupération des régions :", error);
       });
   }, []);
-  // Fetch provinces based on the selected region
+
+  // Récupérer les provinces en fonction de la région sélectionnée
   useEffect(() => {
     if (selectedRegion) {
       axios
         .get(`${apiUrl}/api/actifs?region=${selectedRegion}`)
         .then((response) => {
-          const fetchedProvinces = response.data.map((item) => item.province); // Extract provinces
-          const uniqueProvinces = [...new Set(fetchedProvinces)]; // Remove duplicates
+          const fetchedProvinces = response.data.map((item) => item.province); // Extraire les provinces
+          const uniqueProvinces = [...new Set(fetchedProvinces)]; // Éviter les doublons
           setProvince(uniqueProvinces);
         })
         .catch((error) => {
-          console.error("Error fetching provinces:", error);
+          console.error(
+            "Erreur lors de la récupération des provinces :",
+            error
+          );
         });
     } else {
-      setProvince([]); // Clear provinces if no region is selected
+      setProvince([]); // Réinitialiser les provinces si aucune région n'est sélectionnée
     }
-  }, [selectedRegion]); // Trigger fetch when selectedRegion changes
-  // Fetch actifs based on the selected region and province
+  }, [selectedRegion]);
+
+  // Récupérer les actifs en fonction de la province sélectionnée
   useEffect(() => {
     if (selectedProvince) {
       axios
@@ -91,28 +134,30 @@ const Dashboard = () => {
           setFilteredActifs(fetchedActifs);
         })
         .catch((error) => {
-          console.error("Error fetching actifs:", error);
+          console.error("Erreur lors de la récupération des actifs :", error);
         });
     } else {
-      setFilteredActifs([]);
+      setFilteredActifs([]); // Réinitialiser les actifs si aucune province n'est sélectionnée
     }
   }, [selectedProvince, selectedRegion]);
-  // Gérer la sélection de la région
-  const handleRegionChange = (event) => {
-    setSelectedRegion(event.target.value);
-    setSelectedProvince(""); // Reset province selection when region changes
-  };
-  // Handle province selection
-  const handleProvinceChange = (event) => {
-    setSelectedProvince(event.target.value);
-  };
-  const handleStartDateChange = (e) => {
-    setStartDate(e.target.value);
-  };
 
-  const handleEndDateChange = (e) => {
-    setEndDate(e.target.value);
-  };
+  // Mémoriser les provinces pour éviter des recalculs inutiles
+  const provinceOptions = useMemo(() => {
+    return province.map((prov) => (
+      <MenuItem key={prov} value={prov}>
+        {prov}
+      </MenuItem>
+    ));
+  }, [province]);
+
+  // Mémoriser les actifs filtrés pour éviter des recalculs inutiles
+  const actifOptions = useMemo(() => {
+    return filteredActifs.map((actif) => (
+      <MenuItem key={actif} value={actif}>
+        {actif}
+      </MenuItem>
+    ));
+  }, [filteredActifs]);
 
   const Item = styled(Paper)(({ theme }) => ({
     backgroundColor: "#fff",
@@ -124,6 +169,7 @@ const Dashboard = () => {
       backgroundColor: "#1E1E1E",
     }),
   }));
+
   return (
     <>
       <div className="flex items-center ">
@@ -145,9 +191,8 @@ const Dashboard = () => {
       <hr className="w-3/4 pb-4" />
 
       {/* Barre de filtre */}
-      {/* Barre de filtre */}
       <div className="text-black flex items-center justify-center py-2 space-x-4 py-5">
-        {/* Region Filter */}
+        {/* Filtre par région */}
         <TextField
           label="Filtrer par Région"
           select
@@ -165,7 +210,7 @@ const Dashboard = () => {
           ))}
         </TextField>
 
-        {/* Province Filter (always visible, disabled until a region is selected) */}
+        {/* Filtre par province */}
         <TextField
           label="Filtrer par Province"
           select
@@ -174,17 +219,14 @@ const Dashboard = () => {
           variant="outlined"
           size="small"
           sx={{ width: "200px" }}
-          disabled={!selectedRegion} // Disable the province filter until a region is selected
+          disabled={!selectedRegion} // Désactiver si aucune région n'est sélectionnée
         >
           <MenuItem value="">Toutes les Provinces</MenuItem>
-          {province.map((prov) => (
-            <MenuItem key={prov} value={prov}>
-              {prov}
-            </MenuItem>
-          ))}
+          {provinceOptions}
         </TextField>
-        {/* Filtered Actifs (assets) */}
-        {/* <TextField
+
+        {/* Filtre par actif */}
+        <TextField
           label="Filtrer par Actif"
           select
           value={selectedActif}
@@ -195,14 +237,10 @@ const Dashboard = () => {
           disabled={!selectedProvince} // Désactiver si aucune province n'est sélectionnée
         >
           <MenuItem value="">Tous les Actifs</MenuItem>
-          {filteredActifs.map((actif) => (
-            <MenuItem key={actif} value={actif}>
-              {actif}
-            </MenuItem>
-          ))}
-        </TextField> */}
+          {actifOptions}
+        </TextField>
 
-        {/* Date Filter */}
+        {/* Filtre par date */}
         <div className="space-x-4">
           <TextField
             label=""
@@ -228,12 +266,6 @@ const Dashboard = () => {
       <Box sx={{ flexGrow: 1 }}>
         <Grid container spacing={2}>
           <Grid item xs={12} lg={12}>
-            {/* <GlobalGraph
-              region={selectedRegion} // Already passing selectedRegion
-              province={selectedProvince} // Passing selectedProvince to ClotureNonCloture
-              startDate={startDate} // Passing startDate
-              endDate={endDate}
-            /> */}
             <Index
               region={selectedRegion}
               province={selectedProvince}
@@ -243,32 +275,26 @@ const Dashboard = () => {
             />
           </Grid>
           <Grid item xs={12} lg={4}>
-            <div>
-              <ClotureNonCloture
-                region={selectedRegion} // Already passing selectedRegion
-                province={selectedProvince} // Passing selectedProvince to ClotureNonCloture
-                startDate={startDate} // Passing startDate
-                endDate={endDate} // Passing endDate
-                onTicketsClosedUpdate={handleTicketsClosedUpdate}
-                site={selectedActif ? [selectedActif] : undefined} // Ne passer un actif que s'il est sélectionné
-              />
-            </div>
+            <ClotureNonCloture
+              region={selectedRegion}
+              province={selectedProvince}
+              startDate={startDate}
+              endDate={endDate}
+              onTicketsClosedUpdate={handleTicketsClosedUpdate}
+              site={selectedActif ? [selectedActif] : undefined}
+            />
           </Grid>
           <Grid item xs={12} lg={4}>
-            <div>
-              <BesoinTaux
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate} // Passing startDate
-                endDate={endDate}
-                onFournituresClosedUpdate={handleFournituresClosedUpdate}
-              />
-            </div>
+            <BesoinTaux
+              region={selectedRegion}
+              province={selectedProvince}
+              startDate={startDate}
+              endDate={endDate}
+              onFournituresClosedUpdate={handleFournituresClosedUpdate}
+            />
           </Grid>
           <Grid item xs={12} lg={4}>
-            <div>
-              <BesoinVehicule />
-            </div>
+            <BesoinVehicule />
           </Grid>
 
           <Grid item xs={12} lg={4}>
@@ -276,8 +302,8 @@ const Dashboard = () => {
               <CategorieMaintenance
                 region={selectedRegion}
                 province={selectedProvince}
-                startDate={startDate} // Passing startDate
-                endDate={endDate} // Passing endDate
+                startDate={startDate}
+                endDate={endDate}
               />
             </Item>
           </Grid>
@@ -286,7 +312,7 @@ const Dashboard = () => {
               <Graphtest
                 region={selectedRegion}
                 province={selectedProvince}
-                startDate={startDate} // Passing startDate
+                startDate={startDate}
                 endDate={endDate}
               />
             </Item>
@@ -296,7 +322,7 @@ const Dashboard = () => {
               <TauxDisponibilité
                 region={selectedRegion}
                 province={selectedProvince}
-                startDate={startDate} // Passing startDate
+                startDate={startDate}
                 endDate={endDate}
               />
             </Item>
@@ -306,7 +332,7 @@ const Dashboard = () => {
               <TypesBesoin
                 region={selectedRegion}
                 province={selectedProvince}
-                startDate={startDate} // Passing startDate
+                startDate={startDate}
                 endDate={endDate}
               />
             </Item>
@@ -316,32 +342,15 @@ const Dashboard = () => {
               <CategorieBesoin
                 region={selectedRegion}
                 province={selectedProvince}
-                startDate={startDate} // Passing startDate
+                startDate={startDate}
                 endDate={endDate}
               />
             </Item>
           </Grid>
-
-          {/* <Grid item xs={12} lg={4}>
-            <Item>
-              <Mttr
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate} // Passing startDate
-                endDate={endDate}
-              />
-            </Item>
-          </Grid>
-
-          <Grid item xs={12} lg={4}>
-            <Item>
-              <Tr />
-            </Item>
-          </Grid> */}
         </Grid>
       </Box>
     </>
   );
 };
 
-export default Dashboard;
+export default React.memo(Dashboard);

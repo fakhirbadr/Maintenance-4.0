@@ -1,25 +1,37 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { Chart } from "react-google-charts";
 
 const Specialiste = () => {
+  const [tauxParSpecialite, setTauxParSpecialite] = useState([]);
+
+  // Récupérer les données depuis l'API
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/v1/tauxSpecialite"
+        ); // Remplacez par l'URL de votre API
+        const result = await response.json();
+        setTauxParSpecialite(result.tauxParSpecialite); // Mettre à jour l'état avec les taux par spécialité
+      } catch (error) {
+        console.error("Erreur lors de la récupération des données :", error);
+      }
+    };
+
+    fetchData();
+  }, []);
+
+  // Formater les données pour le graphique
   const data = [
     ["Task", "Hours per Day"],
-    ["Cardiologie", 11],
-    ["Gynécologie", 8],
-    ["Ophtalmologie", 2],
-    ["ORL", 2],
-    ["Endocrinologie", 7],
-    ["Dermatologie", 7],
-    ["Pédiatrie", 7],
-    ["Néphrologue", 7],
-    ["Pneumologie", 7],
+    ...tauxParSpecialite.map((item) => [item._id, item.taux]),
   ];
 
   const options = {
-    pieHole: 0.4, // Creates a Donut Chart. Does not do anything when is3D is enabled
-    is3D: true, // Enables 3D view
-    pieStartAngle: 100, // Rotates the chart
-    sliceVisibilityThreshold: 0.02, // Hides slices smaller than 2%
+    pieHole: 0.4, // Crée un diagramme en forme de beignet
+    is3D: true, // Active la vue 3D
+    pieStartAngle: 100, // Fait tourner le graphique
+    sliceVisibilityThreshold: 0.02, // Masque les tranches de moins de 2%
     legend: {
       position: "left",
       alignment: "center",
@@ -29,7 +41,7 @@ const Specialiste = () => {
       },
     },
     colors: ["#8AD1C2", "#9F8AD1", "#D18A99", "#BCD18A", "#D1C28A"],
-    backgroundColor: "transparent", // Make the background transparent
+    backgroundColor: "transparent", // Fond transparent
   };
 
   return (
@@ -38,13 +50,17 @@ const Specialiste = () => {
         LES SPECIALITES LES PLUS SOLLICITEES
       </h2>
       <div className="flex justify-center py-auto">
-        <Chart
-          chartType="PieChart"
-          data={data}
-          options={options}
-          width={"500px"}
-          height={"300px"}
-        />
+        {tauxParSpecialite.length > 0 ? (
+          <Chart
+            chartType="PieChart"
+            data={data}
+            options={options}
+            width={"500px"}
+            height={"300px"}
+          />
+        ) : (
+          <p>Chargement des données...</p>
+        )}
       </div>
     </div>
   );

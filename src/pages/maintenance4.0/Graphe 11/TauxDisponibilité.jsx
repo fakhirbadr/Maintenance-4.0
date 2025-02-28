@@ -1,163 +1,104 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   Box,
   Typography,
   ThemeProvider,
   CssBaseline,
   createTheme,
-  Stack,
-  LinearProgress,
   Skeleton,
 } from "@mui/material";
 import { Pie } from "react-chartjs-2";
 import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Enregistrer les composants nécessaires de Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend);
 
 const TauxDisponibilité = () => {
-  const [data, setData] = useState(null);
-
-  const getCumulativeEquipmentsStatusCount = (data) => {
-    const categories = [
-      "Dispositif Médicaux",
-      "Équipement Généraux",
-      "Matériel Informatique",
-      "Structure",
-    ];
-
-    const cumulativeData = categories.reduce((acc, categoryName) => {
-      acc[categoryName] = { fonctionnelsCount: 0, nonFonctionnelsCount: 0 };
-      return acc;
-    }, {});
-
-    data.forEach((um) => {
-      um.categories.forEach((category) => {
-        if (categories.includes(category.name)) {
-          const fonctionnels = category.equipments.filter(
-            (equip) => equip.isFunctionel === true
-          );
-          const nonFonctionnels = category.equipments.filter(
-            (equip) => equip.isFunctionel === false
-          );
-          cumulativeData[category.name].fonctionnelsCount +=
-            fonctionnels.length;
-          cumulativeData[category.name].nonFonctionnelsCount +=
-            nonFonctionnels.length;
-        }
-      });
-    });
-
-    return cumulativeData;
-  };
+  const [tauxDispo, setTauxDispo] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const hasFetchedRef = useRef(false);
 
   useEffect(() => {
-    fetch(`${apiUrl}/api/actifs`)
-      .then((response) => response.json())
-      .then((data) => {
-        setData(getCumulativeEquipmentsStatusCount(data));
-      })
-      .catch((error) => console.error("Error fetching data:", error));
+    if (hasFetchedRef.current) return;
+
+    const abortController = new AbortController();
+    const signal = abortController.signal;
+
+    const fetchData = async () => {
+      try {
+        const response = await fetch(`${apiUrl}/api/actifs/taux`, { signal });
+        if (!response.ok) {
+          throw new Error("Network response was not ok");
+        }
+        const data = await response.json();
+        setTauxDispo(data);
+        setError(null);
+        hasFetchedRef.current = true;
+      } catch (error) {
+        if (error.name !== "AbortError") {
+          console.error("Error fetching data:", error);
+          setError(error.message);
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
+    return () => {
+      abortController.abort();
+    };
   }, []);
 
-  if (!data) {
-    return (
-      <div>
-        {" "}
-        <Skeleton variant="rounded" width="100%" height={90} />
-      </div>
+  const chartData = useMemo(() => {
+    if (!tauxDispo) return null;
+
+    const categories = Object.keys(tauxDispo);
+    const taux = Object.values(tauxDispo).map((taux) =>
+      parseFloat(taux.replace("%", ""))
     );
+
+    return {
+      labels: categories,
+      datasets: [
+        {
+          label: "Disponibilité des équipements",
+          data: taux,
+          backgroundColor: [
+            "#13678A",
+            "#45C4B0",
+            "#9AEBA3",
+            "#DAFDBA",
+            "#FFADAD",
+            "#A0C4FF",
+          ],
+          hoverOffset: 4,
+        },
+      ],
+    };
+  }, [tauxDispo]);
+
+  if (loading) {
+    return <Skeleton variant="rounded" width="100%" height={90} />;
   }
 
-  // Préparer les données pour le graphique
-  const categories = [
-    "Dispositif Médicaux",
-    "Équipement Généraux",
-    "Matériel Informatique",
-    "Structure",
-  ];
-
-  const chartData = {
-    labels: categories,
-    datasets: [
-      {
-        label: "Disponibilité des équipements",
-        data: categories.map((category) => {
-          const fonctionnels = data[category].fonctionnelsCount;
-          const nonFonctionnels = data[category].nonFonctionnelsCount;
-          return (
-            (fonctionnels / (fonctionnels + nonFonctionnels)) *
-            100
-          ).toFixed(2); // Calcul du taux de disponibilité
-        }),
-        backgroundColor: [
-          "#13678A", // Dispositif Médicaux
-          "#45C4B0", // Équipement Généraux
-          "#9AEBA3", // Matériel Informatique
-          "#DAFDBA", // Structure
-        ],
-        hoverOffset: 4,
-      },
-    ],
-  };
-
-  // Custom legend items with taux de disponibilité
-  const legendItems = chartData.datasets[0].backgroundColor.map(
-    (color, index) => {
-      const taux = chartData.datasets[0].data[index];
-      return (
-        <Box
-          key={index}
-          display="flex"
-          alignItems="center"
-          sx={{ mb: 1, ml: 2 }}
-        >
-          <Box
-            sx={{
-              width: 15,
-              height: 15,
-              backgroundColor: color,
-              borderRadius: "50%",
-              marginRight: 1,
-            }}
-          />
-          <Typography variant="body2" color="textPrimary">
-            {chartData.labels[index]}: {taux}%
-          </Typography>
-        </Box>
-      );
-    }
-  );
-
-  const options = {
-    plugins: {
-      legend: {
-        display: false,
-      },
-    },
-  };
-
-  const theme = createTheme({
-    palette: {
-      mode: "dark",
-    },
-  });
+  if (error) {
+    return <Typography color="error">Error: {error}</Typography>;
+  }
 
   return (
-    <ThemeProvider theme={theme}>
+    <ThemeProvider theme={createTheme({ palette: { mode: "dark" } })}>
       <CssBaseline />
       <Box
         display="flex"
         flexDirection="row"
         justifyContent="left"
         alignItems="center"
-        sx={{
-          width: "100%",
-          height: "100%",
-          backgroundColor: "#1E1E1E", // Black background
-        }}
+        sx={{ width: "100%", height: "100%", backgroundColor: "#1E1E1E" }}
       >
         <Box
           sx={{
@@ -169,7 +110,14 @@ const TauxDisponibilité = () => {
             padding: "12px",
           }}
         >
-          <Pie data={chartData} options={options} width={400} height={200} />
+          {chartData && (
+            <Pie
+              data={chartData}
+              options={{ plugins: { legend: { display: false } } }}
+              width={400}
+              height={200}
+            />
+          )}
         </Box>
         <Box
           sx={{
@@ -193,16 +141,27 @@ const TauxDisponibilité = () => {
           >
             Taux de Disponibilité par Catégorie d'équipement
           </Typography>
-          {/* Custom Legend with taux next to each item */}
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "flex-start",
-            }}
-          >
-            {legendItems}
-          </Box>
+          {chartData?.datasets[0].backgroundColor.map((color, index) => (
+            <Box
+              key={index}
+              display="flex"
+              alignItems="center"
+              sx={{ mb: 1, ml: 2 }}
+            >
+              <Box
+                sx={{
+                  width: 15,
+                  height: 15,
+                  backgroundColor: color,
+                  borderRadius: "50%",
+                  marginRight: 1,
+                }}
+              />
+              <Typography variant="body2" color="textPrimary">
+                {chartData.labels[index]}: {chartData.datasets[0].data[index]}%
+              </Typography>
+            </Box>
+          ))}
         </Box>
       </Box>
     </ThemeProvider>

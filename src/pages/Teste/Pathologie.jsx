@@ -1,86 +1,45 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import ReactApexChart from "react-apexcharts";
 
-const Pathologie = () => {
-  const [state, setState] = React.useState({
-    series: [
-      {
-        name: "Pathologies",
-        data: [20, 25, 30, 45, 60, 80, 120, 150, 110, 70, 40, 30, 30],
-      },
-    ],
+const Pathologie = ({ topPathologies }) => {
+  const [data, setData] = useState({
+    series: [{ name: "Pathologies", data: [] }],
     options: {
-      chart: {
-        type: "bar",
-        height: 400,
-      },
+      chart: { type: "bar", height: 400 },
       plotOptions: {
-        bar: {
-          horizontal: true,
-          borderRadius: 5,
-          barHeight: "50%",
-        },
+        bar: { horizontal: true, borderRadius: 5, barHeight: "50%" },
       },
       dataLabels: {
         enabled: true,
-        formatter: function (val) {
-          return val + "%";
-        },
-        style: {
-          fontSize: "12px",
-          colors: ["#304758"],
-        },
+        formatter: (val) => `${val}%`,
+        style: { fontSize: "12px", colors: ["#304758"] },
       },
-      xaxis: {
-        categories: [
-          "HTA",
-          "Suivi de Grossesse",
-          "Lombalgies",
-          "Arthrose",
-          "RGO",
-          "Amygdalite",
-          "Goitre",
-          "Pharyngite",
-          "Bronchite",
-          "Conjonctivite",
-          "Grippe",
-          "Dysthyroïdie",
-          "Angines",
-        ],
-        labels: {
-          formatter: function (val) {
-            return val + "%";
-          },
-        },
-      },
-      yaxis: {
-        labels: {
-          style: {
-            fontSize: "14px",
-          },
-        },
-      },
-      // title: {
-      //   text: "Répartition des pathologies en %",
-      //   align: "center",
-      //   style: {
-      //     fontSize: "18px",
-      //     fontWeight: "bolder",
-      //     color: "#444",
-      //   },
-      // },
+      xaxis: { categories: [] },
+      yaxis: { labels: { style: { fontSize: "14px" } } },
     },
   });
+
+  useEffect(() => {
+    if (topPathologies && topPathologies.length > 0) {
+      const categories = topPathologies.map((item) => item.pathology);
+      const values = topPathologies.map((item) => parseFloat(item.rate));
+
+      setData((prev) => ({
+        ...prev,
+        series: [{ name: "Pathologies", data: values }],
+        options: { ...prev.options, xaxis: { categories } },
+      }));
+    }
+  }, [topPathologies]);
 
   return (
     <div className="px-4">
       <h2 className="text-xl font-bold text-gray-700 uppercase">
         Répartition des pathologies en %
       </h2>
-
       <ReactApexChart
-        options={state.options}
-        series={state.series}
+        options={data.options}
+        series={data.series}
         type="bar"
         height={310}
       />

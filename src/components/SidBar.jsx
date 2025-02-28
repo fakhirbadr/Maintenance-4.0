@@ -1,3 +1,4 @@
+import React from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -23,7 +24,14 @@ import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
 import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
 import BugReportIcon from "@mui/icons-material/BugReport";
 import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
-import { Avatar, List, styled, Typography, useTheme } from "@mui/material";
+import {
+  Avatar,
+  List,
+  styled,
+  Typography,
+  useTheme,
+  Collapse,
+} from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { grey } from "@mui/material/colors";
 import { HistoryIcon } from "lucide-react";
@@ -38,6 +46,9 @@ import StarRateIcon from "@mui/icons-material/StarRate";
 import ErrorIcon from "@mui/icons-material/Error";
 import HomeIcon from "@mui/icons-material/Home";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
+import ExpandLess from "@mui/icons-material/ExpandLess";
+import ExpandMore from "@mui/icons-material/ExpandMore";
+
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
@@ -63,13 +74,11 @@ const closedMixin = (theme) => ({
 
 const Drawer = styled(MuiDrawer, {
   shouldForwardProp: (prop) => prop !== "open",
-  // @ts-ignore
 })(({ theme, open }) => ({
   width: drawerWidth,
   flexShrink: 0,
   whiteSpace: "nowrap",
   boxSizing: "border-box",
-
   ...(open && {
     ...openedMixin(theme),
     "& .MuiDrawer-paper": openedMixin(theme),
@@ -79,6 +88,7 @@ const Drawer = styled(MuiDrawer, {
     "& .MuiDrawer-paper": closedMixin(theme),
   }),
 }));
+
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
   alignItems: "center",
@@ -86,6 +96,7 @@ const DrawerHeader = styled("div")(({ theme }) => ({
   padding: theme.spacing(0, 1),
   ...theme.mixins.toolbar,
 }));
+
 const IconWrapper = ({ children }) => {
   return (
     <div style={{ fontSize: "10px", display: "flex", alignItems: "center" }}>
@@ -95,15 +106,6 @@ const IconWrapper = ({ children }) => {
 };
 
 const Array1 = [
-  // {
-  //   text: "page d'accueil",
-  //   icon: (
-  //     <IconWrapper>
-  //       <HomeIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/Homepage",
-  // },
   {
     text: "Dashboard",
     icon: (
@@ -134,7 +136,7 @@ const Array1 = [
     path: "/Tickets",
   },
   {
-    text: "Validation demandes",
+    text: "Validation des tickets",
     icon: (
       <IconWrapper>
         <BookmarkAddedIcon />
@@ -154,75 +156,85 @@ const Array1 = [
     roleRequired: ["admin", "achat", "superviseur"],
   },
   {
-    text: "Gestion de maintenance",
+    text: "Gestion des tickets",
     icon: (
       <IconWrapper>
-        <ConstructionOutlinedIcon />
+        <HomeRepairServiceOutlinedIcon />
       </IconWrapper>
     ),
-    path: "/ticket",
-    roleRequired: ["admin", "superviseur"],
+    path: "#",
+    roleRequired: ["admin", "superviseur", "achat"],
+    children: [
+      {
+        text: "Gestion de maintenance",
+        icon: (
+          <IconWrapper>
+            <ConstructionOutlinedIcon />
+          </IconWrapper>
+        ),
+        path: "/ticket",
+        roleRequired: ["admin", "superviseur"],
+      },
+      {
+        text: "Gestion de commande",
+        icon: (
+          <IconWrapper>
+            <ListAltIcon />
+          </IconWrapper>
+        ),
+        path: "/Besoin",
+        roleRequired: ["admin", "superviseur"],
+      },
+      {
+        text: "Gestion de véhicule",
+        icon: (
+          <IconWrapper>
+            <DirectionsCarRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/BesoinVehicule",
+        roleRequired: ["admin", "superviseur"],
+      },
+    ],
   },
   {
-    text: "Gestion de commande",
+    text: "Historique",
     icon: (
       <IconWrapper>
-        <ListAltIcon />
-      </IconWrapper>
-    ),
-    path: "/Besoin",
-    roleRequired: ["admin", "superviseur"],
-  },
-  {
-    text: "Demande véhicule",
-    icon: (
-      <IconWrapper>
-        <DirectionsCarRoundedIcon />
-      </IconWrapper>
-    ),
-    path: "/BesoinVehicule",
-    roleRequired: ["admin", "superviseur"],
-  },
-  {
-    text: "Historique Intervention",
-    icon: (
-      <IconWrapper>
-        <ConstructionOutlinedIcon />
         <HistoryIcon className="w-[16px]" />
       </IconWrapper>
     ),
-    path: "/HistoriqueIntervention",
+    path: "#",
+    children: [
+      {
+        text: "Historique Intervention",
+        icon: (
+          <IconWrapper>
+            <ConstructionOutlinedIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriqueIntervention",
+      },
+      {
+        text: "Historique commande",
+        icon: (
+          <IconWrapper>
+            <ListAltIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriqueBesoin",
+      },
+      {
+        text: "Historique véhicule",
+        icon: (
+          <IconWrapper>
+            <DirectionsCarRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/Historiquevehicule",
+      },
+    ],
   },
-  {
-    text: "Historique commande",
-    icon: (
-      <IconWrapper>
-        <ListAltIcon />
-        <HistoryIcon className="w-[16px]" />
-      </IconWrapper>
-    ),
-    path: "/HistoriqueBesoin",
-  },
-  {
-    text: "Historique véhicule",
-    icon: (
-      <IconWrapper>
-        <DirectionsCarRoundedIcon />
-        <HistoryIcon className="w-[16px]" />
-      </IconWrapper>
-    ),
-    path: "/Historiquevehicule",
-  },
-  // {
-  //   text: "test",
-  //   icon: (
-  //     <IconWrapper>
-  //       <ListAltIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/test",
-  //   roleRequired: "superviseur",
-  // },
   {
     text: "Paramètres",
     icon: (
@@ -252,7 +264,6 @@ const Array1 = [
     ),
     path: "/utilisateur",
   },
-
   {
     text: "Alertes",
     icon: (
@@ -268,11 +279,18 @@ const Array1 = [
 export default function SidBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
-  let location = useLocation();
+  const location = useLocation();
+  const [openMenus, setOpenMenus] = React.useState({});
 
-  // Récupérer le rôle de l'utilisateur depuis le localStorage
-  const userInfo = JSON.parse(localStorage.getItem("userInfo")); // Parse l'objet JSON
-  const role = userInfo ? userInfo.role : null; // Si userInfo existe, on récupère le rôle,
+  const handleMenuToggle = (menuKey) => {
+    setOpenMenus((prev) => ({
+      ...prev,
+      [menuKey]: !prev[menuKey],
+    }));
+  };
+
+  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  const role = userInfo ? userInfo.role : null;
 
   return (
     <Drawer
@@ -306,6 +324,7 @@ export default function SidBar({ open, handleDrawerClose }) {
           border: "2px solid grey",
         }}
         alt="avatar"
+        src={avatarImage}
       />
       <Typography
         className="text-orange-500"
@@ -323,58 +342,115 @@ export default function SidBar({ open, handleDrawerClose }) {
           fontFamily: "fantasy",
         }}
       >
-        {userInfo ? userInfo.nomComplet : "Nom Complet"}{" "}
-        {/* Affiche le nom complet ou une valeur par défaut */}
+        {userInfo ? userInfo.nomComplet : "Nom Complet"}
       </Typography>
 
       <Divider />
 
       <List>
         {Array1.map((item) => {
-          // Vérification des rôles
-          if (
-            item.roleRequired &&
-            !(Array.isArray(item.roleRequired)
-              ? item.roleRequired.includes(role)
-              : role === item.roleRequired)
-          ) {
-            return null; // Si l'utilisateur n'a pas le bon rôle, ne pas afficher l'élément
+          if (item.roleRequired && !item.roleRequired.includes(role)) {
+            return null;
           }
 
           return (
-            <ListItem key={item.path} disablePadding sx={{ display: "block" }}>
-              <ListItemButton
-                onClick={() => {
-                  navigate(item.path);
-                }}
-                sx={{
-                  minHeight: 10,
-                  justifyContent: open ? "initial" : "center",
-                  px: 2.5,
-                  bgcolor:
-                    location.pathname === item.path
-                      ? theme.palette.mode === "dark"
-                        ? grey[800]
-                        : grey[300]
-                      : null,
-                }}
-              >
-                <ListItemIcon
+            <div key={item.text}>
+              <ListItem disablePadding sx={{ display: "block" }}>
+                <ListItemButton
+                  onClick={
+                    item.children
+                      ? () => handleMenuToggle(item.text)
+                      : () => navigate(item.path)
+                  }
                   sx={{
-                    minWidth: 0,
-                    mr: open ? 2 : "auto",
-                    justifyContent: "center",
+                    minHeight: 10,
+                    justifyContent: open ? "initial" : "center",
+                    px: 2.5,
+                    bgcolor:
+                      location.pathname === item.path
+                        ? theme.palette.mode === "dark"
+                          ? grey[800]
+                          : grey[300]
+                        : null,
                   }}
                 >
-                  {item.icon}
-                </ListItemIcon>
-                <ListItemText
-                  primaryTypographyProps={{ fontSize: "12px" }}
-                  primary={item.text}
-                  sx={{ opacity: open ? 1 : 0 }}
-                />
-              </ListItemButton>
-            </ListItem>
+                  <ListItemIcon
+                    sx={{
+                      minWidth: 0,
+                      mr: open ? 2 : "auto",
+                      justifyContent: "center",
+                    }}
+                  >
+                    {item.icon}
+                  </ListItemIcon>
+                  <ListItemText
+                    primaryTypographyProps={{ fontSize: "12px" }}
+                    primary={item.text}
+                    sx={{ opacity: open ? 1 : 0 }}
+                  />
+                  {item.children &&
+                    open &&
+                    (openMenus[item.text] ? <ExpandLess /> : <ExpandMore />)}
+                </ListItemButton>
+              </ListItem>
+
+              {item.children && (
+                <Collapse
+                  in={openMenus[item.text]}
+                  timeout="auto"
+                  unmountOnExit
+                >
+                  <List component="div" disablePadding>
+                    {item.children.map((child) => {
+                      if (
+                        child.roleRequired &&
+                        !child.roleRequired.includes(role)
+                      ) {
+                        return null;
+                      }
+                      return (
+                        <ListItem
+                          key={child.path}
+                          disablePadding
+                          sx={{ display: "block" }}
+                        >
+                          <ListItemButton
+                            onClick={() => navigate(child.path)}
+                            sx={{
+                              minHeight: 10,
+                              justifyContent: open ? "initial" : "center",
+                              px: 2.5,
+                              pl: 4,
+                              bgcolor:
+                                location.pathname === child.path
+                                  ? theme.palette.mode === "dark"
+                                    ? grey[800]
+                                    : grey[300]
+                                  : null,
+                            }}
+                          >
+                            <ListItemIcon
+                              sx={{
+                                minWidth: 0,
+                                mr: open ? 2 : "auto",
+                                justifyContent: "center",
+                              }}
+                            >
+                              {child.icon}
+                            </ListItemIcon>
+                            <ListItemText
+                              primaryTypographyProps={{ fontSize: "12px" }}
+                              primary={child.text}
+                              sx={{ opacity: open ? 1 : 0 }}
+                            />
+                          </ListItemButton>
+                        </ListItem>
+                      );
+                    })}
+                  </List>
+                </Collapse>
+              )}
+            </div>
           );
         })}
       </List>

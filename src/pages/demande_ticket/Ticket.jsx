@@ -10,6 +10,7 @@ import ModelFourniture from "./ModelFourniture.jsx";
 import myImage from "./4.jpg";
 import myImage2 from "./3.jpg";
 import myImage5 from "./5.jpg";
+import myImage6 from "./6.png";
 import ModelVehicule from "./ModelVehicule";
 import ModelRetour from "./ModelRetour"; // Nouveau composant modal
 import { Grid, useTheme } from "@mui/material";
@@ -159,7 +160,7 @@ const Ticket = () => {
               <CardActionArea onClick={() => setOpenRetour(true)}>
                 <CardMedia
                   component="img"
-                  image={myImage2}
+                  image={myImage6}
                   alt="Retour d'équipement"
                   sx={{
                     height: { xs: 100, md: 200 },

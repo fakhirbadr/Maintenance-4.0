@@ -24,18 +24,14 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const regions = {
   "Tanger-Tétouan-Al Hoceïma": [
-    "Tanger",
-    "Tétouan",
     "Al Hoceïma",
     "Chefchaouen",
     "Larache",
     "Ouezzane",
-    "Fahs-Anjra",
   ],
   "L'Oriental": [
     "Oujda-Angad",
-    "Nador",
-    "Berkane",
+
     "Driouch",
     "Taourirt",
     "Jerada",
@@ -43,46 +39,19 @@ const regions = {
     "Figuig",
   ],
   "Fès-Meknès": [
-    "Fès",
-    "Meknès",
     "Ifrane",
     "Taza",
     "Sefrou",
     "Boulemane",
-    "El Hajeb",
+
     "Moulay Yacoub",
     "Taounate",
   ],
-  "Rabat-Salé-Kénitra": [
-    "Rabat",
-    "Salé",
-    "Kénitra",
-    "Sidi Kacem",
-    "Sidi Slimane",
-    "Khémisset",
-  ],
-  "Béni Mellal-Khénifra": [
-    "Béni Mellal",
-    "Khénifra",
-    "Azilal",
-    "Fquih Ben Salah",
-    "Kasba Tadla",
-  ],
-  "Casablanca-Settat": [
-    "Casablanca",
-    "Mohammedia",
-    "Settat",
-    "El Jadida",
-    "Berrechid",
-    "Nouaceur",
-    "Médiouna",
-    "Sidi Bennour",
-    "Benslimane",
-  ],
+  "Rabat-Salé-Kénitra": ["Sidi Kacem", "Khémisset"],
+  "Béni Mellal-Khénifra": ["Béni Mellal", "Khénifra", "Azilal"],
+  "Casablanca-Settat": ["Settat", "Sidi Bennour"],
   "Marrakech-Safi": [
-    "Marrakech",
     "Safi",
-    "El Jadida",
     "Essaouira",
     "Rehamna",
     "Chichaoua",
@@ -91,17 +60,7 @@ const regions = {
     "El Kelaâ des Sraghna",
   ],
   "Drâa-Tafilalet": ["Errachidia", "Ouarzazate", "Zagora", "Tinghir", "Midelt"],
-  "Souss-Massa": [
-    "Agadir Ida-Outanane",
-    "Taroudant",
-    "TATA",
-    "Tiznit",
-    "Chtouka Aït Baha",
-    "Inezgane-Aït Melloul",
-  ],
-  "Guelmim-Oued Noun": ["Guelmim", "Tan-Tan", "Sidi Ifni", "Assa-Zag"],
-  "Laâyoune-Sakia El Hamra": ["Laâyoune", "Boujdour", "Tarfaya", "Es-Semara"],
-  "Dakhla-Oued Ed-Dahab": ["Dakhla", "Oued Ed-Dahab", "Aousserd"],
+  "Souss-Massa": ["Taroudant", "TATA", "Tiznit"],
 };
 
 const NetworkPatientSynthese = () => {

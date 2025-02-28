@@ -1,4 +1,4 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import {
   Table,
   TableBody,
@@ -13,127 +13,59 @@ import {
   Menu,
   MenuItem,
 } from "@mui/material";
-import MenuRoundedIcon from "@mui/icons-material/MenuRounded"; // Import de l'icône
-import { toPng } from "html-to-image"; // Importation de html-to-image
+import MenuRoundedIcon from "@mui/icons-material/MenuRounded";
+import { toPng } from "html-to-image";
 
 const BorderLinearProgress = styled(LinearProgress)(({ theme }) => ({
   height: 10,
   borderRadius: 5,
-  [`&.${LinearProgress.colorPrimary}`]: {
-    backgroundColor: theme.palette.grey[200],
-    ...theme.applyStyles("dark", {
-      backgroundColor: theme.palette.grey[800],
-    }),
-  },
-  [`& .${LinearProgress.bar}`]: {
+  backgroundColor:
+    theme.palette.mode === "dark"
+      ? theme.palette.grey[800]
+      : theme.palette.grey[200],
+  "& .MuiLinearProgress-bar": {
     borderRadius: 5,
-    backgroundColor: "#1a90ff",
-    ...theme.applyStyles("dark", {
-      backgroundColor: "#308fe8",
-    }),
+    backgroundColor: theme.palette.mode === "dark" ? "#308fe8" : "#1a90ff",
   },
 }));
 
-function createData(name, percentage, cases, icon) {
-  return { name, percentage, cases, icon };
-}
+const serviceIcons = {
+  Consultation: "consultation.png",
+  Soins: "soin.png",
+  Vaccination: "vaccine (2).png",
+  DepistageDiabete: "injection.png",
+  DepistageHTA: "hypertension.png",
+  DepistageCancerDuSein: "breast-cancer.png",
+  Teleexpertises: "ultrasound.png",
+  Transfert: "emergency-services.png",
+  Urgence: "siren.png",
+};
 
-const rows = [
-  createData(
-    "Consultation médicale",
-    100,
-    159,
-    <img
-      src="../../../public/images/teleExpertise/consultation.png"
-      alt="Consultation"
-      width={17}
-    />
-  ),
-  createData(
-    "Activité de soins",
-    50,
-    237,
-    <img
-      src="../../../public/images/teleExpertise/soin.png"
-      alt="Healthcare"
-      width={17}
-    />
-  ),
-  createData(
-    "Vaccination",
-    90,
-    262,
-    <img
-      src="../../../public/images/teleExpertise/vaccine (2).png"
-      alt="Vaccination"
-      width={17}
-    />
-  ),
-  createData(
-    "Dépistage du Diabète",
-    30,
-    305,
-    <img
-      src="../../../public/images/teleExpertise/injection.png"
-      alt="Diabetes"
-      width={17}
-    />
-  ),
-  createData(
-    "Dépistage HTA",
-    80,
-    356,
-    <img
-      src="../../../public/images/teleExpertise/hypertension.png"
-      alt="HTA"
-      width={17}
-    />
-  ),
-  createData(
-    "Dépistage nodule du sein",
-    60,
-    186,
-    <img
-      src="../../../public/images/teleExpertise/breast-cancer.png"
-      alt="Breast Screening"
-      width={17}
-    />
-  ),
-  createData(
-    "Télé-expertise",
-    40,
-    44,
-    <img
-      src="../../../public/images/teleExpertise/ultrasound.png"
-      alt="Tele-expertise"
-      width={17}
-    />
-  ),
-  createData(
-    "Transfert",
-    20,
-    44,
-    <img
-      src="../../../public/images/teleExpertise/emergency-services.png"
-      alt="Transfer"
-      width={17}
-    />
-  ),
-  createData(
-    "Urgence",
-    95,
-    356,
-    <img
-      src="../../../public/images/teleExpertise/siren.png"
-      alt="Emergency"
-      width={17}
-    />
-  ),
-];
+const RepartitionParServices = ({ servicesData }) => {
+  const tableRef = useRef(null);
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [services, setServices] = useState([]);
 
-const RepartitionParServices = () => {
-  const tableRef = useRef(null); // Référence pour capturer la table
-  const [anchorEl, setAnchorEl] = useState(null); // État pour le menu
+  useEffect(() => {
+    if (servicesData && servicesData.length > 0) {
+      const mappedServices = servicesData.map((service) => ({
+        name: service.serviceName,
+        percentage: parseFloat(service.serviceRate),
+        cases: service.cases,
+        icon: (
+          <img
+            src={`/images/teleExpertise/${
+              serviceIcons[service.serviceName] || "default.png"
+            }`}
+            alt={service.serviceName}
+            width={17}
+          />
+        ),
+      }));
+
+      setServices(mappedServices);
+    }
+  }, [servicesData]);
 
   const handleMenuOpen = (event) => {
     setAnchorEl(event.currentTarget);
@@ -143,7 +75,6 @@ const RepartitionParServices = () => {
     setAnchorEl(null);
   };
 
-  // Fonction pour télécharger la table en PNG
   const downloadPng = () => {
     if (tableRef.current) {
       toPng(tableRef.current, { cacheBust: true })
@@ -153,9 +84,7 @@ const RepartitionParServices = () => {
           link.href = dataUrl;
           link.click();
         })
-        .catch((err) => {
-          console.error("Erreur lors du téléchargement de l'image:", err);
-        });
+        .catch(console.error);
     }
     handleMenuClose();
   };
@@ -163,14 +92,12 @@ const RepartitionParServices = () => {
   return (
     <div className="px-4">
       <div className="flex justify-between items-center">
-        {/* Section title */}
         <div className="flex-grow text-center mb-10">
           <h2 className="text-xl font-bold text-gray-700">
-            REPARTITION DES PATIENTS PAR SERVICES
+            RÉPARTITION DES PATIENTS PAR SERVICES
           </h2>
         </div>
         <div>
-          {/* Bouton icône avec menu */}
           <IconButton
             onClick={handleMenuOpen}
             color="gray"
@@ -181,7 +108,6 @@ const RepartitionParServices = () => {
             <MenuRoundedIcon sx={{ fontSize: 19 }} />
           </IconButton>
 
-          {/* Menu contextuel */}
           <Menu
             id="menu"
             anchorEl={anchorEl}
@@ -193,22 +119,14 @@ const RepartitionParServices = () => {
         </div>
       </div>
 
-      {/* Table container */}
       <TableContainer
         component={Paper}
-        ref={tableRef} // Ajout de la référence ici
-        sx={{
-          backgroundColor: "transparent",
-          boxShadow: "none",
-        }}
+        ref={tableRef}
+        sx={{ backgroundColor: "transparent", boxShadow: "none" }}
       >
         <Table
           aria-label="simple table"
-          sx={{
-            "& .MuiTableCell-root": {
-              padding: "4px",
-            },
-          }}
+          sx={{ "& .MuiTableCell-root": { padding: "4px" } }}
         >
           <TableHead>
             <TableRow>
@@ -218,9 +136,9 @@ const RepartitionParServices = () => {
             </TableRow>
           </TableHead>
           <TableBody>
-            {rows.map((row) => (
+            {services.map((service) => (
               <TableRow
-                key={row.name}
+                key={service.name}
                 sx={{
                   "&:last-child td, &:last-child th": { border: 0 },
                   height: "30px",
@@ -234,8 +152,8 @@ const RepartitionParServices = () => {
                       gap: "8px",
                     }}
                   >
-                    {row.icon}
-                    {row.name}
+                    {service.icon}
+                    {service.name}
                   </div>
                 </TableCell>
                 <TableCell align="center">
@@ -249,7 +167,7 @@ const RepartitionParServices = () => {
                   >
                     <BorderLinearProgress
                       variant="determinate"
-                      value={row.percentage}
+                      value={service.percentage}
                       style={{ width: "100%" }}
                     />
                     <span
@@ -260,11 +178,11 @@ const RepartitionParServices = () => {
                         color: "#000",
                       }}
                     >
-                      {`${row.percentage}%`}
+                      {`${service.percentage}%`}
                     </span>
                   </div>
                 </TableCell>
-                <TableCell align="right">{row.cases}</TableCell>
+                <TableCell align="right">{service.cases}</TableCell>
               </TableRow>
             ))}
           </TableBody>

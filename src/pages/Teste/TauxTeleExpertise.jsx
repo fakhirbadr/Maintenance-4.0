@@ -1,5 +1,5 @@
-import React from "react";
-import "./style.css"; // Assurez-vous d'avoir le fichier CSS pour l'animation
+import React, { useState, useEffect } from "react";
+import "./style.css";
 import Table from "@mui/material/Table";
 import TableBody from "@mui/material/TableBody";
 import TableCell from "@mui/material/TableCell";
@@ -7,72 +7,190 @@ import TableContainer from "@mui/material/TableContainer";
 import TableHead from "@mui/material/TableHead";
 import TableRow from "@mui/material/TableRow";
 import Paper from "@mui/material/Paper";
+import CircularProgress from "@mui/material/CircularProgress";
+import KeyboardArrowDownIcon from "@mui/icons-material/KeyboardArrowDown";
+import KeyboardArrowUpIcon from "@mui/icons-material/KeyboardArrowUp";
 
-// Sample data for the table
-function createData(region, province, unite, tauxTeleExpertise) {
-  return { region, province, unite, tauxTeleExpertise };
-}
+const TauxTeleExpertise = ({
+  selectedRegion,
+  selectedProvince,
+  selectedActif,
+}) => {
+  const [data, setData] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [expandedRegion, setExpandedRegion] = useState(null);
+  const [expandedProvince, setExpandedProvince] = useState(null);
 
-const rows = [
-  createData("Casablanca", "Ain Diab", "Unité 1", 75),
-  createData("Casablanca", "Mers Sultan", "Unité 2", 80),
-  createData("Casablanca", "Mohammédia", "Unité 3", 85),
-  createData("Casablanca", "Hay Hassani", "Unité 4", 70),
-  createData("Casablanca", "Berkane", "Unité 5", 65),
-  createData("Rabat", "Agdal", "Unité 6", 90),
-  createData("Rabat", "Salé", "Unité 7", 60),
-  createData("Fès", "Boujloud", "Unité 8", 50),
-  createData("Marrakech", "Guéliz", "Unité 9", 95),
-  createData("Tangier", "Boulevard", "Unité 10", 55),
-];
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/v1/ummcperformance/tele"
+        );
+        if (!response.ok) {
+          throw new Error(`Erreur HTTP: ${response.status}`);
+        }
+        const result = await response.json();
+        setData(result);
+      } catch (err) {
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-// Sort the rows based on "tauxTeleExpertise" in descending order
-const sortedRows = rows.sort(
-  (a, b) => b.tauxTeleExpertise - a.tauxTeleExpertise
-);
+    fetchData();
+  }, []);
 
-const TauxTeleExpertise = () => {
+  const filteredData = data
+    .filter(
+      (regionData) => !selectedRegion || regionData.region === selectedRegion
+    )
+    .map((regionData) => ({
+      ...regionData,
+      provinces: regionData.provinces
+        .filter(
+          (provinceData) =>
+            !selectedProvince || provinceData.province === selectedProvince
+        )
+        .map((provinceData) => ({
+          ...provinceData,
+          unites: provinceData.unites.filter(
+            (uniteData) => !selectedActif || uniteData.unite === selectedActif
+          ),
+        })),
+    }));
+
+  const handleRegionClick = (region) => {
+    setExpandedRegion(expandedRegion === region ? null : region);
+    setExpandedProvince(null);
+  };
+
+  const handleProvinceClick = (province) => {
+    setExpandedProvince(expandedProvince === province ? null : province);
+  };
+
+  if (loading) {
+    return (
+      <div className="flex justify-center mt-4">
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-red-500 text-center mt-4">
+        Erreur de chargement: {error}
+      </div>
+    );
+  }
+
   return (
     <div className="px-4">
       <div className="flex justify-center">
         <h2 className="text-xl font-bold text-gray-700 flex items-center">
           TAUX DE TELEEXPERTISE PAR UNITE
           <img
-            src="../../../public/images/teleExpertise/telemedecine (1).png"
-            alt="Breast Screening"
+            src="/images/teleExpertise/telemedecine (1).png"
+            alt="Icône téléexpertise"
             className="ml-2 w-6 h-6 animate-resize"
           />
         </h2>
       </div>
 
-      {/* Table with transparent background */}
       <TableContainer
         component={Paper}
-        className="mt-4"
-        sx={{ backgroundColor: "transparent" }} // Make background transparent
+        className="mt-4 shadow-lg"
+        sx={{ backgroundColor: "transparent" }}
       >
-        <Table sx={{ minWidth: 650 }} size="small" aria-label="a dense table">
+        <Table sx={{ minWidth: 650 }} size="small">
           <TableHead>
             <TableRow>
-              <TableCell>Region</TableCell>
-              <TableCell align="right">Province</TableCell>
-              <TableCell align="right">Unité</TableCell>
-              <TableCell align="right">Taux Tele Expertise</TableCell>
+              <TableCell sx={{ fontWeight: "bold", fontSize: "1rem" }}>
+                Région
+              </TableCell>
+              <TableCell
+                align="right"
+                sx={{ fontWeight: "bold", fontSize: "1rem" }}
+              >
+                Taux Téléexpertise
+              </TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {sortedRows.map((row) => (
-              <TableRow
-                key={row.region}
-                sx={{ "&:last-child td, &:last-child th": { border: 0 } }}
-              >
-                <TableCell component="th" scope="row">
-                  {row.region}
-                </TableCell>
-                <TableCell align="right">{row.province}</TableCell>
-                <TableCell align="right">{row.unite}</TableCell>
-                <TableCell align="right">{row.tauxTeleExpertise}%</TableCell>
-              </TableRow>
+            {filteredData.map((regionData, regionIndex) => (
+              <React.Fragment key={regionIndex}>
+                <TableRow
+                  onClick={() => handleRegionClick(regionData.region)}
+                  style={{ cursor: "pointer" }}
+                  hover
+                  sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}
+                >
+                  <TableCell component="th" scope="row">
+                    <div className="flex items-center">
+                      {regionData.provinces.length > 0 &&
+                        (expandedRegion === regionData.region ? (
+                          <KeyboardArrowUpIcon className="text-blue-500" />
+                        ) : (
+                          <KeyboardArrowDownIcon className="text-blue-500" />
+                        ))}
+                      <span className="ml-2 font-medium">
+                        {regionData.region}
+                      </span>
+                    </div>
+                  </TableCell>
+                  <TableCell align="right" className="font-medium">
+                    {regionData.tauxTeleexpertiseRegion}%
+                  </TableCell>
+                </TableRow>
+
+                {expandedRegion === regionData.region &&
+                  regionData.provinces.map((provinceData, provinceIndex) => (
+                    <React.Fragment key={provinceIndex}>
+                      <TableRow
+                        onClick={() =>
+                          handleProvinceClick(provinceData.province)
+                        }
+                        style={{ cursor: "pointer" }}
+                        hover
+                        sx={{ "&:hover": { backgroundColor: "#f5f5f5" } }}
+                      >
+                        <TableCell component="th" scope="row">
+                          <div className="flex items-center pl-8">
+                            {provinceData.unites.length > 0 &&
+                              (expandedProvince === provinceData.province ? (
+                                <KeyboardArrowUpIcon className="text-blue-500" />
+                              ) : (
+                                <KeyboardArrowDownIcon className="text-blue-500" />
+                              ))}
+                            <span className="ml-2 font-medium">
+                              {provinceData.province}
+                            </span>
+                          </div>
+                        </TableCell>
+                        <TableCell align="right" className="font-medium">
+                          {provinceData.tauxTeleexpertiseProvince}%
+                        </TableCell>
+                      </TableRow>
+
+                      {expandedProvince === provinceData.province &&
+                        provinceData.unites.map((uniteData, uniteIndex) => (
+                          <TableRow key={uniteIndex}>
+                            <TableCell component="th" scope="row">
+                              <div className="pl-16 font-medium">
+                                {uniteData.unite}
+                              </div>
+                            </TableCell>
+                            <TableCell align="right" className="font-medium">
+                              {uniteData.tauxTeleexpertise}%
+                            </TableCell>
+                          </TableRow>
+                        ))}
+                    </React.Fragment>
+                  ))}
+              </React.Fragment>
             ))}
           </TableBody>
         </Table>
