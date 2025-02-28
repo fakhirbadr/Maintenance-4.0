@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 const Consultation = ({ selectedRegion, selectedProvince, selectedActif }) => {
   const [chartData, setChartData] = useState({
@@ -64,9 +66,7 @@ const Consultation = ({ selectedRegion, selectedProvince, selectedActif }) => {
     const fetchData = async () => {
       try {
         // Construire l'URL avec les filtres
-        const url = new URL(
-          "http://localhost:3000/api/v1/ummcperformance/consultations"
-        );
+        const url = new URL(`${apiUrl}/api/v1/ummcperformance/consultations`);
         if (selectedRegion) url.searchParams.append("region", selectedRegion);
         if (selectedProvince)
           url.searchParams.append("province", selectedProvince);

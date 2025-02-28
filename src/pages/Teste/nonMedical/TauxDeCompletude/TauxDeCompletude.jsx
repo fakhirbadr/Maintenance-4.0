@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const ApexChart = ({
   selectedRegion,
   selectedProvince,
@@ -13,7 +14,7 @@ const ApexChart = ({
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/v1/tauxDeCompletudeMedical"
+          `${apiUrl}/api/v1/tauxDeCompletudeMedical`
         );
         const result = await response.json();
         console.log("Données reçues :", result); // Debugging
