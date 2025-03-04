@@ -147,6 +147,7 @@ const ModelFourniture = ({ open, onClose }) => {
       "STYLO",
       "TENUE INFIRMIER",
       "PATCHES ECG (BOITE 50PCS)",
+      "PRODUIT DE NETTOYAGE"
     ],
     "Matériel Informatique": [
       "ADAPTATEUR DISPLAY/HDMI",
