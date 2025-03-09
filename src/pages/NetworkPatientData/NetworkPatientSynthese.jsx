@@ -13,12 +13,16 @@ import {
   Collapse,
   Button,
   IconButton,
+  Menu,
+  MenuItem,
 } from "@mui/material";
 import ExpandLessIcon from "@mui/icons-material/ExpandLess";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { BarChartIcon } from "lucide-react";
 import GraphFluxPatient from "./GraphFluxPatient"; // Assure-toi que l'import est correct
 import { jsPDF } from "jspdf";
+import * as XLSX from "xlsx";
+
 import "jspdf-autotable"; // Importez jspdf-autotable pour étendre jsPDF
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -75,6 +79,8 @@ const NetworkPatientSynthese = () => {
   );
   const [open, setOpen] = useState(false);
   const [structuredData, setStructuredData] = useState({});
+  const [anchorEl, setAnchorEl] = useState(null);
+  const [selectedPeriod, setSelectedPeriod] = useState("");
 
   const provinceRegionMap = Object.entries(regions).reduce(
     (acc, [region, provinces]) => {
@@ -308,6 +314,62 @@ const NetworkPatientSynthese = () => {
     fetchData();
   }, []);
 
+  const handleClick = (event) => {
+    setAnchorEl(event.currentTarget);
+  };
+
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+
+  const fetchData = async (period) => {
+    try {
+      const response = await fetch(`${apiUrl}/api/v1/inactiveUmmc`);
+      const data = await response.json();
+      return data;
+    } catch (error) {
+      console.error("Erreur lors de la récupération des données:", error);
+      return [];
+    }
+  };
+
+  const exportToExcel = async (period) => {
+    const data = await fetchData(period);
+
+    // Filtrer et transformer les données
+    const filteredData = data.map((item) => {
+      return {
+        date: new Date(item.date).toISOString().split("T")[0], // Format yyyy-mm-jj
+        province: item.province, // Conserver uniquement la province
+        technicien: item.technicien,
+        "Fermé à": item.CloseAt, // Renommer CloseAt
+        "Fermé jusqu'à": item.CloseTo, // Renommer CloseTo
+        raison: item.raison,
+        createdAt: new Date(item.createdAt).toLocaleString("fr-FR", {
+          // Format yyyy-mm-dd hh:mm
+          year: "numeric",
+          month: "2-digit",
+          day: "2-digit",
+          hour: "2-digit",
+          minute: "2-digit",
+        }),
+      };
+    });
+
+    // Convertir les données en feuille Excel
+    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "UMMC Inactifs");
+
+    // Générer le fichier Excel
+    XLSX.writeFile(workbook, `UMMC_Inactifs_${period}.xlsx`);
+  };
+
+  const handleExport = (period) => {
+    exportToExcel(period);
+    handleClose();
+  };
+
   const renderTable = (provinceData) => (
     <Table size="small" sx={{ mb: 3 }}>
       <TableHead>
@@ -398,6 +460,25 @@ const NetworkPatientSynthese = () => {
         <Button variant="contained" color="primary" onClick={exportToPDF}>
           Exporter en PDF
         </Button>
+        <Button variant="contained" color="primary" onClick={handleClick}>
+          Exporter les UMMC inactifs
+        </Button>
+        <Menu
+          anchorEl={anchorEl}
+          open={Boolean(anchorEl)}
+          onClose={handleClose}
+        >
+          <MenuItem onClick={() => handleExport("Aujourd'hui")}>
+            Aujourd'hui
+          </MenuItem>
+          <MenuItem onClick={() => handleExport("Cette semaine")}>
+            Cette semaine
+          </MenuItem>
+          <MenuItem onClick={() => handleExport("Ce mois")}>Ce mois</MenuItem>
+          <MenuItem onClick={() => handleExport("Cette année")}>
+            Cette année
+          </MenuItem>
+        </Menu>
       </Box>
 
       {/* Composant Dialog séparé */}

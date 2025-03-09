@@ -1,8 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import Tabs from "@mui/material/Tabs";
 import Tab from "@mui/material/Tab";
 import {
-  Autocomplete,
   Box,
   Button,
   FormControl,
@@ -11,7 +10,6 @@ import {
   Select,
   SpeedDialAction,
   SpeedDialIcon,
-  TextField,
   Typography,
 } from "@mui/material";
 import Paper from "@mui/material/Paper";
@@ -27,10 +25,8 @@ import RepartitionParServices from "./RepartitionParServices";
 import Specialiste from "./Specialiste";
 import TauxTeleExpertise from "./TauxTeleExpertise";
 import SpeedDial from "@mui/material/SpeedDial";
-import SaveIcon from "@mui/icons-material/Save";
 import { ShareIcon } from "lucide-react";
 import ExcelModel from "./ExcelModel";
-import TauxDeCompletude from "./nonMedical/TauxDeCompletude/TauxDeCompletude";
 import Index from "./nonMedical/Index";
 import DialogMedcin from "./DialogMedcin";
 import dayjs from "dayjs";
@@ -42,55 +38,59 @@ import { AdapterDayjs } from "@mui/x-date-pickers/AdapterDayjs";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Actions pour le SpeedDial
+// Actions pour le SpeedDial - mémorisé car ne change jamais
 const actions = [{ icon: <ShareIcon />, name: "Share" }];
 
 const Test = () => {
-  // Style pour les éléments Paper
-  const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: "#fff",
-    ...theme.typography.body2,
-    padding: theme.spacing(1),
-    textAlign: "center",
-    color: theme.palette.text.secondary,
-    ...theme.applyStyles("dark", {
-      backgroundColor: "#1A2027",
-    }),
-  }));
+  // Style pour les éléments Paper - mémorisé avec useMemo
+  const Item = useMemo(
+    () =>
+      styled(Paper)(({ theme }) => ({
+        backgroundColor: "#fff",
+        ...theme.typography.body2,
+        padding: theme.spacing(1),
+        textAlign: "center",
+        color: theme.palette.text.secondary,
+        ...theme.applyStyles("dark", {
+          backgroundColor: "#1A2027",
+        }),
+      })),
+    []
+  );
 
-  const userInfo = JSON.parse(localStorage.getItem("userInfo"));
+  // Récupération des informations utilisateur une seule fois
+  const userInfo = useMemo(
+    () => JSON.parse(localStorage.getItem("userInfo") || "{}"),
+    []
+  );
   const { role, region, province } = userInfo;
-
   const isDocteur = role === "docteurs";
 
   // États pour la gestion des onglets, régions, provinces, dates, etc.
-  const [value, setValue] = React.useState(0);
+  const [value, setValue] = useState(0);
   const [selectedProvince, setSelectedProvince] = useState(
     isDocteur ? province : null
   );
   const [selectedRegion, setSelectedRegion] = useState(
     isDocteur ? region : null
   );
-  // const selectedActif = isDocteur
-  //   ? JSON.parse(localStorage.getItem("nameActifUser"))?.[0].replace(
-  //       /['"]+/g,
-  //       ""
-  //     ) || null
-  //   : null;
-  // console.log(localStorage.getItem("nameActifUser"));
-
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedActif, setSelectedActif] = useState(
-    isDocteur
-      ? JSON.parse(localStorage.getItem("nameActifUser"))?.[0].replace(
-          /['"]+/g,
-          ""
-        ) || null
-      : null
-  );
+  const [selectedActif, setSelectedActif] = useState(() => {
+    if (isDocteur) {
+      const nameActifUser = localStorage.getItem("nameActifUser");
+      if (nameActifUser) {
+        try {
+          return JSON.parse(nameActifUser)[0].replace(/['"]+/g, "");
+        } catch (e) {
+          return null;
+        }
+      }
+    }
+    return null;
+  });
+
   const [totalPriseEnCharge, setTotalPriseEnCharge] = useState(0);
-  const [data, setData] = useState("");
   const [openModelExcel, setOpenModelExcel] = useState(false);
   const [selectedAction, setSelectedAction] = useState("");
   const [ageRates, setAgeRates] = useState({});
@@ -102,100 +102,58 @@ const Test = () => {
   const [topPathologies, setTopPathologies] = useState([]);
   const [servicesData, setServicesData] = useState([]);
   const [genderRates, setGenderRates] = useState([]);
-  const userRole = userInfo ? userInfo.role : null;
   const [dateDebut, setDateDebut] = useState(null);
   const [dateFin, setDateFin] = useState(null);
 
-  console.log("selectedActif :", selectedActif);
-  console.log("selectedProvince :", selectedProvince);
-  console.log("selectedRegion :", selectedRegion);
+  // Fonction pour récupérer les données - mémorisée avec useCallback
+  const fetchData = useCallback(
+    async (region, province, selectedActif, dateDebut, dateFin) => {
+      setLoading(true);
+      try {
+        const params = {};
+        if (region) params.region = region;
+        if (province) params.province = province;
+        if (selectedActif) params.unite = selectedActif;
 
-  console.log("allData:", allData);
-  // Fonction pour extraire les valeurs uniques
-  const extractUniqueValues = (
-    data,
-    key,
-    filterKey = null,
-    filterValue = null
-  ) => {
-    const uniqueValues = new Set();
-    data.forEach((item) => {
-      if (item[key] && (!filterKey || item[filterKey] === filterValue)) {
-        // Si la valeur est un tableau, ajoutez chaque élément au Set
-        if (Array.isArray(item[key])) {
-          item[key].forEach((value) => uniqueValues.add(value));
-        } else {
-          uniqueValues.add(item[key]);
-        }
+        // Formater les dates en YYYY-MM-DD
+        if (dateDebut) params.dateDebut = dayjs(dateDebut).format("YYYY-MM-DD");
+        if (dateFin) params.dateFin = dayjs(dateFin).format("YYYY-MM-DD");
+
+        // Construire l'URL avec les paramètres
+        const queryString = new URLSearchParams(params).toString();
+        const url = `${apiUrl}/api/v1/ummcperformance?${queryString}`;
+
+        const response = await fetch(url);
+        if (!response.ok)
+          throw new Error("Erreur lors de la récupération des données");
+
+        const data = await response.json();
+
+        // Mettre à jour les états avec les données reçues
+        setAllData(data.data || []);
+        setTotalPriseEnCharge(data.totalPriseEnCharge || 0);
+        setTopPathologies(data.topPathologies || []);
+        setServicesData(data.servicesData || []);
+        setGenderRates(data.genderRates || []);
+        // Utiliser directement les filtres disponibles de l'API
+        setRegions(data.availableFilters?.regions || []);
+        setProvinces(data.availableFilters?.provinces || []);
+        setActifs(data.availableFilters?.unites || []);
+        setAgeRates(data.ageRates || {});
+        console.log(ageRates);
+      } catch (error) {
+        setError(error.message);
+      } finally {
+        setLoading(false);
       }
-    });
-    return Array.from(uniqueValues);
-  };
-
-  // Fonction pour récupérer les données
-  const fetchData = async (
-    region,
-    province,
-    selectedActif,
-    dateDebut,
-    dateFin
-  ) => {
-    try {
-      const params = {};
-      if (region) params.region = region;
-      if (province) params.province = province;
-      if (selectedActif) params.unite = selectedActif; // Utiliser selectedActif au lieu de actif
-
-      // Formater les dates en YYYY-MM-DD
-      if (dateDebut) params.dateDebut = dayjs(dateDebut).format("YYYY-MM-DD");
-      if (dateFin) params.dateFin = dayjs(dateFin).format("YYYY-MM-DD");
-
-      // Construire l'URL avec les paramètres
-      const queryString = new URLSearchParams(params).toString();
-      const url = `${apiUrl}/api/v1/ummcperformance?${queryString}`;
-      console.log("URL de la requête :", url);
-
-      const response = await fetch(url);
-      if (!response.ok)
-        throw new Error("Erreur lors de la récupération des données");
-
-      const data = await response.json();
-
-      // Mettre à jour les états avec les données reçues
-      setAllData(data.data || []);
-      setTotalPriseEnCharge(data.totalPriseEnCharge || 0);
-      setTopPathologies(data.topPathologies || []);
-      setServicesData(data.servicesData || []);
-      setGenderRates(data.genderRates || []);
-
-      // Extraire les régions uniques
-      const uniqueRegions = extractUniqueValues(data.data || [], "region");
-      setRegions(uniqueRegions);
-
-      // Filtrer les provinces en fonction de la région sélectionnée
-      const filteredProvinces = region
-        ? extractUniqueValues(data.data || [], "province", "region", region)
-        : extractUniqueValues(data.data || [], "province");
-
-      setProvinces(filteredProvinces);
-
-      // Filtrer les unités en fonction de la province sélectionnée
-      const filteredActifs = province
-        ? extractUniqueValues(data.data || [], "unite", "province", province)
-        : extractUniqueValues(data.data || [], "unite");
-
-      setActifs(filteredActifs);
-      setAgeRates(data.ageRates || {});
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
-    }
-  };
+    },
+    []
+  );
 
   // Effet pour récupérer les données initiales et les données filtrées
+  // Utilisation d'un effet avec dépendances optimisées
   useEffect(() => {
-    if (!isDocteur) {
+    const debounceTimeout = setTimeout(() => {
       fetchData(
         selectedRegion,
         selectedProvince,
@@ -203,71 +161,92 @@ const Test = () => {
         dateDebut,
         dateFin
       );
-    } else {
-      fetchData(
-        selectedRegion,
-        selectedProvince,
-        selectedActif,
-        dateDebut,
-        dateFin
-      );
-    }
-  }, [selectedRegion, selectedProvince, selectedActif, dateDebut, dateFin]);
+    }, 300); // Ajout d'un debounce pour éviter les appels API trop fréquents
 
-  // Gestion du changement d'onglet
-  const handleChange = (event, newValue) => {
+    return () => clearTimeout(debounceTimeout);
+  }, [
+    fetchData,
+    selectedRegion,
+    selectedProvince,
+    selectedActif,
+    dateDebut,
+    dateFin,
+  ]);
+
+  // Gestion du changement d'onglet - mémorisé avec useCallback
+  const handleChange = useCallback((event, newValue) => {
     setValue(newValue);
-  };
+  }, []);
 
-  // Gestion de l'ouverture et de la fermeture du modal Excel
-  const handleOpenModal = (actionName) => {
+  // Gestion de l'ouverture et de la fermeture du modal Excel - mémorisé avec useCallback
+  const handleOpenModal = useCallback((actionName) => {
     setSelectedAction(actionName);
     setOpenModelExcel(true);
-  };
+  }, []);
 
-  const handleCloseModal = () => {
+  const handleCloseModal = useCallback(() => {
     setOpenModelExcel(false);
     setSelectedAction("");
-  };
+  }, []);
 
-  // Mettre à jour les provinces quand la région change
-  const handleRegionChange = (e) => {
+  // Gestion des changements de filtre - mémorisé avec useCallback
+  const handleRegionChange = useCallback((e) => {
     const region = e.target.value;
     setSelectedRegion(region);
     setSelectedProvince(null);
+    setSelectedActif(null);
+  }, []);
 
-    if (!isDocteur) setSelectedActif(null);
-
-    const filteredProvinces = region
-      ? extractUniqueValues(allData, "province", "region", region)
-      : extractUniqueValues(allData, "province");
-
-    setProvinces(filteredProvinces);
-    setActifs([]);
-  };
-  console.log("totalPriseEnCharge", totalPriseEnCharge);
-  console.log("allData", allData);
-  console.log("topPathologies", topPathologies);
-  console.log("servicesData", servicesData);
-  console.log("genderRates", genderRates);
-  console.log("dateDebut", dateDebut);
-  console.log("dateFin", dateFin);
-
-  const handleProvinceChange = (e) => {
+  const handleProvinceChange = useCallback((e) => {
     const province = e.target.value;
     setSelectedProvince(province);
+    setSelectedActif(null);
+  }, []);
 
-    if (!isDocteur) setSelectedActif(null);
+  const handleActifChange = useCallback((e) => {
+    setSelectedActif(e.target.value);
+  }, []);
 
-    // Filtrer les unités en fonction de la province sélectionnée
-    const filteredActifs = province
-      ? extractUniqueValues(allData, "unite", "province", province)
-      : extractUniqueValues(allData, "unite");
+  // Mémorisation de l'état d'ouverture de la dialog
+  const handleOpenDialog = useCallback(() => setOpen(true), []);
+  const handleCloseDialog = useCallback(() => setOpen(false), []);
 
-    console.log("filteredActifs", filteredActifs); // Ajoutez ce log pour vérifier les unités filtrées
+  // Mémorisation des sélecteurs de date
+  const handleDateDebutChange = useCallback(
+    (newValue) => setDateDebut(newValue),
+    []
+  );
+  const handleDateFinChange = useCallback(
+    (newValue) => setDateFin(newValue),
+    []
+  );
 
-    setActifs(filteredActifs);
-  };
+  // Mémorisation du filtre régions
+  const regionsItems = useMemo(() => {
+    return regions.sort().map((region, index) => (
+      <MenuItem key={index} value={region}>
+        {region}
+      </MenuItem>
+    ));
+  }, [regions]);
+
+  // Mémorisation du filtre provinces
+  const provincesItems = useMemo(() => {
+    return provinces.sort().map((province, index) => (
+      <MenuItem key={index} value={province}>
+        {province}
+      </MenuItem>
+    ));
+  }, [provinces]);
+
+  // Mémorisation du filtre actifs
+  const actifsItems = useMemo(() => {
+    return actifs.sort().map((unite, index) => (
+      <MenuItem key={index} value={unite}>
+        {unite}
+      </MenuItem>
+    ));
+  }, [actifs]);
 
   return (
     <div className="bg-[#F2E5D7] min-h-screen overflow-y-auto">
@@ -301,7 +280,7 @@ const Test = () => {
 
       {/* En-tête de la page */}
       <div className="flex justify-between px-9 py-5">
-        <div className="mb-4  text-3xl font-extrabold leading-none tracking-tight md:text-4xl uppercase text-[#880B25]">
+        <div className="mb-4 text-3xl font-extrabold leading-none tracking-tight md:text-4xl uppercase text-[#880B25]">
           SCX Performance des UMMC (disponible bientôt ❇️)
         </div>
         <div>
@@ -309,6 +288,7 @@ const Test = () => {
             src="../../../public/SCX asset management (1).png"
             alt="SCX Asset Management"
             style={{ height: "40px" }}
+            loading="lazy"
           />
         </div>
       </div>
@@ -339,13 +319,13 @@ const Test = () => {
                 >
                   performance medical
                 </Typography>
-                <Button
+                {/* <Button
                   sx={{ background: "#e5afe9", color: "black" }}
-                  onClick={() => setOpen(true)}
+                  onClick={handleOpenDialog}
                 >
                   Nouvelle Entrée Médicale
                 </Button>
-                {/* <DialogMedcin open={open} handleClose={() => setOpen(false)} /> */}
+                <DialogMedcin open={open} handleClose={handleCloseDialog} /> */}
               </Box>
               <LocalizationProvider dateAdapter={AdapterDayjs}>
                 <Box sx={{ display: "flex", justifyContent: "center", mt: 4 }}>
@@ -356,7 +336,7 @@ const Test = () => {
                       justifyContent: "center",
                       maxWidth: "1200px",
                       mx: "auto",
-                      alignItems: "center", // Ajoutez cette ligne pour aligner verticalement les éléments
+                      alignItems: "center",
                     }}
                   >
                     {/* Filtre Région */}
@@ -386,25 +366,11 @@ const Test = () => {
                           Région
                         </InputLabel>
                         <Select
-                          value={selectedRegion}
+                          value={selectedRegion || ""}
                           onChange={handleRegionChange}
-                          disabled={userRole === "docteurs"}
-                          sx={{
-                            "& .MuiSelect-icon": {
-                              color: "#880B25",
-                            },
-                          }}
                         >
                           <MenuItem value="">Toutes les régions</MenuItem>
-                          {regions.map((region, index) => (
-                            <MenuItem
-                              key={index}
-                              value={region}
-                              sx={{ color: "#333" }}
-                            >
-                              {region}
-                            </MenuItem>
-                          ))}
+                          {regionsItems}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -437,26 +403,11 @@ const Test = () => {
                           Province
                         </InputLabel>
                         <Select
-                          value={selectedProvince}
+                          value={selectedProvince || ""}
                           onChange={handleProvinceChange}
-                          disabled={userRole === "docteurs"}
-                          displayEmpty
-                          sx={{
-                            "& .MuiSelect-icon": {
-                              color: "#880B25",
-                            },
-                          }}
                         >
                           <MenuItem value="">Toutes les provinces</MenuItem>
-                          {provinces.map((province, index) => (
-                            <MenuItem
-                              key={index}
-                              value={province}
-                              sx={{ color: "#333" }}
-                            >
-                              {province}
-                            </MenuItem>
-                          ))}
+                          {provincesItems}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -489,26 +440,11 @@ const Test = () => {
                           Unité
                         </InputLabel>
                         <Select
-                          value={selectedActif}
-                          onChange={(e) => setSelectedActif(e.target.value)}
-                          disabled={userRole === "docteurs"}
-                          displayEmpty
-                          sx={{
-                            "& .MuiSelect-icon": {
-                              color: "#880B25",
-                            },
-                          }}
+                          value={selectedActif || ""}
+                          onChange={handleActifChange}
                         >
                           <MenuItem value="">Toutes les unités</MenuItem>
-                          {actifs.map((unite, index) => (
-                            <MenuItem
-                              key={index}
-                              value={unite}
-                              sx={{ color: "#333" }}
-                            >
-                              {unite}
-                            </MenuItem>
-                          ))}
+                          {actifsItems}
                         </Select>
                       </FormControl>
                     </Grid>
@@ -518,7 +454,7 @@ const Test = () => {
                       <DatePicker
                         label="Date Début"
                         value={dateDebut}
-                        onChange={(newValue) => setDateDebut(newValue)}
+                        onChange={handleDateDebutChange}
                         sx={{
                           minWidth: 200,
                           "& .MuiOutlinedInput-root": {
@@ -534,7 +470,7 @@ const Test = () => {
                       <DatePicker
                         label="Date Fin"
                         value={dateFin}
-                        onChange={(newValue) => setDateFin(newValue)}
+                        onChange={handleDateFinChange}
                         sx={{
                           minWidth: 200,
                           "& .MuiOutlinedInput-root": {
@@ -548,65 +484,75 @@ const Test = () => {
                 </Box>
               </LocalizationProvider>
 
-              {/* Grille des indicateurs */}
-              <Box
-                display="flex"
-                flexWrap="wrap"
-                justifyContent="space-between"
-                gap={2}
-              >
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <CardInfo
-                    title="TOTAL DES PRISES EN CHARGE"
-                    value={totalPriseEnCharge}
-                    icon={PersonAddAltOutlinedIcon}
-                    genderRates={genderRates}
-                  />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <CardInfo
-                    title="EFFECTIF TOTAL OPERATIONNEL"
-                    value={345}
-                    icon={Groups3OutlinedIcon}
-                  />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <CardInfo
-                    title="TOTAL DES UMMC INSTALLÉES"
-                    value={100}
-                    icon={AddHomeWorkRoundedIcon}
-                  />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <TrancheAge
-                    ageRates={ageRates}
-                    selectedRegion={selectedRegion}
-                    selectedProvince={selectedProvince}
-                    selectedActif={selectedActif}
-                  />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <Pathologie
-                    topPathologies={topPathologies}
-                    selectedRegion={selectedRegion}
-                    selectedProvince={selectedProvince}
-                    selectedActif={selectedActif}
-                  />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <RepartitionParServices servicesData={servicesData} />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <Specialiste />
-                </Item>
-                <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
-                  <TauxTeleExpertise
-                    selectedRegion={selectedRegion}
-                    selectedProvince={selectedProvince}
-                    selectedActif={selectedActif}
-                  />
-                </Item>
-              </Box>
+              {loading ? (
+                <Box sx={{ textAlign: "center", py: 4 }}>
+                  <Typography>Chargement des données...</Typography>
+                </Box>
+              ) : error ? (
+                <Box sx={{ textAlign: "center", py: 4, color: "error.main" }}>
+                  <Typography>{error}</Typography>
+                </Box>
+              ) : (
+                /* Grille des indicateurs */
+                <Box
+                  display="flex"
+                  flexWrap="wrap"
+                  justifyContent="space-between"
+                  gap={2}
+                >
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <CardInfo
+                      title="TOTAL DES PRISES EN CHARGE"
+                      value={totalPriseEnCharge}
+                      icon={PersonAddAltOutlinedIcon}
+                      genderRates={genderRates}
+                    />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <CardInfo
+                      title="EFFECTIF TOTAL OPERATIONNEL"
+                      value={345}
+                      icon={Groups3OutlinedIcon}
+                    />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <CardInfo
+                      title="TOTAL DES UMMC INSTALLÉES"
+                      value={100}
+                      icon={AddHomeWorkRoundedIcon}
+                    />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <TrancheAge
+                      ageRates={ageRates}
+                      selectedRegion={selectedRegion}
+                      selectedProvince={selectedProvince}
+                      selectedActif={selectedActif}
+                    />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <Pathologie
+                      topPathologies={topPathologies}
+                      selectedRegion={selectedRegion}
+                      selectedProvince={selectedProvince}
+                      selectedActif={selectedActif}
+                    />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <RepartitionParServices servicesData={servicesData} />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <Specialiste />
+                  </Item>
+                  <Item sx={{ flex: "1 1 30%", backgroundColor: "#fcf2e6" }}>
+                    <TauxTeleExpertise
+                      selectedRegion={selectedRegion}
+                      selectedProvince={selectedProvince}
+                      selectedActif={selectedActif}
+                    />
+                  </Item>
+                </Box>
+              )}
             </div>
           </>
         )}
@@ -616,4 +562,4 @@ const Test = () => {
   );
 };
 
-export default Test;
+export default React.memo(Test);

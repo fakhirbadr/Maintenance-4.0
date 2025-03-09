@@ -9,7 +9,6 @@ import {
   useTheme,
 } from "@mui/material";
 import { Link } from "react-router-dom";
-
 import MuiAppBar from "@mui/material/AppBar";
 import MenuIcon from "@mui/icons-material/Menu";
 import SearchIcon from "@mui/icons-material/Search";
@@ -18,12 +17,14 @@ import SettingsOutlinedIcon from "@mui/icons-material/SettingsOutlined";
 import NotificationsNoneOutlinedIcon from "@mui/icons-material/NotificationsNoneOutlined";
 import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
 import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import ExitToAppIcon from "@mui/icons-material/ExitToApp"; // Importer l'icône de déconnexion
-import { useNavigate } from "react-router-dom"; // Import the useNavigate hook
+// import ExitToAppIcon from "@mui/icons-material/ExitToAppIcon";
+import { useNavigate } from "react-router-dom";
 import HomeRoundedIcon from "@mui/icons-material/HomeRounded";
 import GradingOutlinedIcon from "@mui/icons-material/GradingOutlined";
 import SpeedRoundedIcon from "@mui/icons-material/SpeedRounded";
+import PowerSettingsNewOutlinedIcon from "@mui/icons-material/PowerSettingsNewOutlined";
 import myImage from "../../public/scx.png"; // Ajustez le chemin en fonction de votre structure
+import { motion } from "framer-motion"; // Import Framer Motion pour les animations
 
 const AppBar = styled(MuiAppBar, {
   shouldForwardProp: (prop) => prop !== "open",
@@ -41,6 +42,8 @@ const AppBar = styled(MuiAppBar, {
       duration: theme.transitions.duration.enteringScreen,
     }),
   }),
+  backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
+  boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
 }));
 
 const Search = styled("div")(({ theme }) => ({
@@ -86,12 +89,12 @@ const drawerWidth = 240;
 
 export default function TopBar({ open, handleDrawerOpen, setMode }) {
   const theme = useTheme();
-  const navigate = useNavigate(); // Create navigate function using useNavigate hook
+  const navigate = useNavigate();
 
   // Fonction de déconnexion
   const handleLogout = () => {
-    localStorage.removeItem("authToken"); // Remove the authentication token
-    navigate("/login"); // Redirect to the login page
+    localStorage.removeItem("authToken");
+    navigate("/login");
   };
 
   return (
@@ -105,33 +108,42 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
           sx={{
             marginRight: 5,
             ...(open && { display: "none" }),
+            "&:hover": {
+              transform: "rotate(180deg)",
+              color: theme.palette.primary.main,
+            },
           }}
         >
           <MenuIcon />
         </IconButton>
+
         <Search>
           <SearchIconWrapper>
             <SearchIcon />
           </SearchIconWrapper>
-
           <StyledInputBase
             placeholder="Search…"
             inputProps={{ "aria-label": "search" }}
           />
         </Search>
-        {/* Ajouter un espace flexible de chaque côté de l'image */}
+
+        {/* Logo Centré */}
         <Box flexGrow={8} display="flex" justifyContent="center">
-          <img
+          <motion.img
             src={myImage}
             alt="Your description"
             style={{ height: "40px", width: "98px" }}
+            whileHover={{ scale: 1.1 }}
+            transition={{ type: "spring", stiffness: 300 }}
           />
         </Box>
+
         <Box flexGrow={1} />
-        <Stack direction={"row"}>
-          {theme.palette.mode === "light" ? (
+
+        {/* Icônes de droite */}
+        <Stack direction={"row"} spacing={1}>
+          {/* {theme.palette.mode === "light" ? (
             <IconButton
-              style={{ display: "none" }}
               onClick={() => {
                 localStorage.setItem(
                   "currentMode",
@@ -147,7 +159,6 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             </IconButton>
           ) : (
             <IconButton
-              style={{ display: "none" }}
               onClick={() => {
                 localStorage.setItem(
                   "currentMode",
@@ -161,30 +172,39 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             >
               <DarkModeOutlinedIcon />
             </IconButton>
-          )}
+          )} */}
+
           <IconButton color="inherit" component={Link} to="/homepage">
             <HomeRoundedIcon />
           </IconButton>
 
           <IconButton
-            sx={{ color: "blue" }}
+            sx={{ color: "inherit" }}
             component={Link}
             to="/NetworkPatient"
           >
             <SpeedRoundedIcon sx={{ fontSize: 25 }} />
           </IconButton>
-          <IconButton sx={{ color: "green" }} component={Link} to="/checkListe">
+
+          <IconButton
+            sx={{ color: "inherit" }}
+            component={Link}
+            to="/checkListe"
+          >
             <GradingOutlinedIcon />
           </IconButton>
+
           <IconButton color={"inherit"}>
             <SettingsOutlinedIcon />
           </IconButton>
+
           <IconButton color={"inherit"}>
             <PersonOutlineOutlinedIcon />
           </IconButton>
-          {/* Ajouter l'icône de déconnexion */}
+
+          {/* Icône de déconnexion */}
           <IconButton color={"error"} onClick={handleLogout}>
-            <ExitToAppIcon />
+            <PowerSettingsNewOutlinedIcon />
           </IconButton>
         </Stack>
       </Toolbar>

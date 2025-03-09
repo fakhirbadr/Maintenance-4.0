@@ -6,8 +6,43 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>SCX ASSET MANAGEMENT v1.0</title>
   </head>
+
   <body>
     <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
+    <!-- <script>
+      // Désactiver le clic droit
+      document.addEventListener("contextmenu", (event) =>
+        event.preventDefault()
+      );
+
+      // Désactiver les raccourcis clavier (F12, Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+U, etc.)
+      document.addEventListener("keydown", (event) => {
+        if (
+          event.key === "F12" ||
+          (event.ctrlKey &&
+            event.shiftKey &&
+            (event.key === "I" || event.key === "J" || event.key === "C")) ||
+          (event.ctrlKey && event.key === "U")
+        ) {
+          event.preventDefault();
+        }
+      });
+
+      // Détecter si l'inspecteur est ouvert et rediriger l'utilisateur
+      (function () {
+        const detectDevTools = () => {
+          const threshold = 160;
+          if (
+            window.outerWidth - window.innerWidth > threshold ||
+            window.outerHeight - window.innerHeight > threshold
+          ) {
+            alert("L'inspecteur est détecté ! 😡");
+            window.location.href = "about:blank"; // Redirige l'utilisateur
+          }
+        };
+        setInterval(detectDevTools, 1000);
+      })();
+    </script> -->
   </body>
 </html>

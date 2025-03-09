@@ -34,7 +34,7 @@ const fieldLabels = {
   totalPriseEnCharge: "Total Prise En Charge",
   effectifTotalOperationnel: "Effectif Total Opérationnel",
   totalUMMCInstallees: "Total UMMC Installées",
-  ConsultationMedcineGenerale: "Consultation Médecine Générale",
+  Consultation: "Consultation Médecine Générale",
   Teleexpertises: "Téléexpertises",
   Referencement: "Référencement",
   DepistageDiabete: "Dépistage Diabète",
@@ -68,7 +68,7 @@ const DialogMedcin = ({ open, handleClose }) => {
     totalPriseEnCharge: "",
     effectifTotalOperationnel: "",
     totalUMMCInstallees: "",
-    ConsultationMedcineGenerale: "",
+    Consultation: "",
     Teleexpertises: "",
     Referencement: "",
     Evacuation: "",
@@ -79,7 +79,7 @@ const DialogMedcin = ({ open, handleClose }) => {
     ageGroup15to24: "",
     ageGroup25to64: "",
     ageGroup65to100: "",
-    Consultation: "",
+
     soins: "",
     Vaccination: "",
     DepistageCancerDuSein: "",
@@ -416,9 +416,9 @@ const DialogMedcin = ({ open, handleClose }) => {
               <TextField
                 fullWidth
                 label="Consultation Médecine Générale"
-                name="ConsultationMedcineGenerale"
+                name="Consultation"
                 type="number"
-                value={formData.ConsultationMedcineGenerale}
+                value={formData.Consultation}
                 onChange={handleChange}
                 variant="outlined"
               />

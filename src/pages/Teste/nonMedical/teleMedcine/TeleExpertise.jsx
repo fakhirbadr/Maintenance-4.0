@@ -68,10 +68,17 @@ const TeleExpertise = ({ selectedRegion, selectedProvince, selectedActif }) => {
         const url = new URL(
           "http://localhost:3000/api/v1/ummcperformance/teleexpertises"
         );
-        if (selectedRegion) url.searchParams.append("region", selectedRegion);
-        if (selectedProvince)
+
+        // Si aucune région n'est sélectionnée, ne pas ajouter de filtre de région
+        if (selectedRegion && selectedRegion !== "Toutes les régions") {
+          url.searchParams.append("region", selectedRegion);
+        }
+        if (selectedProvince) {
           url.searchParams.append("province", selectedProvince);
-        if (selectedActif) url.searchParams.append("unite", selectedActif); // Assurez-vous que "unite" est le bon paramètre côté API
+        }
+        if (selectedActif) {
+          url.searchParams.append("unite", selectedActif); // Assurez-vous que "unite" est le bon paramètre côté API
+        }
 
         const response = await fetch(url.toString());
         const data = await response.json();

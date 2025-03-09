@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Divider from "@mui/material/Divider";
 import IconButton from "@mui/material/IconButton";
 import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
@@ -8,35 +8,10 @@ import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
 import ListItemText from "@mui/material/ListItemText";
 import MuiDrawer from "@mui/material/Drawer";
-import HomeOutlinedIcon from "@mui/icons-material/HomeOutlined";
 import HomeRepairServiceOutlinedIcon from "@mui/icons-material/HomeRepairServiceOutlined";
 import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
-import CalendarMonthOutlinedIcon from "@mui/icons-material/CalendarMonthOutlined";
-import CandlestickChartOutlinedIcon from "@mui/icons-material/CandlestickChartOutlined";
 import BookOnlineOutlinedIcon from "@mui/icons-material/BookOnlineOutlined";
-import HelpOutlineOutlinedIcon from "@mui/icons-material/HelpOutlineOutlined";
-import CloudOutlinedIcon from "@mui/icons-material/CloudOutlined";
-import Inventory2OutlinedIcon from "@mui/icons-material/Inventory2Outlined";
-import NotificationsActiveOutlinedIcon from "@mui/icons-material/NotificationsActiveOutlined";
-import AlternateEmailOutlinedIcon from "@mui/icons-material/AlternateEmailOutlined";
-import MenuBookOutlinedIcon from "@mui/icons-material/MenuBookOutlined";
-import SmartToyOutlinedIcon from "@mui/icons-material/SmartToyOutlined";
-import ManageAccountsOutlinedIcon from "@mui/icons-material/ManageAccountsOutlined";
-import BugReportIcon from "@mui/icons-material/BugReport";
-import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
-import {
-  Avatar,
-  List,
-  styled,
-  Typography,
-  useTheme,
-  Collapse,
-} from "@mui/material";
-import { useLocation, useNavigate } from "react-router-dom";
-import { grey } from "@mui/material/colors";
-import { HistoryIcon } from "lucide-react";
 import ListAltIcon from "@mui/icons-material/ListAlt";
-import avatarImage from "../../public/scx.png";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
@@ -44,25 +19,41 @@ import DashboardIcon from "@mui/icons-material/Dashboard";
 import BadgeOutlinedIcon from "@mui/icons-material/BadgeOutlined";
 import StarRateIcon from "@mui/icons-material/StarRate";
 import ErrorIcon from "@mui/icons-material/Error";
-import HomeIcon from "@mui/icons-material/Home";
 import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
+import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
+import { HistoryIcon } from "lucide-react";
+import { motion } from "framer-motion";
+import {
+  Avatar,
+  List,
+  styled,
+  Typography,
+  useTheme,
+  Collapse,
+  Box,
+  Tooltip,
+} from "@mui/material";
+import { useLocation, useNavigate } from "react-router-dom";
+import avatarImage from "../../public/scx.png";
 
 const drawerWidth = 240;
 
 const openedMixin = (theme) => ({
   width: drawerWidth,
   transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
+    easing: theme.transitions.easing.easeOut,
     duration: theme.transitions.duration.enteringScreen,
   }),
   overflowX: "hidden",
+  backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
+  boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
 });
 
 const closedMixin = (theme) => ({
   transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
+    easing: theme.transitions.easing.easeOut,
     duration: theme.transitions.duration.leavingScreen,
   }),
   overflowX: "hidden",
@@ -70,6 +61,8 @@ const closedMixin = (theme) => ({
   [theme.breakpoints.up("sm")]: {
     width: `calc(${theme.spacing(8)} + 1px)`,
   },
+  backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
+  boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
 });
 
 const Drawer = styled(MuiDrawer, {
@@ -99,11 +92,28 @@ const DrawerHeader = styled("div")(({ theme }) => ({
 
 const IconWrapper = ({ children }) => {
   return (
-    <div style={{ fontSize: "10px", display: "flex", alignItems: "center" }}>
+    <div
+      style={{
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
       {children}
     </div>
   );
 };
+
+// Animation variants
+const itemVariants = {
+  hidden: { opacity: 0, x: -20 },
+  visible: { opacity: 1, x: 0 },
+};
+
+const MotionListItem = motion(ListItem);
+const MotionListItemIcon = motion(ListItemIcon);
+const MotionAvatar = motion(Avatar);
+const MotionTypography = motion(Typography);
 
 const Array1 = [
   {
@@ -280,7 +290,13 @@ export default function SidBar({ open, handleDrawerClose }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
-  const [openMenus, setOpenMenus] = React.useState({});
+  const [openMenus, setOpenMenus] = useState({});
+  const [hoveredItem, setHoveredItem] = useState(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const handleMenuToggle = (menuKey) => {
     setOpenMenus((prev) => ({
@@ -292,19 +308,39 @@ export default function SidBar({ open, handleDrawerClose }) {
   const userInfo = JSON.parse(localStorage.getItem("userInfo"));
   const role = userInfo ? userInfo.role : null;
 
+  const handleMouseEnter = (index) => {
+    setHoveredItem(index);
+  };
+
+  const handleMouseLeave = () => {
+    setHoveredItem(null);
+  };
+
+  const getIconColor = (path, index) => {
+    if (location.pathname === path) {
+      return theme.palette.mode === "dark" ? "#1ac2f0" : "#1976d2";
+    }
+
+    if (hoveredItem === index) {
+      return theme.palette.mode === "dark" ? "#1ac2f0" : "#1976d2";
+    }
+
+    return theme.palette.mode === "dark" ? "#a3a3a3" : "#666666";
+  };
+
   return (
-    <Drawer
-      variant="permanent"
-      open={open}
-      PaperProps={{
-        sx: {
-          backgroundColor: "",
-          color: "",
-        },
-      }}
-    >
+    <Drawer variant="permanent" open={open}>
       <DrawerHeader>
-        <IconButton onClick={handleDrawerClose}>
+        <IconButton
+          onClick={handleDrawerClose}
+          sx={{
+            transition: "transform 0.3s ease-in-out",
+            "&:hover": {
+              transform: "rotate(180deg)",
+              color: theme.palette.primary.main,
+            },
+          }}
+        >
           {theme.direction === "rtl" ? (
             <ChevronRightIcon />
           ) : (
@@ -313,138 +349,268 @@ export default function SidBar({ open, handleDrawerClose }) {
         </IconButton>
       </DrawerHeader>
 
-      <Divider />
-      <Avatar
+      <Divider sx={{ mb: 1 }} />
+
+      <Box
         sx={{
-          mx: "auto",
-          width: open ? 90 : 40,
-          height: open ? 90 : 40,
-          my: "2px",
-          transition: "0.5s",
-          border: "2px solid grey",
-        }}
-        alt="avatar"
-        src={avatarImage}
-      />
-      <Typography
-        className="text-orange-500"
-        align="center"
-        sx={{ fontSize: open ? 12 : 0, transition: "0.5s" }}
-      >
-        SCX Asset Management
-      </Typography>
-      <Typography
-        align="center"
-        sx={{
-          fontSize: open ? 15 : 0,
-          transition: "0.5s",
-          color: theme.palette.info.main,
-          fontFamily: "fantasy",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          mb: 2,
         }}
       >
-        {userInfo ? userInfo.nomComplet : "Nom Complet"}
-      </Typography>
+        <MotionAvatar
+          initial={{ scale: 0 }}
+          animate={{ scale: 1 }}
+          transition={{ duration: 0.5, type: "spring" }}
+          sx={{
+            width: open ? 90 : 40,
+            height: open ? 90 : 40,
+            my: "8px",
+            transition: "all 0.5s cubic-bezier(0.4, 0, 0.2, 1)",
+            border: `2px solid ${theme.palette.primary.main}`,
+            boxShadow: "0 4px 8px rgba(0, 0, 0, 0.1)",
+            "&:hover": {
+              transform: "scale(1.1)",
+              boxShadow: "0 8px 16px rgba(0, 0, 0, 0.2)",
+            },
+          }}
+          alt="avatar"
+          src={avatarImage}
+        />
 
-      <Divider />
+        <MotionTypography
+          initial={{ opacity: 0 }}
+          animate={{ opacity: open ? 1 : 0 }}
+          transition={{ duration: 0.5 }}
+          sx={{
+            fontSize: open ? 14 : 0,
+            transition: "0.5s",
+            color: "#f97316",
+            fontWeight: "bold",
+            letterSpacing: "0.5px",
+            mt: 1,
+          }}
+        >
+          SCX Asset Management
+        </MotionTypography>
 
-      <List>
-        {Array1.map((item) => {
+        <MotionTypography
+          initial={{ opacity: 0 }}
+          animate={{ opacity: open ? 1 : 0 }}
+          transition={{ duration: 0.5, delay: 0.2 }}
+          sx={{
+            fontSize: open ? 16 : 0,
+            transition: "0.5s",
+            color: theme.palette.primary.main,
+            fontWeight: "500",
+            mt: 0.5,
+          }}
+        >
+          {userInfo ? userInfo.nomComplet : "Nom Complet"}
+        </MotionTypography>
+      </Box>
+
+      <Divider sx={{ mb: 1 }} />
+
+      <List sx={{ px: 1 }}>
+        {Array1.map((item, index) => {
           if (item.roleRequired && !item.roleRequired.includes(role)) {
             return null;
           }
 
+          const isActive = location.pathname === item.path;
+          const isHovered = hoveredItem === index;
+
           return (
             <div key={item.text}>
-              <ListItem disablePadding sx={{ display: "block" }}>
-                <ListItemButton
-                  onClick={
-                    item.children
-                      ? () => handleMenuToggle(item.text)
-                      : () => navigate(item.path)
-                  }
-                  sx={{
-                    minHeight: 10,
-                    justifyContent: open ? "initial" : "center",
-                    px: 2.5,
-                    bgcolor:
-                      location.pathname === item.path
-                        ? theme.palette.mode === "dark"
-                          ? grey[800]
-                          : grey[300]
-                        : null,
-                  }}
-                >
-                  <ListItemIcon
+              <MotionListItem
+                disablePadding
+                sx={{ display: "block", mb: 0.5 }}
+                initial={mounted ? "hidden" : "visible"}
+                animate="visible"
+                variants={itemVariants}
+                transition={{
+                  duration: 0.3,
+                  delay: index * 0.05,
+                }}
+                onMouseEnter={() => handleMouseEnter(index)}
+                onMouseLeave={handleMouseLeave}
+              >
+                <Tooltip title={open ? "" : item.text} placement="right">
+                  <ListItemButton
+                    onClick={
+                      item.children
+                        ? () => handleMenuToggle(item.text)
+                        : () => navigate(item.path)
+                    }
                     sx={{
-                      minWidth: 0,
-                      mr: open ? 2 : "auto",
-                      justifyContent: "center",
+                      minHeight: 48,
+                      justifyContent: open ? "initial" : "center",
+                      px: 2.5,
+                      borderRadius: "8px",
+                      backgroundColor: isActive
+                        ? theme.palette.mode === "dark"
+                          ? "rgba(25, 118, 210, 0.15)"
+                          : "rgba(25, 118, 210, 0.08)"
+                        : "transparent",
+                      color: isActive
+                        ? theme.palette.primary.main
+                        : theme.palette.text.primary,
+                      transition: "all 0.3s ease",
+                      "&:hover": {
+                        backgroundColor:
+                          theme.palette.mode === "dark"
+                            ? "rgba(25, 118, 210, 0.2)"
+                            : "rgba(25, 118, 210, 0.12)",
+                        transform: "translateX(4px)",
+                      },
                     }}
                   >
-                    {item.icon}
-                  </ListItemIcon>
-                  <ListItemText
-                    primaryTypographyProps={{ fontSize: "12px" }}
-                    primary={item.text}
-                    sx={{ opacity: open ? 1 : 0 }}
-                  />
-                  {item.children &&
-                    open &&
-                    (openMenus[item.text] ? <ExpandLess /> : <ExpandMore />)}
-                </ListItemButton>
-              </ListItem>
+                    <MotionListItemIcon
+                      sx={{
+                        minWidth: 0,
+                        mr: open ? 2 : "auto",
+                        justifyContent: "center",
+                        color: getIconColor(item.path, index),
+                        transition: "color 0.3s ease",
+                      }}
+                      whileHover={{ scale: 1.2, rotate: 5 }}
+                    >
+                      {item.icon}
+                    </MotionListItemIcon>
+
+                    <ListItemText
+                      primary={item.text}
+                      primaryTypographyProps={{
+                        fontSize: "13px",
+                        fontWeight: isActive ? "600" : "400",
+                        color: isActive
+                          ? theme.palette.primary.main
+                          : "inherit",
+                      }}
+                      sx={{
+                        opacity: open ? 1 : 0,
+                        transition: "opacity 0.3s ease",
+                      }}
+                    />
+
+                    {item.children && open && (
+                      <motion.div
+                        animate={{ rotate: openMenus[item.text] ? 180 : 0 }}
+                        transition={{ duration: 0.3 }}
+                      >
+                        {openMenus[item.text] ? <ExpandLess /> : <ExpandMore />}
+                      </motion.div>
+                    )}
+                  </ListItemButton>
+                </Tooltip>
+              </MotionListItem>
 
               {item.children && (
                 <Collapse
                   in={openMenus[item.text]}
                   timeout="auto"
                   unmountOnExit
+                  component={motion.div}
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{
+                    opacity: openMenus[item.text] ? 1 : 0,
+                    height: openMenus[item.text] ? "auto" : 0,
+                  }}
+                  transition={{ duration: 0.3 }}
                 >
-                  <List component="div" disablePadding>
-                    {item.children.map((child) => {
+                  <List component="div" disablePadding sx={{ pl: 1 }}>
+                    {item.children.map((child, childIndex) => {
                       if (
                         child.roleRequired &&
                         !child.roleRequired.includes(role)
                       ) {
                         return null;
                       }
+
+                      const isChildActive = location.pathname === child.path;
+                      const childFullIndex = `${index}-${childIndex}`;
+                      const isChildHovered = hoveredItem === childFullIndex;
+
                       return (
-                        <ListItem
+                        <MotionListItem
                           key={child.path}
                           disablePadding
-                          sx={{ display: "block" }}
+                          sx={{ display: "block", mb: 0.5 }}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                          transition={{
+                            duration: 0.2,
+                            delay: childIndex * 0.05,
+                          }}
+                          onMouseEnter={() => handleMouseEnter(childFullIndex)}
+                          onMouseLeave={handleMouseLeave}
                         >
-                          <ListItemButton
-                            onClick={() => navigate(child.path)}
-                            sx={{
-                              minHeight: 10,
-                              justifyContent: open ? "initial" : "center",
-                              px: 2.5,
-                              pl: 4,
-                              bgcolor:
-                                location.pathname === child.path
-                                  ? theme.palette.mode === "dark"
-                                    ? grey[800]
-                                    : grey[300]
-                                  : null,
-                            }}
+                          <Tooltip
+                            title={open ? "" : child.text}
+                            placement="right"
                           >
-                            <ListItemIcon
+                            <ListItemButton
+                              onClick={() => navigate(child.path)}
                               sx={{
-                                minWidth: 0,
-                                mr: open ? 2 : "auto",
-                                justifyContent: "center",
+                                minHeight: 40,
+                                justifyContent: open ? "initial" : "center",
+                                pl: open ? 4 : 2.5,
+                                borderRadius: "8px",
+                                backgroundColor: isChildActive
+                                  ? theme.palette.mode === "dark"
+                                    ? "rgba(25, 118, 210, 0.15)"
+                                    : "rgba(25, 118, 210, 0.08)"
+                                  : "transparent",
+                                color: isChildActive
+                                  ? theme.palette.primary.main
+                                  : theme.palette.text.secondary,
+                                transition: "all 0.3s ease",
+                                "&:hover": {
+                                  backgroundColor:
+                                    theme.palette.mode === "dark"
+                                      ? "rgba(25, 118, 210, 0.2)"
+                                      : "rgba(25, 118, 210, 0.12)",
+                                  transform: "translateX(4px)",
+                                },
                               }}
                             >
-                              {child.icon}
-                            </ListItemIcon>
-                            <ListItemText
-                              primaryTypographyProps={{ fontSize: "12px" }}
-                              primary={child.text}
-                              sx={{ opacity: open ? 1 : 0 }}
-                            />
-                          </ListItemButton>
-                        </ListItem>
+                              <MotionListItemIcon
+                                sx={{
+                                  minWidth: 0,
+                                  mr: open ? 2 : "auto",
+                                  justifyContent: "center",
+                                  color: isChildActive
+                                    ? theme.palette.primary.main
+                                    : isChildHovered
+                                    ? theme.palette.primary.main
+                                    : theme.palette.text.secondary,
+                                  transition: "color 0.3s ease",
+                                  fontSize: "0.9rem",
+                                }}
+                                whileHover={{ scale: 1.2, rotate: 5 }}
+                              >
+                                {child.icon}
+                              </MotionListItemIcon>
+
+                              <ListItemText
+                                primary={child.text}
+                                primaryTypographyProps={{
+                                  fontSize: "12px",
+                                  fontWeight: isChildActive ? "500" : "400",
+                                  color: isChildActive
+                                    ? theme.palette.primary.main
+                                    : "inherit",
+                                }}
+                                sx={{
+                                  opacity: open ? 1 : 0,
+                                  transition: "opacity 0.3s ease",
+                                }}
+                              />
+                            </ListItemButton>
+                          </Tooltip>
+                        </MotionListItem>
                       );
                     })}
                   </List>
@@ -455,7 +621,7 @@ export default function SidBar({ open, handleDrawerClose }) {
         })}
       </List>
 
-      <Divider />
+      <Divider sx={{ mt: 1 }} />
     </Drawer>
   );
 }

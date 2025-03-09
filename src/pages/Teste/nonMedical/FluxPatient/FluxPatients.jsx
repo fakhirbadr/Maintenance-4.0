@@ -3,7 +3,7 @@ import ReactApexChart from "react-apexcharts";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const Consultation = ({ selectedRegion, selectedProvince, selectedActif }) => {
+const FluxPatients = ({ selectedRegion, selectedProvince, selectedActif }) => {
   const [chartData, setChartData] = useState({
     series: [],
     options: {
@@ -67,10 +67,17 @@ const Consultation = ({ selectedRegion, selectedProvince, selectedActif }) => {
       try {
         // Construire l'URL avec les filtres
         const url = new URL(`${apiUrl}/api/v1/ummcperformance/consultations`);
-        if (selectedRegion) url.searchParams.append("region", selectedRegion);
-        if (selectedProvince)
+
+        // Si aucune région n'est sélectionnée, ne pas ajouter de filtre de région
+        if (selectedRegion && selectedRegion !== "Toutes les régions") {
+          url.searchParams.append("region", selectedRegion);
+        }
+        if (selectedProvince) {
           url.searchParams.append("province", selectedProvince);
-        if (selectedActif) url.searchParams.append("actif", selectedActif);
+        }
+        if (selectedActif) {
+          url.searchParams.append("actif", selectedActif);
+        }
 
         const response = await fetch(url.toString());
         const data = await response.json();
@@ -175,4 +182,4 @@ const Consultation = ({ selectedRegion, selectedProvince, selectedActif }) => {
   );
 };
 
-export default Consultation;
+export default FluxPatients;

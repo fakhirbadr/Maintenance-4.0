@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const TauxDeCompletudeDeDossierComplet = ({
   // Correction du nom du composant
   selectedRegion,
@@ -14,8 +15,7 @@ const TauxDeCompletudeDeDossierComplet = ({
   useEffect(() => {
     const fetchData = async () => {
       try {
-        let url =
-          "http://localhost:3000/api/v1/tauxDeCompletudeDeDossierComplet?";
+        let url = `${apiUrl}/api/v1/tauxDeCompletudeDeDossierComplet?`;
 
         if (selectedRegion && selectedRegion !== "Toutes les régions") {
           url += `region=${encodeURIComponent(selectedRegion)}&`;

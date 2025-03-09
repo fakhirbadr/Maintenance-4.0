@@ -27,163 +27,242 @@ import Index from "./Tablekpiv2/Index";
 
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
+// Configurations d'animation
+const containerVariants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  show: { opacity: 1, y: 0 },
+};
+// Styled component défini en dehors du composant principal pour éviter les re-créations
+const Item = styled(Paper)(({ theme }) => ({
+  backgroundColor: "#fff",
+  ...theme.typography.body2,
+  padding: theme.spacing(0),
+  textAlign: "center",
+  color: theme.palette.text.secondary,
+  ...theme.applyStyles("dark", {
+    backgroundColor: "#1E1E1E",
+  }),
+}));
+
+// Création d'un client axios pour réutilisation
+const axiosClient = axios.create({
+  baseURL: apiUrl,
+});
 
 const Dashboard = () => {
-  const [regions, setRegions] = useState([]); // Liste des régions depuis l'API
-  const [selectedRegion, setSelectedRegion] = useState(""); // Région sélectionnée
-  const [province, setProvince] = useState([]);
-  const [selectedProvince, setSelectedProvince] = useState("");
-  const [startDate, setStartDate] = useState("");
-  const [endDate, setEndDate] = useState("");
-  const [actifs, setActifs] = useState([]); // Liste des actifs
-  const [filteredActifs, setFilteredActifs] = useState([]); // Actifs filtrés en fonction de la province
-  const [closedTicketsCount, setClosedTicketsCount] = useState(0);
-  const [fournituresClosed, setFournituresClosed] = useState(0);
-  const [selectedActif, setSelectedActif] = useState("");
-  const [totalClosed, setTotalClosed] = useState(null);
-  const hasFetchedRegionsRef = useRef(false); // Référence pour suivre si les régions ont déjà été chargées
+  const [filters, setFilters] = useState({
+    region: "",
+    province: "",
+    actif: "",
+    startDate: "",
+    endDate: "",
+  });
+  const [data, setData] = useState({
+    regions: [],
+    provinces: [],
+    filteredActifs: [],
+    closedTicketsCount: 0,
+    fournituresClosed: 0,
+    totalClosed: null,
+  });
+  const hasFetchedRegionsRef = useRef(false);
+  const isLoadingRef = useRef(false);
 
-  // Callback pour mettre à jour le nombre de tickets fermés
-  const handleTicketsClosedUpdate = useCallback((value) => {
-    setClosedTicketsCount(value);
+  // Regrouper les fonctions de mise à jour des compteurs dans un seul objet
+  const updateHandlers = useMemo(
+    () => ({
+      handleTicketsClosedUpdate: (value) => {
+        setData((prev) => ({ ...prev, closedTicketsCount: value }));
+      },
+      handleFournituresClosedUpdate: (closedCount) => {
+        setData((prev) => ({ ...prev, fournituresClosed: closedCount }));
+      },
+      handleTotalClosed: (value) => {
+        setData((prev) => ({ ...prev, totalClosed: value }));
+      },
+    }),
+    []
+  );
+
+  // Fonction de mise à jour des filtres
+  const updateFilter = useCallback((field, value) => {
+    setFilters((prev) => {
+      const newFilters = { ...prev, [field]: value };
+
+      // Réinitialiser les filtres dépendants
+      if (field === "region") {
+        newFilters.province = "";
+        newFilters.actif = "";
+      } else if (field === "province") {
+        newFilters.actif = "";
+      }
+
+      return newFilters;
+    });
   }, []);
 
-  // Callback pour mettre à jour le nombre de fournitures fermées
-  const handleFournituresClosedUpdate = useCallback((closedCount) => {
-    setFournituresClosed(closedCount);
-  }, []);
+  // Gestionnaires d'événements pour les filtres
+  const handleRegionChange = useCallback(
+    (event) => {
+      updateFilter("region", event.target.value);
+    },
+    [updateFilter]
+  );
 
-  // Callback pour mettre à jour le total des tickets fermés
-  const handleTotalClosed = useCallback((value) => {
-    setTotalClosed(value);
-  }, []);
+  const handleProvinceChange = useCallback(
+    (event) => {
+      updateFilter("province", event.target.value);
+    },
+    [updateFilter]
+  );
 
-  // Gérer la sélection de la région
-  const handleRegionChange = useCallback((event) => {
-    setSelectedRegion(event.target.value);
-    setSelectedProvince(""); // Reset province selection when region changes
-  }, []);
+  const handleActifChange = useCallback(
+    (event) => {
+      updateFilter("actif", event.target.value);
+    },
+    [updateFilter]
+  );
 
-  // Gérer la sélection de la province
-  const handleProvinceChange = useCallback((event) => {
-    setSelectedProvince(event.target.value);
-  }, []);
+  const handleStartDateChange = useCallback(
+    (e) => {
+      updateFilter("startDate", e.target.value);
+    },
+    [updateFilter]
+  );
 
-  // Gérer la sélection de la date de début
-  const handleStartDateChange = useCallback((e) => {
-    setStartDate(e.target.value);
-  }, []);
+  const handleEndDateChange = useCallback(
+    (e) => {
+      updateFilter("endDate", e.target.value);
+    },
+    [updateFilter]
+  );
 
-  // Gérer la sélection de la date de fin
-  const handleEndDateChange = useCallback((e) => {
-    setEndDate(e.target.value);
-  }, []);
-
-  // Gérer la sélection de l'actif
-  const handleActifChange = useCallback((event) => {
-    setSelectedActif(event.target.value);
-  }, []);
-
-  // Récupérer les régions depuis l'API
+  // Récupérer les régions une seule fois
   useEffect(() => {
-    if (hasFetchedRegionsRef.current) return; // Ne pas relancer la requête si les régions ont déjà été chargées
+    if (hasFetchedRegionsRef.current || isLoadingRef.current) return;
 
-    axios
-      .get(`${apiUrl}/api/actifs`)
+    isLoadingRef.current = true;
+
+    axiosClient
+      .get("/api/actifs")
       .then((response) => {
-        const fetchedRegions = response.data.map((item) => item.region); // Extraire les régions
-        const uniqueRegions = [...new Set(fetchedRegions)]; // Éviter les doublons
-        setRegions(uniqueRegions);
-        hasFetchedRegionsRef.current = true; // Marquer les régions comme chargées
+        const fetchedRegions = response.data.map((item) => item.region);
+        const uniqueRegions = [...new Set(fetchedRegions)];
+        setData((prev) => ({ ...prev, regions: uniqueRegions }));
+        hasFetchedRegionsRef.current = true;
       })
       .catch((error) => {
         console.error("Erreur lors de la récupération des régions :", error);
+      })
+      .finally(() => {
+        isLoadingRef.current = false;
       });
   }, []);
 
-  // Récupérer les provinces en fonction de la région sélectionnée
+  // Récupérer les provinces lorsque la région change
   useEffect(() => {
-    if (selectedRegion) {
-      axios
-        .get(`${apiUrl}/api/actifs?region=${selectedRegion}`)
-        .then((response) => {
-          const fetchedProvinces = response.data.map((item) => item.province); // Extraire les provinces
-          const uniqueProvinces = [...new Set(fetchedProvinces)]; // Éviter les doublons
-          setProvince(uniqueProvinces);
-        })
-        .catch((error) => {
-          console.error(
-            "Erreur lors de la récupération des provinces :",
-            error
-          );
-        });
-    } else {
-      setProvince([]); // Réinitialiser les provinces si aucune région n'est sélectionnée
+    if (!filters.region) {
+      setData((prev) => ({ ...prev, provinces: [] }));
+      return;
     }
-  }, [selectedRegion]);
 
-  // Récupérer les actifs en fonction de la province sélectionnée
+    axiosClient
+      .get(`/api/actifs`, {
+        params: { region: filters.region },
+      })
+      .then((response) => {
+        const fetchedProvinces = response.data.map((item) => item.province);
+        const uniqueProvinces = [...new Set(fetchedProvinces)];
+        setData((prev) => ({ ...prev, provinces: uniqueProvinces }));
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la récupération des provinces :", error);
+      });
+  }, [filters.region]);
+
+  // Récupérer les actifs lorsque la province change
   useEffect(() => {
-    if (selectedProvince) {
-      axios
-        .get(
-          `${apiUrl}/api/actifs?region=${selectedRegion}&province=${selectedProvince}`
-        )
-        .then((response) => {
-          const fetchedActifs = response.data.map((item) => item.name);
-          setFilteredActifs(fetchedActifs);
-        })
-        .catch((error) => {
-          console.error("Erreur lors de la récupération des actifs :", error);
-        });
-    } else {
-      setFilteredActifs([]); // Réinitialiser les actifs si aucune province n'est sélectionnée
+    if (!filters.province || !filters.region) {
+      setData((prev) => ({ ...prev, filteredActifs: [] }));
+      return;
     }
-  }, [selectedProvince, selectedRegion]);
 
-  // Mémoriser les provinces pour éviter des recalculs inutiles
-  const provinceOptions = useMemo(() => {
-    return province.map((prov) => (
-      <MenuItem key={prov} value={prov}>
-        {prov}
-      </MenuItem>
-    ));
-  }, [province]);
+    axiosClient
+      .get(`/api/actifs`, {
+        params: {
+          region: filters.region,
+          province: filters.province,
+        },
+      })
+      .then((response) => {
+        const fetchedActifs = response.data.map((item) => item.name);
+        setData((prev) => ({ ...prev, filteredActifs: fetchedActifs }));
+      })
+      .catch((error) => {
+        console.error("Erreur lors de la récupération des actifs :", error);
+      });
+  }, [filters.province, filters.region]);
 
-  // Mémoriser les actifs filtrés pour éviter des recalculs inutiles
-  const actifOptions = useMemo(() => {
-    return filteredActifs.map((actif) => (
-      <MenuItem key={actif} value={actif}>
-        {actif}
-      </MenuItem>
-    ));
-  }, [filteredActifs]);
-
-  const Item = styled(Paper)(({ theme }) => ({
-    backgroundColor: "#fff",
-    ...theme.typography.body2,
-    padding: theme.spacing(0),
-    textAlign: "center",
-    color: theme.palette.text.secondary,
-    ...theme.applyStyles("dark", {
-      backgroundColor: "#1E1E1E",
+  // Mémoriser les options de sélection pour éviter des recalculs inutiles
+  const selectOptions = useMemo(
+    () => ({
+      provinceOptions: data.provinces.map((prov) => (
+        <MenuItem key={prov} value={prov}>
+          {prov}
+        </MenuItem>
+      )),
+      actifOptions: data.filteredActifs.map((actif) => (
+        <MenuItem key={actif} value={actif}>
+          {actif}
+        </MenuItem>
+      )),
+      regionOptions: data.regions.map((region) => (
+        <MenuItem key={region} value={region}>
+          {region}
+        </MenuItem>
+      )),
     }),
-  }));
+    [data.provinces, data.filteredActifs, data.regions]
+  );
+
+  // Extraire les propriétés communes pour les graphiques pour éviter la duplication
+  const graphProps = useMemo(
+    () => ({
+      region: filters.region,
+      province: filters.province,
+      startDate: filters.startDate,
+      endDate: filters.endDate,
+    }),
+    [filters.region, filters.province, filters.startDate, filters.endDate]
+  );
+
+  // Élément dark pour réutilisation
+  const darkItem = useMemo(() => ({ sx: { backgroundColor: "#1E1E1E" } }), []);
 
   return (
     <>
-      <div className="flex items-center ">
+      <div className="flex items-center">
         <div className="mr-auto">
           <Location />
         </div>
-        <div className="flex justify-center flex-1  space-x-4">
+        <div className="flex justify-center flex-1 space-x-4">
           <span className="text-center text-base bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
             Total des interventions :{" "}
-            <span className="font-semibold">{closedTicketsCount}</span>
+            <span className="font-semibold">{data.closedTicketsCount}</span>
           </span>
-          <span className="text-center text-base  bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
+          <span className="text-center text-base bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
             Total des livraisons :{" "}
-            <span className="font-semibold">{totalClosed}</span>
+            <span className="font-semibold">{data.totalClosed}</span>
           </span>
         </div>
       </div>
@@ -196,48 +275,44 @@ const Dashboard = () => {
         <TextField
           label="Filtrer par Région"
           select
-          value={selectedRegion}
+          value={filters.region}
           onChange={handleRegionChange}
           variant="outlined"
           size="small"
           sx={{ width: "200px" }}
         >
           <MenuItem value="">Toutes les Régions</MenuItem>
-          {regions.map((region) => (
-            <MenuItem key={region} value={region}>
-              {region}
-            </MenuItem>
-          ))}
+          {selectOptions.regionOptions}
         </TextField>
 
         {/* Filtre par province */}
         <TextField
           label="Filtrer par Province"
           select
-          value={selectedProvince}
+          value={filters.province}
           onChange={handleProvinceChange}
           variant="outlined"
           size="small"
           sx={{ width: "200px" }}
-          disabled={!selectedRegion} // Désactiver si aucune région n'est sélectionnée
+          disabled={!filters.region}
         >
           <MenuItem value="">Toutes les Provinces</MenuItem>
-          {provinceOptions}
+          {selectOptions.provinceOptions}
         </TextField>
 
         {/* Filtre par actif */}
         <TextField
           label="Filtrer par Actif"
           select
-          value={selectedActif}
+          value={filters.actif}
           onChange={handleActifChange}
           variant="outlined"
           size="small"
           sx={{ width: "200px" }}
-          disabled={!selectedProvince} // Désactiver si aucune province n'est sélectionnée
+          disabled={!filters.province}
         >
           <MenuItem value="">Tous les Actifs</MenuItem>
-          {actifOptions}
+          {selectOptions.actifOptions}
         </TextField>
 
         {/* Filtre par date */}
@@ -245,7 +320,7 @@ const Dashboard = () => {
           <TextField
             label=""
             type="date"
-            value={startDate}
+            value={filters.startDate}
             onChange={handleStartDateChange}
             variant="outlined"
             size="small"
@@ -254,7 +329,7 @@ const Dashboard = () => {
           <TextField
             label=""
             type="date"
-            value={endDate}
+            value={filters.endDate}
             onChange={handleEndDateChange}
             variant="outlined"
             size="small"
@@ -267,30 +342,23 @@ const Dashboard = () => {
         <Grid container spacing={2}>
           <Grid item xs={12} lg={12}>
             <Index
-              region={selectedRegion}
-              province={selectedProvince}
-              startDate={startDate}
-              endDate={endDate}
-              onTotalClosed={handleTotalClosed}
+              {...graphProps}
+              onTotalClosed={updateHandlers.handleTotalClosed}
             />
           </Grid>
           <Grid item xs={12} lg={4}>
             <ClotureNonCloture
-              region={selectedRegion}
-              province={selectedProvince}
-              startDate={startDate}
-              endDate={endDate}
-              onTicketsClosedUpdate={handleTicketsClosedUpdate}
-              site={selectedActif ? [selectedActif] : undefined}
+              {...graphProps}
+              onTicketsClosedUpdate={updateHandlers.handleTicketsClosedUpdate}
+              site={filters.actif ? [filters.actif] : undefined}
             />
           </Grid>
           <Grid item xs={12} lg={4}>
             <BesoinTaux
-              region={selectedRegion}
-              province={selectedProvince}
-              startDate={startDate}
-              endDate={endDate}
-              onFournituresClosedUpdate={handleFournituresClosedUpdate}
+              {...graphProps}
+              onFournituresClosedUpdate={
+                updateHandlers.handleFournituresClosedUpdate
+              }
             />
           </Grid>
           <Grid item xs={12} lg={4}>
@@ -298,53 +366,28 @@ const Dashboard = () => {
           </Grid>
 
           <Grid item xs={12} lg={4}>
-            <Item sx={{ backgroundColor: "#1E1E1E" }}>
-              <CategorieMaintenance
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate}
-                endDate={endDate}
-              />
+            <Item {...darkItem}>
+              <CategorieMaintenance {...graphProps} />
             </Item>
           </Grid>
           <Grid item xs={12} lg={4}>
-            <Item sx={{ backgroundColor: "#1E1E1E" }}>
-              <Graphtest
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate}
-                endDate={endDate}
-              />
+            <Item {...darkItem}>
+              <Graphtest {...graphProps} />
             </Item>
           </Grid>
           <Grid item xs={12} lg={4}>
-            <Item sx={{ backgroundColor: "#1E1E1E" }}>
-              <TauxDisponibilité
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate}
-                endDate={endDate}
-              />
+            <Item {...darkItem}>
+              <TauxDisponibilité {...graphProps} />
             </Item>
           </Grid>
           <Grid item xs={12} lg={8}>
             <Item>
-              <TypesBesoin
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate}
-                endDate={endDate}
-              />
+              <TypesBesoin {...graphProps} />
             </Item>
           </Grid>
           <Grid item xs={12} lg={4}>
-            <Item sx={{ backgroundColor: "#1E1E1E" }}>
-              <CategorieBesoin
-                region={selectedRegion}
-                province={selectedProvince}
-                startDate={startDate}
-                endDate={endDate}
-              />
+            <Item {...darkItem}>
+              <CategorieBesoin {...graphProps} />
             </Item>
           </Grid>
         </Grid>

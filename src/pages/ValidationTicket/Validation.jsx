@@ -1173,7 +1173,6 @@ const Validation = () => {
               variant="standard"
               value={updatedBesoin}
               onChange={(e) => setUpdatedBesoin(e.target.value)}
-              disabled
             />
             <TextField
               margin="dense"
@@ -1192,7 +1191,6 @@ const Validation = () => {
               variant="standard"
               value={updatedCommentaire}
               onChange={(e) => setUpdatedCommentaire(e.target.value)}
-              disabled
             />
 
             <TextField

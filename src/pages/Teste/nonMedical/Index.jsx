@@ -140,6 +140,19 @@ const Index = () => {
           ?.unites || []
       );
     };
+    // Exemple de fonction d'agrégation pour "Toutes les régions"
+    const aggregateAllRegions = (regionsData) => {
+      return regionsData.reduce(
+        (acc, region) => {
+          // Exemple : somme des taux pour chaque catégorie
+          acc.taux += region.taux;
+          acc.totalDossiers += region.totalDossiers;
+          acc.dossiersComplets += region.dossiersComplets;
+          return acc;
+        },
+        { taux: 0, totalDossiers: 0, dossiersComplets: 0 }
+      );
+    };
 
     return [
       ...findUnits(medicalData),

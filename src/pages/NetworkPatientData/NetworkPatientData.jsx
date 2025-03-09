@@ -17,6 +17,7 @@ import {
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import PeopleIcon from "@mui/icons-material/People";
+import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -37,6 +38,12 @@ const NetworkPatientData = () => {
   const [dynamicActifs, setDynamicActifs] = useState([]);
   const [actifsData, setActifsData] = useState({});
   const [selectedUnite, setSelectedUnite] = useState("");
+  const [closeAt, setCloseAt] = useState("");
+  const [closeTo, setCloseTo] = useState("");
+  const [raison, setRaison] = useState("");
+  const [date, setDate] = useState("");
+
+  const raisons = ["Intempéries", "Véhicule en panne"]; // Liste des raisons
 
   const handleTimeChange = (event) => {
     setSelectedTime(event.target.value);
@@ -275,6 +282,41 @@ const NetworkPatientData = () => {
 
   const today = new Date();
   const formattedDate = today.toLocaleDateString("fr-FR"); // Formatée en date française
+  // Gestionnaire pour la sélection d'un actif
+
+  const handleSubmit = async () => {
+    const dataToSend = {
+      date,
+      CloseAt: closeAt,
+      CloseTo: closeTo,
+      technicien: technicien,
+      province: province,
+      raison,
+      unite: selectedActif,
+    };
+
+    try {
+      const response = await fetch(
+        "http://localhost:3000/api/v1/inactiveUmmc",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataToSend),
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error("Erreur lors de l'envoi des données");
+      }
+
+      const result = await response.json();
+      console.log("Données envoyées avec succès:", result);
+    } catch (error) {
+      console.error("Erreur:", error);
+    }
+  };
 
   return (
     <Box p={4} maxHeight="70vh">
@@ -289,7 +331,7 @@ const NetworkPatientData = () => {
       </Typography>
       <Grid container spacing={4} justifyContent="center" alignItems="stretch">
         {/* Test Réseau */}
-        <Grid item xs={12} md={6} display="flex">
+        <Grid item xs={12} md={4} display="flex">
           <Card
             sx={{
               p: 3,
@@ -327,7 +369,7 @@ const NetworkPatientData = () => {
         </Grid>
 
         {/* Patients en Attente */}
-        <Grid item xs={12} md={6} display="flex">
+        <Grid item xs={12} md={4} display="flex">
           <Card
             sx={{
               p: 3,
@@ -354,6 +396,103 @@ const NetworkPatientData = () => {
               variant="outlined"
               sx={{ mt: 2 }}
             />
+          </Card>
+        </Grid>
+
+        <Grid item xs={12} md={4} display="flex">
+          <Card
+            sx={{
+              p: 3,
+              boxShadow: 3,
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+            }}
+          >
+            <Box display="flex" alignItems="center" gap={2} mb={2}>
+              <EventBusyOutlinedIcon fontSize="large" color="error" />
+              <Typography variant="h5" fontWeight="bold">
+                UMMC inactive
+              </Typography>
+            </Box>
+
+            <Box display="flex" flexDirection="column" gap={2}>
+              {/* Inputs "De" et "À" sur la même ligne */}
+              <Box display="flex" gap={2}>
+                <TextField
+                  type="time"
+                  label="De"
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  defaultValue="09:00"
+                  value={closeAt}
+                  onChange={(e) => setCloseAt(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  type="time"
+                  label="À"
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  defaultValue="16:00"
+                  value={closeTo}
+                  onChange={(e) => setCloseTo(e.target.value)}
+                  fullWidth
+                />
+              </Box>
+
+              {/* Inputs "Le" et "Raison" sur la même ligne */}
+              <Box display="flex" gap={2}>
+                <TextField
+                  type="date"
+                  label="Le"
+                  variant="outlined"
+                  InputLabelProps={{ shrink: true }}
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                  fullWidth
+                />
+                <TextField
+                  select
+                  label="Raison"
+                  variant="outlined"
+                  value={raison}
+                  onChange={(e) => setRaison(e.target.value)}
+                  fullWidth
+                >
+                  {raisons.map((option, index) => (
+                    <MenuItem key={index} value={option}>
+                      {option}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </Box>
+              <Box
+                display="flex"
+                flexDirection={{ xs: "column", sm: "row" }}
+                justifyContent="center"
+                alignItems="center"
+                gap={2}
+              >
+                <FormControl sx={{ minWidth: 200 }}>
+                  <InputLabel>Choisir un Actif</InputLabel>
+                  <Select
+                    value={selectedActif} // Utilisez selectedActif (nom de l'actif)
+                    onChange={handleSelectChange}
+                    label="Choisir un Actif"
+                  >
+                    {dynamicActifs.map((actif) => (
+                      <MenuItem key={actif._id} value={actif.name}>
+                        {" "}
+                        {/* Utilisez le nom ici */}
+                        {actif.name}
+                      </MenuItem>
+                    ))}
+                  </Select>
+                </FormControl>
+              </Box>
+              <Button onClick={handleSubmit}>ENVOYER</Button>
+            </Box>
           </Card>
         </Grid>
       </Grid>

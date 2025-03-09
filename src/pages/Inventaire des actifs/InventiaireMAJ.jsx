@@ -15,10 +15,9 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import CancelIcon from "@mui/icons-material/Cancel";
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import axios from "axios";
 import { EditIcon } from "lucide-react";
-import AddCircleOutlineOutlinedIcon from "@mui/icons-material/AddCircleOutlineOutlined";
 
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -43,38 +42,26 @@ const InventaireMAJ = () => {
   const [besoins, setBesoins] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [editMode, setEditMode] = useState(false);
   const [newName, setNewName] = useState("");
-  const [isEditing, setIsEditing] = useState(false); // Control editing mode
+  const [isEditing, setIsEditing] = useState(false);
+  const [editingActifId, setEditingActifId] = useState(null);
 
-  // State to store region totals
-  const [regionTotals, setRegionTotals] = useState({});
-
-  // State to store non-functional equipment count for each region
-  const [regionNonFunctional, setRegionNonFunctional] = useState({});
-
+  // Fetch data only once on component mount
   useEffect(() => {
-    // Fetch actifs
-    axios
-      .get(`${apiUrl}/api/actifs`)
-      .then((response) => {
-        setActifs(response.data);
-        // After fetching the actifs, calculate region totals
-        regionsMaroc.forEach((region) => calculateRegionTotal(region));
-      })
-      .catch((err) => {
-        setError(err.message);
-      });
-
-    // Fetch besoins
-    const fetchBesoins = async () => {
+    const fetchData = async () => {
+      setLoading(true);
       try {
-        const fournituresResponse = await axios.get(
-          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&isDeleted=false`
-        );
-        const subticketsResponse = await axios.get(
-          `${apiUrl}/api/v1/subtickets?isClosed=false`
-        );
+        // Fetch data in parallel using Promise.all
+        const [actifsResponse, fournituresResponse, subticketsResponse] =
+          await Promise.all([
+            axios.get(`${apiUrl}/api/actifs`),
+            axios.get(
+              `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&isDeleted=false`
+            ),
+            axios.get(`${apiUrl}/api/v1/subtickets?isClosed=false`),
+          ]);
+
+        setActifs(actifsResponse.data);
 
         // Transform subtickets fields
         const formattedSubtickets = subticketsResponse.data.subTickets.map(
@@ -96,112 +83,181 @@ const InventaireMAJ = () => {
           ...fournituresResponse.data.fournitures,
           ...formattedSubtickets,
         ];
-        console.log("Merged Besoins:", mergedBesoins);
-
         setBesoins(mergedBesoins);
       } catch (err) {
-        console.error("Erreur lors du chargement des besoins:", err);
+        setError(err.message);
+        console.error("Error fetching data:", err);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchBesoins();
-  }, []); // This will run once, when the component is mounted.
-  // This will run once, when the component is mounted.
+    fetchData();
+  }, []);
 
-  // Function to calculate the total for a region and non-functional equipment count
-  const calculateRegionTotal = (region) => {
-    const actifsRegion = actifs.filter((actif) => actif.region === region);
+  // Memoize actifs by region to avoid recalculations
+  const actifsByRegion = useMemo(() => {
+    const result = {};
+    regionsMaroc.forEach((region) => {
+      result[region] = actifs.filter((actif) => actif.region === region);
+    });
+    return result;
+  }, [actifs]);
 
-    // Calcul du total des besoins pour la région
-    const totalBesoinsRegion = actifsRegion.reduce((total, actif) => {
-      const besoinsActif = besoins.filter(
-        (besoin) => besoin.name === actif.name
-      );
-      return total + besoinsActif.length;
-    }, 0);
+  // Memoize besoins by actif name for quicker lookups
+  const besoinsByActifName = useMemo(() => {
+    const result = {};
+    besoins.forEach((besoin) => {
+      if (!result[besoin.name]) {
+        result[besoin.name] = [];
+      }
+      result[besoin.name].push(besoin);
+    });
+    return result;
+  }, [besoins]);
 
-    // Calcul du nombre d'équipements non fonctionnels pour la région
-    const nonFunctionalCountRegion = actifsRegion.reduce((total, actif) => {
-      const nonFunctionalCount = actif.categories?.reduce(
-        (count, category) =>
-          count +
-          category.equipments.filter((equipment) => !equipment.isFunctionel)
-            .length,
-        0
-      );
-      return total + nonFunctionalCount;
-    }, 0);
+  // Memoize region statistics to avoid recalculation on every render
+  const regionStats = useMemo(() => {
+    const stats = {};
 
-    // Mise à jour des états avec les résultats calculés
-    setRegionTotals((prev) => ({
-      ...prev,
-      [region]: totalBesoinsRegion,
-    }));
+    regionsMaroc.forEach((region) => {
+      const actifsInRegion = actifsByRegion[region] || [];
 
-    setRegionNonFunctional((prev) => ({
-      ...prev,
-      [region]: nonFunctionalCountRegion,
-    }));
-  };
+      let totalBesoins = 0;
+      let totalNonFunctional = 0;
 
-  // Load totals for each region when the component is mounted
-  useEffect(() => {
-    regionsMaroc.forEach((region) => calculateRegionTotal(region));
-  }, [actifs, besoins]); // Recalculate if actifs or besoins change
+      actifsInRegion.forEach((actif) => {
+        // Count besoins
+        const actifBesoins = besoinsByActifName[actif.name] || [];
+        totalBesoins += actifBesoins.length;
 
-  const updateActifName = (actifId) => {
-    if (!newName.trim()) {
+        // Count non-functional equipment
+        if (actif.categories) {
+          actif.categories.forEach((category) => {
+            if (category.equipments) {
+              totalNonFunctional += category.equipments.filter(
+                (equipment) => !equipment.isFunctionel
+              ).length;
+            }
+          });
+        }
+      });
+
+      stats[region] = {
+        totalBesoins,
+        totalNonFunctional,
+      };
+    });
+
+    return stats;
+  }, [actifsByRegion, besoinsByActifName]);
+
+  // Memoize non-functional counts for each actif
+  const actifNonFunctionalCounts = useMemo(() => {
+    const counts = {};
+
+    actifs.forEach((actif) => {
+      if (actif.categories) {
+        counts[actif._id] = actif.categories.reduce(
+          (count, category) =>
+            count +
+            (category.equipments?.filter((equipment) => !equipment.isFunctionel)
+              .length || 0),
+          0
+        );
+      } else {
+        counts[actif._id] = 0;
+      }
+    });
+
+    return counts;
+  }, [actifs]);
+
+  const handleRegionClick = useCallback(
+    (index) => {
+      setOpenRegion(openRegion === index ? false : index);
+    },
+    [openRegion]
+  );
+
+  const handleActifClick = useCallback(
+    (actifId) => {
+      setOpenActif(openActif === actifId ? null : actifId);
+    },
+    [openActif]
+  );
+
+  const handleCategoryClick = useCallback(
+    (categoryId) => {
+      setOpenCategory(openCategory === categoryId ? null : categoryId);
+    },
+    [openCategory]
+  );
+
+  const startEditing = useCallback((actif) => {
+    setNewName(actif.name);
+    setIsEditing(true);
+    setEditingActifId(actif._id);
+  }, []);
+
+  const updateActifName = useCallback(() => {
+    if (!newName.trim() || !editingActifId) {
       alert("Please provide a valid name.");
       return;
     }
 
     axios
-      .put(`http://localhost:3000/api/actifs/${actifId}`, { name: newName })
-      .then((response) => {
+      .put(`${apiUrl}/api/actifs/${editingActifId}`, { name: newName })
+      .then(() => {
         // Update the actif state with the new name
         setActifs((prevActifs) =>
           prevActifs.map((actif) =>
-            actif._id === actifId ? { ...actif, name: newName } : actif
+            actif._id === editingActifId ? { ...actif, name: newName } : actif
           )
         );
-        setNewName(""); // Reset the name input field
-        alert("Asset name updated successfully.");
+        setNewName("");
+        setIsEditing(false);
+        setEditingActifId(null);
       })
       .catch((err) => {
         console.error("Error updating asset name:", err);
         alert("Failed to update asset name.");
       });
-  };
+  }, [newName, editingActifId]);
+
+  // If loading, show loading spinner centered
+  if (loading) {
+    return (
+      <div
+        style={{ display: "flex", justifyContent: "center", padding: "2rem" }}
+      >
+        <CircularProgress />
+      </div>
+    );
+  }
+
+  if (error) {
+    return <p>Error: {error}</p>;
+  }
 
   return (
     <div>
       <h2 className="pb-3 text-3xl font-extrabold leading-none tracking-tight md:text-4xl uppercase text-orange-500">
         Inventaire des actifs
       </h2>
-      {/* <div className="py-4 justify-end flex">
-        <Button sx={{ padding: "7px" }} variant="outlined">
-          Ajouter un actif
-        </Button>
-      </div> */}
 
       {regionsMaroc.map((region, index) => {
-        // Charger les actifs de la région spécifique
-        const actifsRegion = actifs.filter((actif) => actif.region === region);
-
-        // Get the total of needs for this region from the state
-        const totalBesoinsRegion = regionTotals[region] || 0;
-
-        // Get the total of non-functional equipment for this region from the state
-        const totalNonFunctionalRegion = regionNonFunctional[region] || 0;
+        const stats = regionStats[region] || {
+          totalBesoins: 0,
+          totalNonFunctional: 0,
+        };
+        const actifsRegion = actifsByRegion[region] || [];
 
         return (
           <Accordion
             key={index}
             expanded={openRegion === index}
-            onChange={() => {
-              setOpenRegion(openRegion === index ? false : index);
-              loadActifs(region);
-            }}
+            onChange={() => handleRegionClick(index)}
           >
             <AccordionSummary
               expandIcon={<ExpandMoreIcon />}
@@ -211,53 +267,37 @@ const InventaireMAJ = () => {
               <div style={{ display: "flex", alignItems: "center" }}>
                 <h3>{region}</h3>
                 <Badge
-                  badgeContent={totalNonFunctionalRegion}
+                  badgeContent={stats.totalNonFunctional}
                   color="error"
-                  sx={{ marginLeft: 2 }} // Add padding here
+                  sx={{ marginLeft: 2 }}
                 />
                 <Badge
-                  badgeContent={totalBesoinsRegion}
+                  badgeContent={stats.totalBesoins}
                   color="warning"
-                  sx={{ marginLeft: 2, paddingLeft: 1 }} // Add padding here
+                  sx={{ marginLeft: 2, paddingLeft: 1 }}
                 />
               </div>
             </AccordionSummary>
             <AccordionDetails>
-              {loading ? (
-                <CircularProgress />
-              ) : error ? (
-                <p>Error: {error}</p>
-              ) : actifsRegion.length > 0 ? (
+              {actifsRegion.length > 0 ? (
                 <List>
                   {actifsRegion.map((actif) => {
-                    const besoinsActif = besoins.filter(
-                      (besoin) => besoin.name === actif.name
-                    );
-
-                    // Calculate the total number of non-functional equipment for the actif
-                    const nonFunctionalCount = actif.categories?.reduce(
-                      (count, category) =>
-                        count +
-                        category.equipments.filter(
-                          (equipment) => !equipment.isFunctionel
-                        ).length,
-                      0
-                    );
+                    const actifBesoins = besoinsByActifName[actif.name] || [];
+                    const nonFunctionalCount =
+                      actifNonFunctionalCounts[actif._id] || 0;
+                    const isCurrentlyEditing =
+                      isEditing && editingActifId === actif._id;
 
                     return (
                       <Accordion
-                        key={actif.id}
+                        key={actif._id}
                         expanded={openActif === actif._id}
-                        onChange={() =>
-                          setOpenActif(
-                            openActif === actif._id ? null : actif._id
-                          )
-                        }
+                        onChange={() => handleActifClick(actif._id)}
                       >
                         <AccordionSummary
                           expandIcon={<ExpandMoreIcon />}
-                          aria-controls={`panel${actif.id}-content`}
-                          id={`panel${actif.id}-header`}
+                          aria-controls={`panel${actif._id}-content`}
+                          id={`panel${actif._id}-header`}
                         >
                           <ListItemText
                             primary={
@@ -265,7 +305,7 @@ const InventaireMAJ = () => {
                                 style={{
                                   display: "flex",
                                   alignItems: "center",
-                                  justifyContent: "space-between", // Permet de pousser le bouton à droite
+                                  justifyContent: "space-between",
                                 }}
                               >
                                 <div
@@ -283,7 +323,7 @@ const InventaireMAJ = () => {
                                     />
                                   )}
                                   <Badge
-                                    badgeContent={besoinsActif.length}
+                                    badgeContent={actifBesoins.length}
                                     color="warning"
                                     sx={{ marginLeft: 2, paddingLeft: 1 }}
                                   />
@@ -301,67 +341,57 @@ const InventaireMAJ = () => {
                                     alignItems: "center",
                                     justifyContent: "center",
                                   }}
-                                  onClick={() => {
-                                    // Activate editing mode and set the current name as the newName
-                                    setNewName(actif.name); // Assuming `actif.name` is the current name
-                                    setIsEditing(true); // Enable editing mode
+                                  onClick={(e) => {
+                                    e.stopPropagation(); // Prevent accordion toggle
+                                    startEditing(actif);
                                   }}
-                                >
-                                  {/* Icon only, no text */}
-                                </Button>
-
-                                {/* Conditionally render the TextField based on isEditing */}
-                                {isEditing && (
-                                  <TextField
-                                    value={newName}
-                                    onChange={(e) => setNewName(e.target.value)}
-                                    label="New Asset Name"
-                                    variant="outlined"
-                                    fullWidth
-                                    sx={{ marginTop: "10px" }}
-                                  />
-                                )}
-
-                                {/* Only show the update button when in editing mode */}
-                                {isEditing && (
-                                  <Button
-                                    onClick={() => updateActifName(actif._id)} // Assuming `actif._id` is the ID
-                                    variant="contained"
-                                    color="primary"
-                                    sx={{ marginTop: "10px" }}
-                                  >
-                                    Update Name
-                                  </Button>
-                                )}
+                                />
                               </div>
                             }
                             sx={{
                               backgroundColor: "#332f2f",
                               padding: "8px",
                               borderRadius: "4px",
+                              width: "100%",
                             }}
                           />
                         </AccordionSummary>
                         <AccordionDetails>
+                          {isCurrentlyEditing && (
+                            <div style={{ marginBottom: "15px" }}>
+                              <TextField
+                                value={newName}
+                                onChange={(e) => setNewName(e.target.value)}
+                                label="New Asset Name"
+                                variant="outlined"
+                                fullWidth
+                                sx={{ marginBottom: "10px" }}
+                              />
+                              <Button
+                                onClick={updateActifName}
+                                variant="contained"
+                                color="primary"
+                              >
+                                Update Name
+                              </Button>
+                            </div>
+                          )}
+
                           {actif.categories && (
                             <List sx={{ pl: 4 }}>
                               {actif.categories.map((category) => {
                                 // Count non-functional equipment for this category
                                 const nonFunctionalCountCategory =
-                                  category.equipments.filter(
+                                  category.equipments?.filter(
                                     (equipment) => !equipment.isFunctionel
-                                  ).length;
+                                  ).length || 0;
 
                                 return (
                                   <div key={category.id}>
                                     <ListItem
                                       button
                                       onClick={() =>
-                                        setOpenCategory(
-                                          openCategory === category.id
-                                            ? null
-                                            : category.id
-                                        )
+                                        handleCategoryClick(category.id)
                                       }
                                       selected={openCategory === category.id}
                                     >
@@ -384,8 +414,7 @@ const InventaireMAJ = () => {
                                                 sx={{ marginLeft: 2 }}
                                               />
                                             )}
-                                            <div style={{ flexGrow: 1 }} />{" "}
-                                            {/* This pushes the button to the right */}
+                                            <div style={{ flexGrow: 1 }} />
                                           </div>
                                         }
                                       />
@@ -433,7 +462,8 @@ const InventaireMAJ = () => {
                               })}
                             </List>
                           )}
-                          {besoinsActif.length > 0 ? (
+
+                          {actifBesoins.length > 0 ? (
                             <>
                               <Typography
                                 variant="h6"
@@ -447,24 +477,23 @@ const InventaireMAJ = () => {
                               >
                                 Besoins
                                 <Badge
-                                  badgeContent={besoinsActif.length}
+                                  badgeContent={actifBesoins.length}
                                   color="warning"
                                   sx={{ marginLeft: 2 }}
                                 />
                               </Typography>
                               <Grid container spacing={2} sx={{ pl: 4 }}>
-                                {besoinsActif.map((besoin) => (
+                                {actifBesoins.map((besoin) => (
                                   <Grid
                                     item
                                     xs={12}
                                     sm={6}
                                     md={4}
                                     lg={2.4}
-                                    key={besoin._id}
+                                    key={besoin.id || besoin._id}
                                   >
                                     <ListItem
                                       sx={{
-                                        backgroundColor: "",
                                         borderRadius: "8px",
                                       }}
                                     >

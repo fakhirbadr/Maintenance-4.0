@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import ReactApexChart from "react-apexcharts";
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const TauxDeCompletudeAdministratif = ({
   selectedRegion,
   selectedProvince,
@@ -13,7 +14,7 @@ const TauxDeCompletudeAdministratif = ({
     const fetchData = async () => {
       try {
         const response = await fetch(
-          "http://localhost:3000/api/v1/tauxDeCompletudeAdministratif"
+          `${apiUrl}/api/v1/tauxDeCompletudeAdministratif`
         );
         const result = await response.json();
         console.log("Données administratives reçues :", result); // Debugging

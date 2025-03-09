@@ -9,6 +9,8 @@ import Paper from "@mui/material/Paper";
 import VisibilityIcon from "@mui/icons-material/Visibility";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import axios from "axios";
+import * as XLSX from "xlsx";
+import { saveAs } from "file-saver";
 import {
   Button,
   CircularProgress,
@@ -267,6 +269,83 @@ const DocteursInventaire = () => {
     setOpenDialog(false);
     setSelectedItem(null);
   }, []);
+  const handleExportExcel = () => {
+    // Obtenir les 4 dernières semaines
+    const lastFourWeeks = [...statisticsByDate]
+      .sort((a, b) => new Date(b.startDate) - new Date(a.startDate))
+      .slice(0, 4);
+
+    // Préparer les données
+    const cachedActifData =
+      JSON.parse(localStorage.getItem("cachedActifData")) || [];
+    const unitMap = cachedActifData.reduce((acc, unit) => {
+      const normalized = normalizeUnitName(unit.name);
+      acc[normalized] = {
+        region: unit.region || "Non spécifiée",
+        province: unit.province || "Non spécifiée",
+        name: unit.name,
+      };
+      return acc;
+    }, {});
+
+    // Créer un Set de toutes les unités uniques
+    const allUnitsSet = new Set(allUnits.map(normalizeUnitName));
+
+    // Générer les données pour Excel
+    const data = Array.from(allUnitsSet).map((unitName) => {
+      const info = unitMap[unitName] || {
+        region: "Non spécifiée",
+        province: "Non spécifiée",
+        name: unitName,
+      };
+
+      // Vérifier la présence dans chaque semaine
+      const weekStatus = lastFourWeeks.map((week) => {
+        const isPresent = week.unitsWithInventory.some(
+          (u) => normalizeUnitName(u.name) === unitName
+        );
+        return isPresent ? "Fait" : "Non fait";
+      });
+
+      // Calculer le pourcentage
+      const doneCount = weekStatus.filter((s) => s === "Fait").length;
+      const percentage = (doneCount / lastFourWeeks.length) * 100;
+
+      return {
+        Région: info.region,
+        Province: info.province,
+        Unité: info.name,
+        ...lastFourWeeks.reduce((acc, _, index) => {
+          acc[`Semaine ${index + 1}`] = weekStatus[index];
+          return acc;
+        }, {}),
+        "% Réalisation": `${percentage.toFixed(0)}%`,
+      };
+    });
+
+    // Trier les données
+    data.sort((a, b) => {
+      if (a.Région !== b.Région) return a.Région.localeCompare(b.Région);
+      if (a.Province !== b.Province)
+        return a.Province.localeCompare(b.Province);
+      return a.Unité.localeCompare(b.Unité);
+    });
+
+    // Créer le fichier Excel
+    const worksheet = XLSX.utils.json_to_sheet(data);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Statistiques");
+
+    // Générer et télécharger le fichier
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+    saveAs(blob, "statistiques_inventaire.xlsx");
+  };
   // const groupByRegion = (unitsWithInventory, unitsWithoutInventory) => {
   //   const cachedActifData = JSON.parse(localStorage.getItem("cachedActifData"));
   //   const groupedByRegion = {};
@@ -340,6 +419,14 @@ const DocteursInventaire = () => {
         style={{ marginBottom: 20 }}
       >
         Statistiques
+      </Button>
+      <Button
+        variant="contained"
+        color="secondary"
+        onClick={handleExportExcel}
+        style={{ marginBottom: 20, marginLeft: 10 }}
+      >
+        Exporter en Excel
       </Button>
       {isLoading && (
         <div style={{ display: "flex", justifyContent: "center", margin: 20 }}>
