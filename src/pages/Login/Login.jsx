@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import backgroundImage from "./1.jpg";
+import scxLogo from "../../../public/scx.png"; // Assurez-vous que le chemin est correct
+
 import axios from "axios";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -154,9 +156,9 @@ const Login = () => {
               className="text-white text-6xl animate-heartbeat"
             /> */}
             <img
-              src="../../../public/scx.png" // Chemin vers votre logo SCX
+              src={scxLogo}
               alt="SCX Logo"
-              className="w-75 h-32 mx-auto animate-heartbeat filter "
+              className="w-75 h-32 mx-auto animate-heartbeat filter"
             />
             {/* <h1 className="text-5xl font-bold text-white tracking-wide">
               SCX <span className="text-blue-200">Medical</span> Suite
