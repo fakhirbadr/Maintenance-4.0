@@ -263,7 +263,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: ["admin", "docteurs", "user"],
+    roleRequired: ["admin", "docteurs", "user","chargé de stock],
   },
   {
     text: "Utilisateur",
