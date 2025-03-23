@@ -13,11 +13,17 @@ import {
   MenuItem,
   InputLabel,
   Chip,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 import ArrowDownwardIcon from "@mui/icons-material/ArrowDownward";
 import ArrowUpwardIcon from "@mui/icons-material/ArrowUpward";
 import PeopleIcon from "@mui/icons-material/People";
 import EventBusyOutlinedIcon from "@mui/icons-material/EventBusyOutlined";
+import { useNavigate } from "react-router-dom";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -42,6 +48,8 @@ const NetworkPatientData = () => {
   const [closeTo, setCloseTo] = useState("");
   const [raison, setRaison] = useState("");
   const [date, setDate] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const navigate = useNavigate();
 
   const raisons = ["Intempéries", "Véhicule en panne"]; // Liste des raisons
 
@@ -296,16 +304,13 @@ const NetworkPatientData = () => {
     };
 
     try {
-      const response = await fetch(
-        "http://localhost:3000/api/v1/inactiveUmmc",
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(dataToSend),
-        }
-      );
+      const response = await fetch(`${apiUrl}/api/v1/inactiveUmmc`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dataToSend),
+      });
 
       if (!response.ok) {
         throw new Error("Erreur lors de l'envoi des données");
@@ -313,9 +318,16 @@ const NetworkPatientData = () => {
 
       const result = await response.json();
       console.log("Données envoyées avec succès:", result);
+      setOpenDialog(true); // Ouvre le Dialog après succès
     } catch (error) {
       console.error("Erreur:", error);
     }
+  };
+
+  // Fonction pour fermer le dialogue
+  const handleCloseDialog = () => {
+    setOpenDialog(false);
+    navigate("/"); // Redirection vers la page d'accueil
   };
 
   return (
@@ -496,6 +508,18 @@ const NetworkPatientData = () => {
           </Card>
         </Grid>
       </Grid>
+
+      <Dialog open={openDialog} onClose={handleCloseDialog}>
+        <DialogTitle>Succès</DialogTitle>
+        <DialogContent>
+          <p>Les données ont été envoyées avec succès ! ❇️</p>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCloseDialog} color="primary">
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       {/* Données Aujourd'hui */}
       <Box mt={6} mx={2}>

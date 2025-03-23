@@ -199,7 +199,7 @@ const Login = () => {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     className="w-full pl-12 pr-4 py-3 bg-white/30 backdrop-blur-sm text-white rounded-lg border-2 border-white/20 focus:border-cyan-300 focus:ring-2 focus:ring-cyan-200 outline-none transition-all duration-300 placeholder:text-white/60"
-                    placeholder="medical@provider.com"
+                    placeholder="nomComplet@scx.com"
                     required
                   />
                   <FontAwesomeIcon

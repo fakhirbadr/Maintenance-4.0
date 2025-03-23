@@ -326,7 +326,41 @@ const NetworkPatientSynthese = () => {
     try {
       const response = await fetch(`${apiUrl}/api/v1/inactiveUmmc`);
       const data = await response.json();
-      return data;
+
+      const today = new Date().toISOString().split("T")[0]; // Obtenir la date d'aujourd'hui
+
+      // Filtrer les données en fonction de la période
+      let filteredData = [];
+      if (period === "Aujourd'hui") {
+        filteredData = data.filter(
+          (item) => item.date && item.date.split("T")[0] === today
+        );
+      } else if (period === "Cette semaine") {
+        const startOfWeek = new Date();
+        startOfWeek.setHours(0, 0, 0, 0);
+        startOfWeek.setDate(startOfWeek.getDate() - startOfWeek.getDay());
+        filteredData = data.filter(
+          (item) => new Date(item.date) >= startOfWeek
+        );
+      } else if (period === "Ce mois") {
+        const startOfMonth = new Date();
+        startOfMonth.setHours(0, 0, 0, 0);
+        startOfMonth.setDate(1);
+        filteredData = data.filter(
+          (item) => new Date(item.date) >= startOfMonth
+        );
+      } else if (period === "Cette année") {
+        const startOfYear = new Date();
+        startOfYear.setHours(0, 0, 0, 0);
+        startOfYear.setMonth(0, 1);
+        filteredData = data.filter(
+          (item) => new Date(item.date) >= startOfYear
+        );
+      } else {
+        filteredData = data;
+      }
+
+      return filteredData;
     } catch (error) {
       console.error("Erreur lors de la récupération des données:", error);
       return [];
@@ -334,35 +368,42 @@ const NetworkPatientSynthese = () => {
   };
 
   const exportToExcel = async (period) => {
-    const data = await fetchData(period);
+    const data = await fetchData(period); // Récupérer et filtrer les données
 
-    // Filtrer et transformer les données
-    const filteredData = data.map((item) => {
-      return {
-        date: new Date(item.date).toISOString().split("T")[0], // Format yyyy-mm-jj
-        province: item.province, // Conserver uniquement la province
-        technicien: item.technicien,
-        "Fermé à": item.CloseAt, // Renommer CloseAt
-        "Fermé jusqu'à": item.CloseTo, // Renommer CloseTo
-        raison: item.raison,
-        createdAt: new Date(item.createdAt).toLocaleString("fr-FR", {
-          // Format yyyy-mm-dd hh:mm
-          year: "numeric",
-          month: "2-digit",
-          day: "2-digit",
-          hour: "2-digit",
-          minute: "2-digit",
-        }),
-      };
-    });
+    if (data.length === 0) {
+      alert("Aucune donnée à exporter pour cette période.");
+      return;
+    }
 
-    // Convertir les données en feuille Excel
-    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    // Transformer les données avant exportation
+    const formattedData = data.map((item) => ({
+      date: new Date(item.date).toISOString().split("T")[0], // yyyy-mm-dd
+      province: item.province,
+      technicien: item.technicien,
+      unite: item.unite,
+      "Fermé à": item.CloseAt,
+      "Fermé jusqu'à": item.CloseTo,
+      raison: item.raison,
+      createdAt: new Date(item.createdAt).toLocaleString("fr-FR", {
+        year: "numeric",
+        month: "2-digit",
+        day: "2-digit",
+        hour: "2-digit",
+        minute: "2-digit",
+      }),
+    }));
+
+    // Génération du fichier Excel
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "UMMC Inactifs");
 
-    // Générer le fichier Excel
-    XLSX.writeFile(workbook, `UMMC_Inactifs_${period}.xlsx`);
+    // Obtenir la date d'aujourd'hui au format yyyy-mm-dd
+    const today = new Date();
+    const formattedDate = today.toISOString().split("T")[0];
+
+    // Téléchargement du fichier avec la date d'aujourd'hui dans le nom
+    XLSX.writeFile(workbook, `UMMC_Inactifs_${period}_${formattedDate}.xlsx`);
   };
 
   const handleExport = (period) => {

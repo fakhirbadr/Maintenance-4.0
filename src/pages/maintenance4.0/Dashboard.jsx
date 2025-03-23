@@ -251,23 +251,27 @@ const Dashboard = () => {
 
   return (
     <>
-      <div className="flex items-center">
+      <div className="flex items-center  p-4 rounded-lg shadow-lg">
         <div className="mr-auto">
           <Location />
         </div>
-        <div className="flex justify-center flex-1 space-x-4">
-          <span className="text-center text-base bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
+        <div className="flex justify-center flex-1 space-x-6">
+          <span className="text-center text-base text-white bg-gray-800 bg-opacity-60 py-3 px-4 rounded-lg font-medium shadow-md backdrop-blur-lg border border-gray-700">
             Total des interventions :{" "}
-            <span className="font-semibold">{data.closedTicketsCount}</span>
+            <span className="font-semibold text-orange-400">
+              {data.closedTicketsCount}
+            </span>
           </span>
-          <span className="text-center text-base bg-orange-100 text-black py-2 px-1 rounded-lg font-medium">
+          <span className="text-center text-base text-white bg-gray-800 bg-opacity-60 py-3 px-4 rounded-lg font-medium shadow-md backdrop-blur-lg border border-gray-700">
             Total des livraisons :{" "}
-            <span className="font-semibold">{data.totalClosed}</span>
+            <span className="font-semibold text-orange-400">
+              {data.totalClosed}
+            </span>
           </span>
         </div>
       </div>
 
-      <hr className="w-3/4 pb-4" />
+      <hr className="w-3/4 border-t-2 border-gray-700 opacity-50 rounded-lg my-4 shadow-md shadow-orange-400/50" />
 
       {/* Barre de filtre */}
       <div className="text-black flex items-center justify-center py-2 space-x-4 py-5">
