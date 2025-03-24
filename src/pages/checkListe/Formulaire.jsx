@@ -10,6 +10,10 @@ import {
   Stepper,
   Step,
   StepLabel,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogActions,
 } from "@mui/material";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -139,6 +143,7 @@ const Formulaire = () => {
   const [technicien, setTechnicien] = useState("");
   const [activeStep, setActiveStep] = useState(0);
   const [selectedActif, setSelectedActif] = useState("");
+  const [openDialog, setOpenDialog] = React.useState(false);
 
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
@@ -230,9 +235,10 @@ const Formulaire = () => {
         console.log("Réponse de l'API :", data);
 
         // Affiche un message de succès
-        alert("Soumission réussie !");
+        setOpenDialog(true);
+
         // Recharge la page
-        window.location.reload();
+        // window.location.reload();
       } else {
         const errorData = await response.json();
         alert(
@@ -403,6 +409,78 @@ const Formulaire = () => {
           </Button>
         </Box>
       </form>
+      <Dialog
+        open={openDialog}
+        onClose={() => window.location.reload()}
+        PaperProps={{
+          style: {
+            borderRadius: "16px",
+            padding: "20px",
+            backgroundColor: "#2d3748",
+            backgroundImage:
+              "linear-gradient(145deg, rgba(45, 55, 72, 0.9), rgba(74, 85, 104, 0.9))",
+            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+          },
+        }}
+      >
+        <DialogTitle
+          style={{
+            fontSize: "1.5rem",
+            fontWeight: "600",
+            color: "#f7fafc",
+            textAlign: "center",
+            padding: "16px 24px 8px",
+          }}
+        >
+          Merci, cher collaborateur ! ✨
+        </DialogTitle>
+
+        <DialogContent style={{ padding: "16px 24px" }}>
+          <p
+            style={{
+              fontSize: "1.1rem",
+              color: "#e2e8f0",
+              textAlign: "center",
+              lineHeight: "1.6",
+              margin: 0,
+              opacity: 0.9,
+            }}
+          >
+            Votre engagement nous aide à améliorer notre activité.
+          </p>
+        </DialogContent>
+
+        <DialogActions
+          style={{
+            padding: "16px 24px",
+            justifyContent: "center",
+          }}
+        >
+          <Button
+            onClick={() => window.location.reload()}
+            variant="contained"
+            color="primary"
+            autoFocus
+            style={{
+              padding: "8px 24px",
+              borderRadius: "12px",
+              fontSize: "1rem",
+              fontWeight: "500",
+              textTransform: "none",
+              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
+              minWidth: "120px",
+              backgroundColor: "#4299e1",
+              color: "#ffffff",
+              "&:hover": {
+                backgroundColor: "#3182ce",
+              },
+            }}
+          >
+            OK
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
