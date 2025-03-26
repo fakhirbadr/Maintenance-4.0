@@ -124,7 +124,12 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/dashboard",
-    roleRequired: ["achat", "superviseur", "docteurs"],
+    roleRequired: [
+      "achat",
+      "superviseur",
+      "docteurs",
+      "chargés de performance",
+    ],
   },
   {
     text: "Inventaire des actifs",
@@ -134,7 +139,13 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Inventaire",
-    roleRequired: ["admin", "achat", "superviseur", "docteurs"],
+    roleRequired: [
+      "admin",
+      "achat",
+      "superviseur",
+      "docteurs",
+      "chargés de performance",
+    ],
   },
   {
     text: "Création ticket",
@@ -153,7 +164,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Validation",
-    roleRequired: ["admin", "superviseur"],
+    roleRequired: ["admin", "superviseur", "chargés de performance"],
   },
   {
     text: "Gestion Achat",
@@ -163,7 +174,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Achat",
-    roleRequired: ["admin", "achat", "superviseur"],
+    roleRequired: ["admin", "achat", "superviseur", "chargés de performance"],
   },
   {
     text: "Gestion des tickets",
@@ -173,7 +184,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "#",
-    roleRequired: ["admin", "superviseur", "achat"],
+    roleRequired: ["admin", "superviseur", "achat", "chargés de performance"],
     children: [
       {
         text: "Gestion de maintenance",
@@ -183,7 +194,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/ticket",
-        roleRequired: ["admin", "superviseur"],
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
       {
         text: "Gestion de commande",
@@ -193,7 +204,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/Besoin",
-        roleRequired: ["admin", "superviseur"],
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
       {
         text: "Gestion de véhicule",
@@ -203,7 +214,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/BesoinVehicule",
-        roleRequired: ["admin", "superviseur"],
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
     ],
   },
@@ -253,7 +264,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/parametres",
-    roleRequired: ["admin", "superviseur"],
+    roleRequired: ["admin", "superviseur", "chargés de performance"],
   },
   {
     text: "Suivi demande",
@@ -282,7 +293,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/Alerte",
-    roleRequired: ["superviseur", "achat"],
+    roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
 ];
 

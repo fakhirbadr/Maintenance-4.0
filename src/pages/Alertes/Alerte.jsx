@@ -756,6 +756,7 @@ const Alerte = () => {
                         <p className="category">
                           {route.categorie || "Catégorie non spécifiée"} |{" "}
                           {route.besoin || "Équipement défectueux non spécifié"}
+                          /{route.status}
                         </p>
                         <p className="details">
                           <ImportantText>Technicien : </ImportantText>

@@ -259,6 +259,9 @@ function CreateAccountForm() {
             <MenuItem value="user">User</MenuItem>
             <MenuItem value="docteurs">docteurs</MenuItem>
             <MenuItem value="chargé de stock">chargé de stock</MenuItem>
+            <MenuItem value="chargés de performance">
+              chargés de performance
+            </MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>
