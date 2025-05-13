@@ -1446,6 +1446,8 @@ const ListeBesoin = () => {
                   "Demandé à la pharmacie",
                   "En cours de livraison",
                   "Achat sur place",
+                "Achat sur place par le support",
+                "En attendant le déblocage de la caisse",
                   "Livré",
                 ].map((status, index) => (
                   <MenuItem key={index} value={status}>
