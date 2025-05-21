@@ -74,7 +74,7 @@ const TauxDisponibilité = () => {
             "#9AEBA3",
             "#DAFDBA",
             "#FFADAD",
-            "#A0C4FF",
+            // "#A0C4FF",
           ],
           hoverOffset: 4,
         },

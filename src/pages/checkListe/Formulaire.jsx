@@ -1,20 +1,22 @@
 import React, { useEffect, useState } from "react";
 import {
-  FormControlLabel,
-  Checkbox,
-  FormGroup,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails,
   Button,
   TextField,
   Box,
+  Switch,
+  Typography,
+  FormControlLabel,
   MenuItem,
-  Stepper,
-  Step,
-  StepLabel,
   Dialog,
   DialogTitle,
   DialogContent,
   DialogActions,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
@@ -128,41 +130,40 @@ const categories = {
     "Extincteur CO2",
     "Extincteur liquide",
     "Plot",
-    "Plaque d’Etain",
-    "Morceau d’Alucobond",
+    "Plaque d'Etain",
+    "Morceau d'Alucobond",
     "Groupe électrogène",
     "Piquet terre",
     "Projecteur",
   ],
 };
 
-const Formulaire = () => {
-  const [actifsData, setActifsData] = useState({});
+const FormulaireSimplifie = () => {
   const [dynamicActifs, setDynamicActifs] = useState([]);
+  const [actifsData, setActifsData] = useState({});
   const [selectedUnite, setSelectedUnite] = useState("");
   const [technicien, setTechnicien] = useState("");
-  const [activeStep, setActiveStep] = useState(0);
-  const [selectedActif, setSelectedActif] = useState("");
-  const [openDialog, setOpenDialog] = React.useState(false);
+  const [openDialog, setOpenDialog] = useState(false);
 
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
     if (userIds && Array.isArray(userIds)) {
-      const fetchedActifs = [];
-      userIds.forEach(async (id) => {
-        try {
-          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
-          if (response.ok) {
-            const data = await response.json();
-            fetchedActifs.push(data);
-            if (fetchedActifs.length === userIds.length) {
-              setDynamicActifs(fetchedActifs);
+      const fetchData = async () => {
+        const fetchedActifs = [];
+        for (const id of userIds) {
+          try {
+            const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+            if (response.ok) {
+              const data = await response.json();
+              fetchedActifs.push(data);
             }
+          } catch (error) {
+            console.error("Error fetching data", error);
           }
-        } catch (error) {
-          console.error("Error fetching data", error);
         }
-      });
+        setDynamicActifs(fetchedActifs);
+      };
+      fetchData();
     }
   }, []);
 
@@ -178,69 +179,74 @@ const Formulaire = () => {
 
   const handleInputChange = (event, actif) => {
     const { name, value } = event.target;
-
-    // Initialisation sécurisée de l'objet actif
     setActifsData((prevState) => ({
       ...prevState,
       [actif]: {
         ...prevState[actif],
-        [name]: value || "", // Valeur par défaut pour éviter les erreurs
+        [name]: value,
       },
     }));
   };
-  const handleSelectChange = (event) => {
-    setSelectedActif(event.target.value);
-  };
 
-  const handleCheckboxChange = (event, actif) => {
-    const { name } = event.target;
-
-    // Initialisation sécurisée de l'objet actif
+  const handleSwitchChange = (event, actif) => {
+    const { checked } = event.target;
     setActifsData((prevState) => ({
       ...prevState,
       [actif]: {
         ...prevState[actif],
-        fonctionnel:
-          name === "fonctionnel"
-            ? prevState[actif]?.fonctionnel === "Oui"
-              ? "Non"
-              : "Oui"
-            : prevState[actif]?.fonctionnel || "Non",
+        fonctionnel: checked, // Gardez la valeur booléenne
       },
     }));
   };
 
   const handleSubmit = async () => {
     try {
+      // Préparer les données d'équipement
+      const equipmentData = {};
+
+      // Parcourir toutes les catégories et tous les items
+      Object.keys(categories).forEach((category) => {
+        categories[category].forEach((item) => {
+          // Récupérer les données de l'item ou utiliser les valeurs par défaut
+          const itemData = actifsData[item] || {
+            quantite: 1,
+            fonctionnel: true,
+          };
+
+          // Convertir la valeur fonctionnel en "Oui"/"Non"
+          equipmentData[item] = {
+            quantite: itemData.quantite || 1,
+            fonctionnel:
+              itemData.fonctionnel === true || itemData.fonctionnel === "Oui"
+                ? "Oui"
+                : "Non",
+          };
+        });
+      });
+
       const requestData = {
         selectedUnite,
         technicien,
         date: new Date().toISOString(),
-        equipment: actifsData,
+        equipment: equipmentData,
       };
+
+      console.log("Données envoyées:", requestData); // Pour débogage
 
       const response = await fetch(
         `${apiUrl}/api/v1/inventaire/actifsInventaire`,
         {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(requestData),
         }
       );
 
       if (response.ok) {
-        const data = await response.json();
-        console.log("Réponse de l'API :", data);
-
-        // Affiche un message de succès
         setOpenDialog(true);
-
-        // Recharge la page
-        // window.location.reload();
       } else {
         const errorData = await response.json();
+        console.error("Erreur du serveur:", errorData);
         alert(
           `Erreur lors de la soumission: ${
             errorData.message || response.statusText
@@ -248,241 +254,166 @@ const Formulaire = () => {
         );
       }
     } catch (error) {
-      console.error("Erreur lors de la soumission du formulaire:", error);
-      alert("Une erreur s'est produite lors de la soumission du formulaire.");
+      console.error("Erreur lors de la soumission:", error);
+      alert("Une erreur est survenue lors de l'envoi du formulaire");
     }
   };
 
-  const steps = [
-    "Équipements médicaux",
-    "Alimentation électrique",
-    "Câblage",
-    "Gestion de stock et déchets",
-    "Matériel d'installation",
-  ];
+  // Initialize default values for each item
+  const getDefaultValue = (item) => {
+    return {
+      quantite: actifsData[item]?.quantite || 1,
+      fonctionnel:
+        actifsData[item]?.fonctionnel !== undefined
+          ? actifsData[item].fonctionnel
+          : true, // true par défaut
+    };
+  };
 
   return (
-    <div>
-      <Stepper className="pb-9" activeStep={activeStep} alternativeLabel>
-        {steps.map((label, index) => (
-          <Step key={index}>
-            <StepLabel>{label}</StepLabel>
-          </Step>
-        ))}
-      </Stepper>
+    <Box p={2} maxWidth={800} mx="auto">
+      <Typography variant="h5" align="center" gutterBottom>
+        Formulaire d'Inventaire
+      </Typography>
 
-      <form style={{ width: "80%", margin: "0 auto" }} onSubmit={handleSubmit}>
-        <Box
-          sx={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            marginBottom: 3,
-            gap: 2,
-          }}
+      <Box mb={3}>
+        <TextField
+          select
+          label="Unité"
+          variant="outlined"
+          fullWidth
+          value={selectedUnite}
+          onChange={(e) => setSelectedUnite(e.target.value)}
+          margin="normal"
+          required
         >
-          <TextField
-            select
-            label="Sélectionnez une unité"
-            variant="outlined"
-            required
-            fullWidth
-            value={selectedUnite}
-            onChange={(e) => setSelectedUnite(e.target.value)}
-            sx={{ flex: 1 }}
-          >
-            {dynamicActifs.map((actif) => (
-              <MenuItem key={actif.id} value={actif.name}>
-                {actif.name}
-              </MenuItem>
-            ))}
-          </TextField>
+          {dynamicActifs.map((actif) => (
+            <MenuItem key={actif.id} value={actif.name}>
+              {actif.name}
+            </MenuItem>
+          ))}
+        </TextField>
 
-          <TextField
-            label="Date et heure d'aujourd'hui"
-            variant="outlined"
-            type="datetime-local"
-            value={new Date().toISOString().slice(0, 16)}
-            disabled
-            sx={{ flex: 1 }}
-          />
+        <TextField
+          label="Technicien"
+          variant="outlined"
+          value={technicien}
+          fullWidth
+          disabled
+          margin="normal"
+        />
 
-          <TextField
-            label="Nom du technicien"
-            variant="outlined"
-            value={technicien}
-            disabled
-            sx={{ flex: 1 }}
-          />
-        </Box>
+        <TextField
+          label="Date et heure"
+          variant="outlined"
+          value={new Date().toLocaleString()}
+          fullWidth
+          disabled
+          margin="normal"
+        />
+      </Box>
 
-        {Object.keys(categories)[activeStep] &&
-          categories[Object.keys(categories)[activeStep]].map((item) => (
-            <Box
-              key={item}
-              sx={{
-                marginBottom: 1,
-                padding: 1,
-                border: "1px solid #ccc",
-                borderRadius: "3px",
-              }}
-            >
-              <Box sx={{ display: "flex", alignItems: "center", gap: 2 }}>
-                <Box sx={{ flex: 1, fontWeight: "bold", textAlign: "center" }}>
-                  {item}
-                </Box>
-
-                <TextField
-                  label="Quantité"
-                  variant="outlined"
-                  name="quantite"
-                  type="number"
-                  value={actifsData[item]?.quantite || ""}
-                  onChange={(e) => handleInputChange(e, item)}
-                  // required
-                  sx={{ flex: 2 }}
-                />
-
-                <FormGroup
-                  row
+      {Object.keys(categories).map((category) => (
+        <Accordion key={category}>
+          <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+            <Typography variant="subtitle1">
+              {category === "electrical" && "Alimentation électrique"}
+              {category === "medical" && "Équipements médicaux"}
+              {category === "cabling" && "Câblage"}
+              {category === "stock_management" && "Gestion de stock et déchets"}
+              {category === "installation_material" &&
+                "Matériel d'installation"}
+            </Typography>
+          </AccordionSummary>
+          <AccordionDetails>
+            {categories[category].map((item) => {
+              const defaultValue = getDefaultValue(item);
+              return (
+                <Box
+                  key={item}
+                  display="flex"
+                  alignItems="center"
+                  justifyContent="space-between"
+                  mb={2}
+                  p={1}
                   sx={{
-                    flex: 3,
-                    display: "flex",
-                    justifyContent: "space-around",
-                    alignItems: "center",
+                    borderBottom: "1px solid #eee",
+                    "&:last-child": { borderBottom: "none" },
                   }}
                 >
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={actifsData[item]?.fonctionnel === "Oui"}
-                        onChange={(e) => handleCheckboxChange(e, item)}
-                        name="fonctionnel"
-                      />
-                    }
-                    label="Fonctionnel"
+                  <Typography sx={{ flex: 1 }}>{item}</Typography>
+                  <TextField
+                    label="Quantité"
+                    variant="outlined"
+                    name="quantite"
+                    type="number"
+                    size="small"
+                    value={defaultValue.quantite}
+                    onChange={(e) => handleInputChange(e, item)}
+                    sx={{ width: "100px", mx: 2 }}
+                    inputProps={{ min: 1 }}
                   />
-                  <FormControlLabel
-                    control={
-                      <Checkbox
-                        checked={actifsData[item]?.fonctionnel === "Non"}
-                        onChange={(e) => handleCheckboxChange(e, item)}
-                        name="fonctionnel"
-                      />
-                    }
-                    label="Non fonctionnel"
-                  />
-                </FormGroup>
-              </Box>
-            </Box>
-          ))}
+                  <Box display="flex" alignItems="center">
+                    <Typography variant="body2" sx={{ mr: 1 }}>
+                      État:
+                    </Typography>
+                    <FormControlLabel
+                      control={
+                        <Switch
+                          checked={
+                            defaultValue.fonctionnel === true ||
+                            defaultValue.fonctionnel === "Oui"
+                          }
+                          onChange={(e) => handleSwitchChange(e, item)}
+                          color="primary"
+                        />
+                      }
+                      label={
+                        defaultValue.fonctionnel === "Oui"
+                          ? "Fonctionnel"
+                          : "Défectueux"
+                      }
+                      labelPlacement="start"
+                    />
+                  </Box>
+                </Box>
+              );
+            })}
+          </AccordionDetails>
+        </Accordion>
+      ))}
 
-        <Box
-          sx={{
-            marginTop: 2,
-            display: "flex",
-            justifyContent: "space-between",
-          }}
+      <Box mt={3} textAlign="center">
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={handleSubmit}
+          size="large"
+          sx={{ width: "200px" }}
         >
-          <Button
-            variant="outlined"
-            onClick={() => setActiveStep((prevStep) => prevStep - 1)}
-            disabled={activeStep === 0}
-          >
-            Précédent
-          </Button>
-          <Button
-            type="button" // Type "button" pour éviter la soumission automatique du formulaire
-            variant="contained"
-            color="primary"
-            onClick={async () => {
-              if (activeStep === steps.length - 1) {
-                // Si c'est la dernière étape, appelle handleSubmit
-                await handleSubmit();
-              } else {
-                // Sinon, passe simplement à l'étape suivante
-                setActiveStep((prevStep) => prevStep + 1);
-              }
-            }}
-          >
-            {activeStep === steps.length - 1 ? "Soumettre" : "Suivant"}
-          </Button>
-        </Box>
-      </form>
-      <Dialog
-        open={openDialog}
-        onClose={() => window.location.reload()}
-        PaperProps={{
-          style: {
-            borderRadius: "16px",
-            padding: "20px",
-            backgroundColor: "#2d3748",
-            backgroundImage:
-              "linear-gradient(145deg, rgba(45, 55, 72, 0.9), rgba(74, 85, 104, 0.9))",
-            boxShadow: "0 4px 20px rgba(0, 0, 0, 0.3)",
-            border: "1px solid rgba(255, 255, 255, 0.1)",
-          },
-        }}
-      >
-        <DialogTitle
-          style={{
-            fontSize: "1.5rem",
-            fontWeight: "600",
-            color: "#f7fafc",
-            textAlign: "center",
-            padding: "16px 24px 8px",
-          }}
-        >
-          Merci, cher collaborateur ! ✨
-        </DialogTitle>
+          Soumettre
+        </Button>
+      </Box>
 
-        <DialogContent style={{ padding: "16px 24px" }}>
-          <p
-            style={{
-              fontSize: "1.1rem",
-              color: "#e2e8f0",
-              textAlign: "center",
-              lineHeight: "1.6",
-              margin: 0,
-              opacity: 0.9,
-            }}
-          >
+      <Dialog open={openDialog} onClose={() => window.location.reload()}>
+        <DialogTitle>Merci pour votre contribution !</DialogTitle>
+        <DialogContent>
+          <Typography>
             Votre engagement nous aide à améliorer notre activité.
-          </p>
+          </Typography>
         </DialogContent>
-
-        <DialogActions
-          style={{
-            padding: "16px 24px",
-            justifyContent: "center",
-          }}
-        >
+        <DialogActions>
           <Button
             onClick={() => window.location.reload()}
             variant="contained"
             color="primary"
-            autoFocus
-            style={{
-              padding: "8px 24px",
-              borderRadius: "12px",
-              fontSize: "1rem",
-              fontWeight: "500",
-              textTransform: "none",
-              boxShadow: "0 2px 8px rgba(0, 0, 0, 0.3)",
-              minWidth: "120px",
-              backgroundColor: "#4299e1",
-              color: "#ffffff",
-              "&:hover": {
-                backgroundColor: "#3182ce",
-              },
-            }}
           >
             OK
           </Button>
         </DialogActions>
       </Dialog>
-    </div>
+    </Box>
   );
 };
 
-export default Formulaire;
+export default FormulaireSimplifie;

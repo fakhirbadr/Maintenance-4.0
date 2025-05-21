@@ -137,7 +137,7 @@ const Hr = () => {
                     mb: 2,
                   }}
                 >
-                  SCX Technology RH Portal badr
+                  SCX Technology RH Portal
                 </Typography>
                 <Typography
                   variant="body2"

@@ -45,22 +45,24 @@ const Login = () => {
           localStorage.removeItem("authToken");
         });
     }
-  }, []);
+  }, [navigate]);
 
-  const fetchActifNames = async (actifIds) => {
+  // Nouvelle version : fetch noms et objets complets des actifs de l'utilisateur
+  const fetchActifDataAndNames = async (actifIds) => {
     try {
-      const actifNames = await Promise.all(
+      const actifResponses = await Promise.all(
         actifIds.map(async (id) => {
           const response = await axios.get(`${apiUrl}/api/actifs/${id}`);
-          return response.data.name;
+          return response.data;
         })
       );
+      // Stocke les noms seulement
+      const actifNames = actifResponses.map((actif) => actif.name);
       localStorage.setItem("nameActifUser", JSON.stringify(actifNames));
+      // Stocke toutes les données utiles (nom, region, province, etc.)
+      localStorage.setItem("cachedActifData", JSON.stringify(actifResponses));
     } catch (error) {
-      console.error(
-        "Erreur lors de la récupération des noms des actifs:",
-        error
-      );
+      console.error("Erreur lors de la récupération des actifs:", error);
     }
   };
 
@@ -94,9 +96,11 @@ const Login = () => {
 
           if (user.actifIds && Array.isArray(user.actifIds)) {
             localStorage.setItem("userActifs", JSON.stringify(user.actifIds));
-            fetchActifNames(user.actifIds); // Récupérer les noms des actifs
+            fetchActifDataAndNames(user.actifIds); // Charge noms + data en localStorage
           } else {
             localStorage.setItem("userActifs", JSON.stringify([]));
+            localStorage.setItem("nameActifUser", JSON.stringify([]));
+            localStorage.setItem("cachedActifData", JSON.stringify([]));
           }
 
           axios
@@ -151,18 +155,11 @@ const Login = () => {
       <section className="w-full z-10 transform transition-all duration-500 ease-in-out">
         <div className="flex flex-col items-center justify-center px-6 py-8 mx-auto md:h-screen lg:py-0">
           <div className="mb-10 space-y-4 text-center animate-fade-in-down">
-            {/* <FontAwesomeIcon
-              icon={faHeartPulse}
-              className="text-white text-6xl animate-heartbeat"
-            /> */}
             <img
               src={scxLogo}
               alt="SCX Logo"
               className="w-75 h-32 mx-auto animate-heartbeat filter"
             />
-            {/* <h1 className="text-5xl font-bold text-white tracking-wide">
-              SCX <span className="text-blue-200">Medical</span> Suite
-            </h1> */}
             <p className="text-cyan-100 font-light text-lg">
               Digital Healthcare Asset Management
             </p>

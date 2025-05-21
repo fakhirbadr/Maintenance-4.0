@@ -19,11 +19,10 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 const ModelFourniture = ({ open, onClose }) => {
   const [names, setNames] = useState([]);
-  const [Name, setSelectedName] = useState(""); // Sélection de l'actif
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const [formData, setFormData] = useState({
-    name: "", // Ajoutez un champ pour le nom de l'actif
+    name: "",
     categorie: "",
     besoin: "",
     quantite: "",
@@ -32,8 +31,8 @@ const ModelFourniture = ({ open, onClose }) => {
     customBesoin: "",
     status: "créé",
     province: "",
-    region: "", // Add region to formData
-    commentaire: "", // Ajout du commentaire
+    region: "",
+    commentaire: "",
   });
 
   const [besoins, setBesoins] = useState([]);
@@ -80,8 +79,6 @@ const ModelFourniture = ({ open, onClose }) => {
       "SERRURE INTELLIGENTE",
       "GERFLEX",
       "RAMPES D'ACCES",
-
-      // ... autres besoins
     ],
     "Dispositif Médicaux": [
       "BALANCE",
@@ -113,8 +110,6 @@ const ModelFourniture = ({ open, onClose }) => {
       "TENSIOMETRE DIGITALE",
       "THERMOMÈTRE",
       "TOISE",
-
-      // ... autres besoins
     ],
     "équipement généreaux": [
       "BATTERIE GROUPE ELECTROGENE",
@@ -137,22 +132,20 @@ const ModelFourniture = ({ open, onClose }) => {
       "RÉFRIGÉRATEUR",
       "TÉLÉRUPTEUR",
       "TV REMOTE CONTRÔLE",
-
-      // ... autres besoins
     ],
     Fourniture: [
       "BLOC NOTE",
       "BLOUSE MEDECIN",
       "CACHET MEDECIN",
       "CACHET UNITE",
-      "CARTON D'EMBALLAGE", // Ajouté ici
+      "CARTON D'EMBALLAGE",
       "CELLOPHANE",
       "DRAP D'EXAMEN",
       "FLUORESCENT",
       "GEL D'ÉCHOGRAPHIE",
       "ORDONANCIER",
       "PAPIER A4",
-      "PAPIER À BULLES", // Ajouté ici
+      "PAPIER À BULLES",
       "RAMETTE DE PAPIER D'IMPRIMANTE",
       "PILES 2A",
       "PILES 3A",
@@ -163,7 +156,7 @@ const ModelFourniture = ({ open, onClose }) => {
       "PRODUIT NETTOYAGE",
       "PYJAMA INFIRMIÈRE",
       "STYLO",
-      "TONER D'IMPRIMANTE", // Renommé ici
+      "TONER D'IMPRIMANTE",
       "CARTON",
     ],
     "Matériel Informatique": [
@@ -200,8 +193,6 @@ const ModelFourniture = ({ open, onClose }) => {
       "SWITCH",
       "TRANSFORMATEUR NVR 12V",
       "TRANSFORMATEUR NVR 48V",
-
-      // ... autres besoins
     ],
     Connexion: ["SATELITE", "IAM", "ORANGE", "INWI", "CÂBLE UTP (ETHERNET)"],
   };
@@ -209,33 +200,31 @@ const ModelFourniture = ({ open, onClose }) => {
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
     if (userIds && Array.isArray(userIds)) {
-      const fetchedNames = [];
-      userIds.forEach(async (id) => {
-        try {
-          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
-          if (response.ok) {
-            const data = await response.json();
-            fetchedNames.push(data);
-            if (fetchedNames.length === userIds.length) {
-              setNames(fetchedNames);
-              setSelectedName(fetchedNames[0]?.name || "");
-
-              // Retrieve region and province from the fetched data
-              const siteData = fetchedNames[0]; // Assuming the first result corresponds to the user site
-              setFormData((prevData) => ({
-                ...prevData,
-                province: siteData.province, // Set province from the fetched data
-                region: siteData.region, // Set region from the fetched data
-              }));
+      Promise.all(
+        userIds.map(async (id) => {
+          try {
+            const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+            if (response.ok) {
+              return await response.json();
             }
-          } else {
-            console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
+          } catch (error) {
+            console.error(
+              `Erreur lors de la récupération des données pour l'ID ${id}:`,
+              error
+            );
           }
-        } catch (error) {
-          console.error(
-            `Erreur lors de la récupération des données pour l'ID ${id}:`,
-            error
-          );
+          return null;
+        })
+      ).then((results) => {
+        const actifs = results.filter(Boolean);
+        setNames(actifs);
+        if (actifs.length > 0) {
+          setFormData((prevData) => ({
+            ...prevData,
+            name: actifs[0]?.name || "",
+            province: actifs[0]?.province || "",
+            region: actifs[0]?.region || "",
+          }));
         }
       });
     }
@@ -245,32 +234,26 @@ const ModelFourniture = ({ open, onClose }) => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
       const userInfo = JSON.parse(storedUserInfo);
-      if (userInfo.province) {
-        setFormData((prevData) => ({
-          ...prevData,
-
-          site: userInfo.site,
-          technicien: userInfo.nomComplet,
-        }));
-      }
+      setFormData((prevData) => ({
+        ...prevData,
+        site: userInfo.site,
+        technicien: userInfo.nomComplet,
+      }));
     }
   }, []);
 
   const handleSelectChange = (event) => {
     const { value } = event.target;
-    setSelectedName(value); // Met à jour la sélection de l'actif
     setFormData((prevData) => ({
       ...prevData,
-      name: value, // Mise à jour de l'état formData pour le champ 'name'
+      name: value,
     }));
-
-    // Find the selected actif's region and province
     const selectedActif = names.find((actif) => actif.name === value);
     if (selectedActif) {
       setFormData((prevData) => ({
         ...prevData,
-        region: selectedActif.region || "", // Set region from the selected actif
-        province: selectedActif.province || "", // Set province from the selected actif
+        region: selectedActif.region || "",
+        province: selectedActif.province || "",
       }));
     }
   };
@@ -297,7 +280,6 @@ const ModelFourniture = ({ open, onClose }) => {
       customCategorie,
       customBesoin,
       commentaire,
-
       status,
     } = formData;
 
@@ -322,10 +304,10 @@ const ModelFourniture = ({ open, onClose }) => {
     }
 
     setError("");
-    setIsSubmitting(true); // Désactiver le bouton
+    setIsSubmitting(true);
 
     try {
-      const response = await axios.post(`${apiUrl}/api/v1/fournitureRoutes`, {
+      await axios.post(`${apiUrl}/api/v1/fournitureRoutes`, {
         name,
         region: formData.region,
         province: formData.province,
@@ -333,16 +315,14 @@ const ModelFourniture = ({ open, onClose }) => {
         besoin: selectedBesoin,
         quantite,
         technicien,
-        commentaire, // Ajout du commentaire
-        isClosed: false, // Par défaut à false
+        commentaire,
+        isClosed: false,
         status: formData.status,
         dateCreation: new Date(),
-        dateCloture: null, // Par défaut à null
+        dateCloture: null,
       });
 
       setSuccess("Ticket créé avec succès !");
-      console.log("Réponse de l'API :", response.data);
-
       setFormData({
         name: "",
         categorie: "",
@@ -353,7 +333,8 @@ const ModelFourniture = ({ open, onClose }) => {
         customBesoin: "",
         status: "",
         commentaire: "",
-        status: "", // Réinitialisation du champ commentaire
+        region: "",
+        province: "",
       });
 
       setTimeout(() => {
@@ -364,7 +345,7 @@ const ModelFourniture = ({ open, onClose }) => {
       setError("Une erreur s'est produite lors de la création du ticket.");
       console.error("Erreur API :", err);
     }
-    setIsSubmitting(false); // Désactiver le bouton
+    setIsSubmitting(false);
   };
 
   return (
@@ -391,7 +372,6 @@ const ModelFourniture = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -403,7 +383,6 @@ const ModelFourniture = ({ open, onClose }) => {
               disabled
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -415,7 +394,6 @@ const ModelFourniture = ({ open, onClose }) => {
               disabled
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -427,7 +405,6 @@ const ModelFourniture = ({ open, onClose }) => {
               disabled
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth margin="normal">
               <InputLabel id="categorie-label">Catégorie</InputLabel>
@@ -445,7 +422,6 @@ const ModelFourniture = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth margin="normal">
               <InputLabel id="besoin-label">Besoin</InputLabel>
@@ -463,20 +439,6 @@ const ModelFourniture = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
-          {/* {formData.besoin === "Autre" && (
-            <Grid item xs={12}>
-              <TextField
-                fullWidth
-                margin="normal"
-                label="Autre Besoin"
-                name="customBesoin"
-                value={formData.customBesoin}
-                onChange={handleChange}
-              />
-            </Grid>
-          )} */}
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -488,7 +450,6 @@ const ModelFourniture = ({ open, onClose }) => {
               onChange={handleChange}
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth

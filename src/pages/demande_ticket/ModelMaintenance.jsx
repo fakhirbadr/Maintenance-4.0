@@ -27,7 +27,7 @@ const ModelMaintenance = ({ open, onClose }) => {
   const [urgence, setUrgence] = useState("");
   const [province, setProvince] = useState("");
   const [technicien, setTechnicien] = useState("");
-  const [description, setDescription] = useState(""); // Ajout de l'état pour description
+  const [description, setDescription] = useState("");
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
   const [selectedActifId, setSelectedActifId] = useState("");
@@ -39,31 +39,36 @@ const ModelMaintenance = ({ open, onClose }) => {
   useEffect(() => {
     const userIds = JSON.parse(localStorage.getItem("userActifs"));
     if (userIds && Array.isArray(userIds)) {
-      const fetchedNames = [];
-      userIds.forEach(async (id) => {
-        try {
-          const response = await fetch(`${apiUrl}/api/actifs/${id}`);
-          if (response.ok) {
-            const data = await response.json();
-            fetchedNames.push(data); // Ajoutez l'objet complet ici
-            if (fetchedNames.length === userIds.length) {
-              setNames(fetchedNames); // Mettez à jour avec les objets complets
-              setSelectedName(fetchedNames[""].name); // Utilisez le premier nom
-              setCategories(fetchedNames[""].categories || []); // Catégories du premier actif
-              setSelectedCategory(fetchedNames[0].categories[0]?.name || "");
-              setEquipments(fetchedNames[0].categories[0]?.equipments || []);
-              setSelectedEquipment(
-                fetchedNames[0].categories[0]?.equipments[0]?._id || ""
-              );
+      Promise.all(
+        userIds.map(async (id) => {
+          try {
+            const response = await fetch(`${apiUrl}/api/actifs/${id}`);
+            if (response.ok) {
+              return await response.json();
             }
-          } else {
-            console.error(`Erreur pour l'ID ${id}: ${response.statusText}`);
+          } catch (e) {
+            console.error(e);
           }
-        } catch (error) {
-          console.error(
-            `Erreur lors de la récupération des données pour l'ID ${id}:`,
-            error
+          return null;
+        })
+      ).then((results) => {
+        const actifs = results.filter(Boolean);
+        setNames(actifs);
+        if (actifs.length > 0) {
+          setSelectedName(actifs[0].name);
+          setSelectedActifId(actifs[0]._id);
+          setCategories(actifs[0].categories || []);
+          setSelectedCategory(actifs[0].categories[0]?.name || "");
+          setSelectedCategoryId(actifs[0].categories[0]?._id || "");
+          setEquipments(actifs[0].categories[0]?.equipments || []);
+          setSelectedEquipment(
+            actifs[0].categories[0]?.equipments[0]?.name || ""
           );
+          setSelectedEquipmentId(
+            actifs[0].categories[0]?.equipments[0]?._id || ""
+          );
+          setSelectedRegionActif(actifs[0].region || "");
+          setProvince(actifs[0].province || "");
         }
       });
     }
@@ -72,33 +77,58 @@ const ModelMaintenance = ({ open, onClose }) => {
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
-      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
-      // if (userInfo.province) {
-      //   setProvince(userInfo.province); // Mise à jour de province
-      // }
+      const userInfo = JSON.parse(storedUserInfo);
       if (userInfo.nomComplet) {
-        setTechnicien(userInfo.nomComplet); // Mise à jour du technicien
+        setTechnicien(userInfo.nomComplet);
       }
     }
   }, []);
+
   const handleSelectChange = (event) => {
-    const name = event.target.value;
-    setSelectedName(name);
+    const actifName = event.target.value;
+    setSelectedName(actifName);
     setSelectedCategory("");
     setSelectedEquipment("");
-
-    const selectedActif = names.find((actif) => actif.name === name);
+    const selectedActif = names.find((actif) => actif.name === actifName);
     if (selectedActif) {
-      setSelectedActifId(selectedActif._id); // Stocke l'ID de l'actif
-      setCategories(selectedActif.categories);
-      setSelectedRegionActif(selectedActif.region);
-      setProvince(selectedActif.province);
-      setSelectedCategory(selectedActif.categories[""]?.name || "");
-      setSelectedEquipment(
-        selectedActif.categories[0]?.equipments[0]?._id || ""
-      );
+      setSelectedActifId(selectedActif._id);
+      setCategories(selectedActif.categories || []);
+      setSelectedRegionActif(selectedActif.region || "");
+      setProvince(selectedActif.province || "");
+      // Init category & equipment
+      if (selectedActif.categories && selectedActif.categories.length > 0) {
+        setSelectedCategory(selectedActif.categories[0].name || "");
+        setSelectedCategoryId(selectedActif.categories[0]._id || "");
+        setEquipments(selectedActif.categories[0].equipments || []);
+        if (
+          selectedActif.categories[0].equipments &&
+          selectedActif.categories[0].equipments.length > 0
+        ) {
+          setSelectedEquipment(
+            selectedActif.categories[0].equipments[0].name || ""
+          );
+          setSelectedEquipmentId(
+            selectedActif.categories[0].equipments[0]._id || ""
+          );
+        } else {
+          setSelectedEquipment("");
+          setSelectedEquipmentId("");
+        }
+      } else {
+        setSelectedCategory("");
+        setSelectedCategoryId("");
+        setEquipments([]);
+        setSelectedEquipment("");
+        setSelectedEquipmentId("");
+      }
     } else {
-      console.error("Actif introuvable pour le nom :", name);
+      setCategories([]);
+      setSelectedCategory("");
+      setEquipments([]);
+      setSelectedEquipment("");
+      setSelectedActifId("");
+      setSelectedRegionActif("");
+      setProvince("");
     }
   };
 
@@ -106,95 +136,88 @@ const ModelMaintenance = ({ open, onClose }) => {
     const categoryName = event.target.value;
     setSelectedCategory(categoryName);
     setSelectedEquipment("");
-
-    const selectedCategory = categories.find(
+    const selectedCategoryObj = categories.find(
       (category) => category.name === categoryName
     );
-
-    if (selectedCategory) {
-      setSelectedCategoryId(selectedCategory._id); // Stocke l'ID de la catégorie
-      setEquipments(selectedCategory.equipments);
+    if (selectedCategoryObj) {
+      setSelectedCategoryId(selectedCategoryObj._id);
+      setEquipments(selectedCategoryObj.equipments || []);
+      if (
+        selectedCategoryObj.equipments &&
+        selectedCategoryObj.equipments.length > 0
+      ) {
+        setSelectedEquipment(selectedCategoryObj.equipments[0].name || "");
+        setSelectedEquipmentId(selectedCategoryObj.equipments[0]._id || "");
+      } else {
+        setSelectedEquipment("");
+        setSelectedEquipmentId("");
+      }
+    } else {
+      setEquipments([]);
+      setSelectedEquipment("");
+      setSelectedCategoryId("");
     }
   };
 
   const handleEquipmentChange = (event) => {
-    const selectedName = event.target.value;
-    setSelectedEquipment(selectedName);
-
+    const equipmentName = event.target.value;
+    setSelectedEquipment(equipmentName);
     const selectedEquipmentObj = equipments.find(
-      (equipment) => equipment.name === selectedName
+      (equipment) => equipment.name === equipmentName
     );
-
     if (selectedEquipmentObj) {
-      setSelectedEquipmentId(selectedEquipmentObj._id); // Stocke l'ID de l'équipement
+      setSelectedEquipmentId(selectedEquipmentObj._id);
+    } else {
+      setSelectedEquipmentId("");
     }
   };
-  // Fonction pour gérer la description
+
   const handleDescriptionChange = (event) => {
     setDescription(event.target.value);
   };
 
-  // Fonction pour soumettre la demande de maintenance
   const handleSubmit = async () => {
-    // Vérifier si les ID sont définis avant d'envoyer les requêtes
     if (!selectedActifId || !selectedCategoryId || !selectedEquipmentId) {
       setError("Certains IDs sont manquants : Actif, Catégorie ou Équipement.");
-      return; // Arrêter la soumission si les IDs sont manquants
+      return;
     }
-    setIsSubmitting(true); // Désactiver le bouton
-
-    console.log("Actif ID:", selectedActifId);
-    console.log("Category ID:", selectedCategoryId);
-    console.log("Equipment ID:", selectedEquipmentId);
-
+    setIsSubmitting(true);
     const ticketData = {
-      site: selectedName, // Utilise le nom de l'actif
-      categorie: selectedCategory, // Utilise la catégorie sélectionnée
+      site: selectedName,
+      categorie: selectedCategory,
       equipement_deficitaire: selectedEquipment,
-      name: name, // Envoie l'ID de l'équipement
+      name: name,
       urgence: urgence,
       province,
       region: selectedRegionActif,
       technicien,
       description,
-      selectedActifId: selectedActifId,
-      selectedCategoryId: selectedCategoryId,
-      selectedEquipmentId: selectedEquipmentId,
+      selectedActifId,
+      selectedCategoryId,
+      selectedEquipmentId,
     };
-    console.log(ticketData);
     try {
-      // POST pour créer un ticket de maintenance
       const response = await fetch(`${apiUrl}/api/v1/ticketMaintenance`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(ticketData),
       });
-
       if (response.ok) {
         setSuccess("Ticket créé avec succès !");
-
-        // Si le ticket a été créé avec succès, effectuer la mise à jour via PUT
+        // PUT update
         const updateResponse = await fetch(
           `${apiUrl}/api/actifs/${selectedActifId}/categories/${selectedCategoryId}/equipments/${selectedEquipmentId}`,
           {
             method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              // Vous pouvez envoyer des données supplémentaires si nécessaire pour la mise à jour
-              isFunctionel: false, // Exemple de mise à jour de statut
-            }),
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ isFunctionel: false }),
           }
         );
-
         if (updateResponse.ok) {
           setTimeout(() => {
-            setSuccess(""); // Effacer le message de succès après un certain délai
-            onClose(); // Fermer la modale après la soumission
-          }, 2000); // Rester visible pendant 2 secondes
+            setSuccess("");
+            onClose();
+          }, 2000);
         } else {
           console.error(
             "Erreur lors de la mise à jour de l'équipement",
@@ -212,8 +235,8 @@ const ModelMaintenance = ({ open, onClose }) => {
         "Erreur lors de la soumission de la demande de maintenance:",
         error
       );
-      setIsSubmitting(false); // Réactiver le bouton à la fin
     }
+    setIsSubmitting(false);
   };
 
   return (
@@ -221,7 +244,7 @@ const ModelMaintenance = ({ open, onClose }) => {
       <DialogTitle>Faire une demande de maintenance</DialogTitle>
       <DialogContent>
         {success && <Alert severity="success">{success}</Alert>}
-
+        {error && <Alert severity="error">{error}</Alert>}
         <Grid container spacing={3}>
           {/* First row: Type d'intervention and Urgence */}
           <Grid item xs={12} sm={6}>
@@ -248,7 +271,6 @@ const ModelMaintenance = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth margin="normal">
               <InputLabel>Urgence</InputLabel>
@@ -263,21 +285,7 @@ const ModelMaintenance = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
-          {/* Second row: Précisez and Technicien */}
-          {name === "Autre" && (
-            <Grid item xs={12} sm={6}>
-              <TextField
-                label="Précisez le type d'intervention"
-                variant="outlined"
-                fullWidth
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                margin="normal"
-              />
-            </Grid>
-          )}
-          {/* Third row: Actif, Catégorie, Équipement */}
+          {/* Actif, Catégorie, Équipement */}
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="select-label">Nom de l'Actif</InputLabel>
@@ -295,7 +303,6 @@ const ModelMaintenance = ({ open, onClose }) => {
               </Select>
             </FormControl>
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <TextField
               fullWidth
@@ -323,7 +330,6 @@ const ModelMaintenance = ({ open, onClose }) => {
               disabled
             />
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="category-select-label">Catégorie</InputLabel>
@@ -334,15 +340,14 @@ const ModelMaintenance = ({ open, onClose }) => {
                 onChange={handleCategoryChange}
                 label="Catégorie"
               >
-                {categories.map((category, index) => (
-                  <MenuItem key={index} value={category.name}>
+                {categories.map((category) => (
+                  <MenuItem key={category._id} value={category.name}>
                     {category.name}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-
           <Grid item xs={12} sm={6}>
             <FormControl fullWidth>
               <InputLabel id="equipment-select-label">Équipement</InputLabel>
@@ -351,16 +356,16 @@ const ModelMaintenance = ({ open, onClose }) => {
                 id="equipment-select"
                 value={selectedEquipment}
                 onChange={handleEquipmentChange}
+                label="Équipement"
               >
                 {equipments.map((equipment) => (
                   <MenuItem key={equipment._id} value={equipment.name}>
-                    {equipment.name} {/* Affiche le nom de l'équipement */}
+                    {equipment.name}
                   </MenuItem>
                 ))}
               </Select>
             </FormControl>
           </Grid>
-
           {/* Description field */}
           <Grid item xs={12}>
             <TextField

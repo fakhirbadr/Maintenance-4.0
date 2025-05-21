@@ -1,588 +1,16 @@
-// import React, { useEffect, useState } from "react";
-// import axios from "axios";
-// import { ThemeProvider, createTheme } from "@mui/material/styles";
-// import MUIDataTable from "mui-datatables";
-// import UpdateDialog from "./updateBesoin"; // Import du composant UpdateDialog
-// import moment from "moment";
-
-// import { CheckCircle, Edit, Eye, Delete } from "lucide-react"; // Icônes Lucide React
-// import {
-//   IconButton,
-//   Dialog,
-//   DialogActions,
-//   DialogContent,
-//   DialogTitle,
-//   TextField,
-//   Button,
-//   Typography,
-//   FormControl,
-//   InputLabel,
-//   Select,
-//   MenuItem,
-// } from "@mui/material";
-// import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
-
-// const ListeBesoin = () => {
-//   const handleDownloadExcel = () => {
-//     const worksheet = XLSX.utils.json_to_sheet(rows);
-//     const workbook = XLSX.utils.book_new();
-//     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
-//     XLSX.writeFile(workbook, "demande_fourniture.xlsx");
-//   };
-//   const [rows, setRows] = useState([]);
-//   const [loading, setLoading] = useState(true);
-//   const [closedRows, setClosedRows] = useState(new Set()); // New state to track closed rows
-//   const [openDialog, setOpenDialog] = useState(false); // Gestion de l'ouverture du dialogue
-//   const [selectedFourniture, setSelectedFourniture] = useState(null); // Fourniture sélectionnée pour modification
-//   const [updatedName, setUpdatedName] = useState(""); // Valeur modifiable du nom
-//   const [updatedCategorie, setUpdatedCategorie] = useState(""); // Valeur modifiable de la catégorie
-//   const [updatedBesoin, setUpdatedBesoin] = useState(""); // Valeur modifiable du besoin
-//   const [updatedQuantite, setUpdatedQuantite] = useState(""); // Valeur modifiable de la quantité
-//   const [updatedCommentaire, setUpdatedCommentaire] = useState(""); // Valeur modifiable de la commentaire
-
-//   const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
-//   const [updatedStatus, setUpdatedStatus] = useState("");
-//   const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
-
-//   const fetchFournitures = async () => {
-//     try {
-//       const response = await axios.get(
-//         "${apiUrl}/api/v1/fournitureRoutes?isClosed=false"
-//       );
-//       const reversedData = response.data.fournitures.reverse(); // Inverser l'ordre des données
-//       setRows(reversedData); // Mettre à jour l'état avec les données inversées
-//       setLoading(false);
-//     } catch (error) {
-//       console.error("Erreur lors de la récupération des fournitures :", error);
-//       setLoading(false);
-//     }
-//   };
-//   // Handle view dialog opening and start timer
-//   const handleView = (rowIndex) => {
-//     const rowData = rows[rowIndex];
-//     setSelectedFourniture(rowData); // Set selected row
-//     setOpenViewDialog(true); // Open the View dialog
-//     startTimer(rowData.dateCreation); // Start the countdown timer
-//   };
-//   // Start the timer to show elapsed time
-//   const startTimer = (creationDate) => {
-//     const interval = setInterval(() => {
-//       const currentTime = new Date();
-//       const timeDiff = currentTime - new Date(creationDate);
-//       const hours = Math.floor(timeDiff / (1000 * 60 * 60));
-//       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
-//       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
-
-//       setTimeElapsed(`${hours}h ${minutes}m ${seconds}s`); // Update elapsed time
-
-//       // Optionally stop the timer after a certain period
-//     }, 1000);
-
-//     return () => clearInterval(interval); // Cleanup timer on component unmount
-//   };
-//   const handleCloseViewDialog = () => {
-//     setOpenViewDialog(false); // Close the View dialog
-//   };
-
-//   const handleEdit = (rowIndex) => {
-//     const rowData = rows[rowIndex];
-//     setSelectedFourniture(rowData); // Mettre à jour la ligne sélectionnée
-//     setUpdatedName(rowData.name); // Mettre à jour le formulaire avec les données existantes
-//     setUpdatedCategorie(rowData.categorie);
-//     setUpdatedBesoin(rowData.besoin);
-//     setUpdatedQuantite(rowData.quantite);
-//     setUpdatedStatus(rowData.status);
-//     setUpdatedCommentaire(rowData.commentaire);
-
-//     setOpenDialog(true); // Ouvrir le dialogue pour modification
-//   };
-//   const handleCloseDialog = () => {
-//     setOpenDialog(false);
-//   };
-//   const handleChange = (event) => {
-//     setUpdatedStatus(event.target.value);
-//   };
-//   const handleUpdateFourniture = async () => {
-//     try {
-//       await axios.patch(
-//         `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture._id}`,
-//         {
-//           name: updatedName,
-//           categorie: updatedCategorie,
-//           besoin: updatedBesoin,
-//           quantite: updatedQuantite,
-//           status: updatedStatus,
-//           commentaire: updatedCommentaire,
-//         }
-//       );
-
-//       // Mettre à jour la ligne localement dans l'état après la modification
-//       setRows((prevRows) =>
-//         prevRows.map((row) =>
-//           row._id === selectedFourniture._id
-//             ? {
-//                 ...row,
-//                 name: updatedName,
-//                 categorie: updatedCategorie,
-//                 besoin: updatedBesoin,
-//                 quantite: updatedQuantite,
-//                 status: updatedStatus,
-//                 commentaire: updatedCommentaire,
-//               }
-//             : row
-//         )
-//       );
-
-//       setOpenDialog(false); // Fermer le dialogue après la mise à jour
-//       alert("Fourniture mise à jour avec succès");
-//     } catch (error) {
-//       console.error("Erreur lors de la mise à jour de la fourniture :", error);
-//       alert("Erreur lors de la mise à jour de la fourniture");
-//     }
-//   };
-
-//   const handleClose = async (rowIndex) => {
-//     const rowData = rows[rowIndex]; // Get the selected row data
-//     console.log("Clôturer :", rowData);
-
-//     try {
-//       const currentDate = new Date(); // Get the current date and time
-//       currentDate.setHours(currentDate.getHours()); // Ajoute 1 heure si nécessaire (pour ajuster selon le fuseau horaire)
-
-//       // Send a PATCH request to update `isClosed` and `dateCloture`
-//       const response = await axios.patch(
-//         `${apiUrl}/api/v1/fournitureRoutes/${rowData._id}`,
-//         {
-//           isClosed: true,
-//           dateCloture: currentDate.toISOString(), // Format ISO for the date
-//         }
-//       );
-
-//       // Check if the request was successful
-//       if (response.status === 200) {
-//         // Update the state locally after successful request
-//         setRows((prevRows) =>
-//           prevRows.map((row) =>
-//             row._id === rowData._id
-//               ? {
-//                   ...row,
-//                   isClosed: true,
-//                   dateCloture: currentDate.toISOString(),
-//                 }
-//               : row
-//           )
-//         );
-//         alert("Fourniture clôturée avec succès");
-//       } else {
-//         console.error(
-//           "Erreur lors de la mise à jour sur le serveur :",
-//           response
-//         );
-//         alert("Impossible de clôturer la fourniture. Veuillez réessayer.");
-//       }
-//     } catch (error) {
-//       console.error("Erreur lors de la clôture de l'élément :", error.message);
-//       alert(
-//         "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer."
-//       );
-//     }
-//   };
-
-//   const handleDelete = async (rowIndex) => {
-//     const rowData = rows[rowIndex];
-//     console.log("Supprimer :", rowData);
-
-//     if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
-//       try {
-//         // Send a DELETE request to the backend
-//         await axios.delete(
-//           `${apiUrl}/api/v1/fournitureRoutes/${rowData._id}`
-//         );
-
-//         // Remove the item from the local state after successful deletion
-//         setRows(rows.filter((_, index) => index !== rowIndex));
-//         alert("Fourniture supprimée avec succès");
-//       } catch (error) {
-//         console.error("Erreur lors de la suppression de l'élément :", error);
-//         alert("Erreur lors de la suppression de l'élément");
-//       }
-//     }
-//   };
-//   const styles = {
-//     largeIcon: {
-//       width: 60,
-//       height: 60,
-//     },
-//   };
-
-//   useEffect(() => {
-//     fetchFournitures();
-//   }, []);
-
-//   const columns = [
-//     {
-//       name: "name",
-//       label: "Nom",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "region",
-//       label: "Region",
-//       options: { filter: true, sort: false, filterType: "checkbox" },
-//     },
-//     {
-//       name: "province",
-//       label: "Province",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "categorie",
-//       label: "Catégorie",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "besoin",
-//       label: "Besoin",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "quantite",
-//       label: "Quantité",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "technicien",
-//       label: "créé par",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "status",
-//       label: "Status",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "commentaire",
-//       label: "commentaire responsable",
-//       options: { filter: true, sort: false, filterType: "dropdown" },
-//     },
-//     {
-//       name: "dateCreation",
-//       label: "Date de création",
-//       options: {
-//         filter: true,
-//         sort: false,
-//         customBodyRender: (value) => {
-//           const date = new Date(value);
-//           return date.toLocaleString("fr-FR", {
-//             year: "numeric",
-//             month: "long",
-//             day: "numeric",
-//             hour: "2-digit",
-//             minute: "2-digit",
-//           });
-//         },
-//         filterType: "dropdown",
-//       },
-//     },
-//     {
-//       name: "actions",
-//       label: "Actions",
-//       options: {
-//         filter: false,
-//         sort: false,
-//         customBodyRender: (value, tableMeta) => {
-//           const rowIndex = tableMeta.rowIndex; // Obtient l'index de la ligne
-//           return (
-//             <div style={{ display: "flex", gap: "1px" }}>
-//               <IconButton onClick={() => handleView(rowIndex)} color="primary">
-//                 <Eye style={{ width: "18px", height: "18px" }} />
-//               </IconButton>
-//               <IconButton onClick={() => handleEdit(rowIndex)} color="default">
-//                 <Edit style={{ width: "18px", height: "18px" }} />
-//               </IconButton>
-//               <IconButton
-//                 onClick={() => handleDelete(rowIndex)}
-//                 color="secondary"
-//               >
-//                 <Delete style={{ width: "18px", height: "18px" }} />
-//               </IconButton>
-//               <IconButton onClick={() => handleClose(rowIndex)} color="success">
-//                 <CheckCircle style={{ width: "18px", height: "18px" }} />
-//               </IconButton>
-//             </div>
-//           );
-//         },
-//       },
-//     },
-//   ];
-
-//   const getMuiTheme = () =>
-//     createTheme({
-//       typography: { fontFamily: "sans-serif" },
-//       palette: {
-//         background: { paper: "#1E1E1E", default: "#0f172a" },
-//         mode: "dark",
-//       },
-//       components: {
-//         MuiTableCell: {
-//           styleOverrides: {
-//             head: { padding: "10px 4px" },
-//             body: {
-//               padding: "7px 15px",
-//               color: "#e2e8f0",
-//               textOverflow: "ellipsis",
-//             },
-//           },
-//         },
-//       },
-//     });
-
-//   const options = {
-//     filterType: "checkbox",
-//     selectableRows: "none",
-
-//     rowsPerPage: 50,
-//     rowsPerPageOptions: [10, 50, 70, 100],
-//     search: true,
-//     download: true,
-//     setRowProps: (_, dataIndex) => {
-//       // Check if the ticket is closed
-//       const rowData = rows[dataIndex];
-//       return {
-//         style: {
-//           backgroundColor: rowData.isClosed ? "#4CAF50" : "inherit", // Green if closed
-//         },
-//       };
-//     },
-//   };
-
-//   return (
-//     <>
-//       <div className="flex justify-end gap-4">
-//         <Button onClick={handleDownloadExcel} variant="outlined">
-//           Télécharger Excel
-//         </Button>
-//       </div>
-//       <div className="w-[100%] py-3">
-//         <ThemeProvider theme={getMuiTheme()}>
-//           <MUIDataTable
-//             title={"Gestion des fournitures"}
-//             data={rows}
-//             columns={columns}
-//             options={options}
-//           />
-//         </ThemeProvider>
-//         <Dialog open={openDialog} onClose={handleCloseDialog}>
-//           <DialogTitle>Modifier la fourniture</DialogTitle>
-//           <DialogContent>
-//             <TextField
-//               autoFocus
-//               margin="dense"
-//               label="Nom"
-//               type="text"
-//               fullWidth
-//               variant="standard"
-//               value={updatedName}
-//               onChange={(e) => setUpdatedName(e.target.value)}
-//               disabled
-//             />
-//             <TextField
-//               margin="dense"
-//               label="Catégorie"
-//               type="text"
-//               fullWidth
-//               variant="standard"
-//               value={updatedCategorie}
-//               onChange={(e) => setUpdatedCategorie(e.target.value)}
-//               disabled
-//             />
-//             <TextField
-//               margin="dense"
-//               label="Besoin"
-//               type="text"
-//               fullWidth
-//               variant="standard"
-//               value={updatedBesoin}
-//               onChange={(e) => setUpdatedBesoin(e.target.value)}
-//               disabled
-//             />
-//             <TextField
-//               margin="dense"
-//               label="Quantité"
-//               type="number"
-//               fullWidth
-//               variant="standard"
-//               value={updatedQuantite}
-//               onChange={(e) => setUpdatedQuantite(e.target.value)}
-//             />
-//             <TextField
-//               margin="dense"
-//               label="Commentaire responsable"
-//               type="text"
-//               fullWidth
-//               variant="standard"
-//               value={updatedCommentaire}
-//               onChange={(e) => setUpdatedCommentaire(e.target.value)}
-//               disabled
-//             />
-
-//             <TextField
-//               margin="dense"
-//               label="Date de création"
-//               type="text"
-//               fullWidth
-//               variant="standard"
-//               value={
-//                 selectedFourniture
-//                   ? new Date(selectedFourniture.dateCreation).toLocaleString(
-//                       "fr-FR",
-//                       {
-//                         weekday: "long",
-//                         year: "numeric",
-//                         month: "long",
-//                         day: "numeric",
-//                         hour: "2-digit",
-//                         minute: "2-digit",
-//                         second: "2-digit",
-//                       }
-//                     )
-//                   : ""
-//               }
-//               disabled
-//             />
-//             <FormControl fullWidth margin="normal">
-//               <InputLabel>Status</InputLabel>
-//               <Select
-//                 value={updatedStatus}
-//                 onChange={handleChange}
-//                 label="Status"
-//                 name="status"
-//               >
-//                 {[
-//                   "Ouvert",
-//                   "En cours",
-//                   "Reçu par le support",
-//                   "Expédié",
-//                   "Demandé aux achats",
-//                   "Demandé à Biopetra",
-//                   "Demandé à la pharmacie",
-//                   "En cours de livraison",
-//                   "Livré",
-//                 ].map((status, index) => (
-//                   <MenuItem key={index} value={status}>
-//                     {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
-//                     {/* Capitalize first letter */}
-//                   </MenuItem>
-//                 ))}
-//               </Select>
-//             </FormControl>
-//           </DialogContent>
-//           <DialogActions>
-//             <Button onClick={handleCloseDialog} color="primary">
-//               Annuler
-//             </Button>
-//             <Button onClick={handleUpdateFourniture} color="primary">
-//               Mettre à jour
-//             </Button>
-//           </DialogActions>
-//         </Dialog>
-//         {/* View Dialog */}
-//         <Dialog open={openViewDialog} onClose={handleCloseViewDialog}>
-//           <DialogTitle>Voir la fourniture</DialogTitle>
-//           <DialogContent>
-//             {selectedFourniture && (
-//               <>
-//                 <TextField
-//                   margin="dense"
-//                   label="Nom"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture.name}
-//                   disabled
-//                 />
-//                 <TextField
-//                   margin="dense"
-//                   label="Besoin"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture.besoin}
-//                   disabled
-//                 />
-//                 <TextField
-//                   margin="dense"
-//                   label="Quantité"
-//                   type="number"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture?.quantite || ""}
-//                   disabled
-//                 />
-//                 <TextField
-//                   margin="dense"
-//                   label="Technicien"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture?.technicien || ""}
-//                   disabled
-//                 />{" "}
-//                 <TextField
-//                   margin="dense"
-//                   label="Status"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture?.status || ""}
-//                   disabled
-//                 />
-//                 <TextField
-//                   margin="dense"
-//                   label="Commentaire responsable"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={selectedFourniture?.commentaire || ""}
-//                   disabled
-//                 />
-//                 <TextField
-//                   margin="dense"
-//                   label="Date de création"
-//                   type="text"
-//                   fullWidth
-//                   variant="standard"
-//                   value={new Date(
-//                     selectedFourniture.dateCreation
-//                   ).toLocaleString("fr-FR")}
-//                   disabled
-//                 />
-//                 <Typography variant="h6" style={{ marginTop: "10px" }}>
-//                   Temps écoulé : {timeElapsed}
-//                 </Typography>
-//               </>
-//             )}
-//           </DialogContent>
-//           <DialogActions>
-//             <Button onClick={handleCloseViewDialog} color="primary">
-//               Fermer
-//             </Button>
-//           </DialogActions>
-//         </Dialog>
-//       </div>
-//     </>
-//   );
-// };
-
-// export default ListeBesoin;
 import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import MUIDataTable from "mui-datatables";
 import UpdateDialog from "../besoin/updateBesoin"; // Import du composant UpdateDialog
 import moment from "moment";
-
+import { jsPDF } from "jspdf";
+import "jspdf-autotable";
 import { CheckCircle, Edit, Eye, Delete } from "lucide-react"; // Icônes Lucide React
+import SelectAllIcon from "@mui/icons-material/SelectAll";
+import CloseIcon from "@mui/icons-material/Close";
+import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
+import InventoryIcon from "@mui/icons-material/Inventory";
 import {
   IconButton,
   Dialog,
@@ -603,6 +31,9 @@ import {
   Step,
   StepLabel,
   Tooltip,
+  Checkbox,
+  Divider,
+  ListItemIcon,
 } from "@mui/material";
 import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
 import { ContentCopy } from "@mui/icons-material";
@@ -655,6 +86,144 @@ const ListeBesoin = () => {
   const [selectedStatus, setSelectedStatus] = useState("");
   const [statusHistory, setStatusHistory] = useState([]);
   const [activeStep, setActiveStep] = useState(0);
+
+  const [openPdfDialog, setOpenPdfDialog] = useState(false);
+  const [selectedRows, setSelectedRows] = useState([]);
+  const [deliveryRows, setDeliveryRows] = useState([]);
+
+  // Fonction pour ouvrir le dialogue de sélection PDF
+  const handleOpenPdfDialog = () => {
+    // Filtrer seulement les commandes "En cours de livraison"
+    const filteredRows = rows.filter(
+      (row) => row.status === "En cours de livraison"
+    );
+    setDeliveryRows(filteredRows);
+    setSelectedRows([]);
+    setOpenPdfDialog(true);
+  };
+
+  // Fonction pour fermer le dialogue
+  const handleClosePdfDialog = () => {
+    setOpenPdfDialog(false);
+    setSelectedRows([]);
+  };
+
+  // Gérer la sélection/désélection des lignes
+  const handleToggleRow = (rowId) => {
+    setSelectedRows((prev) => {
+      if (prev.includes(rowId)) {
+        return prev.filter((id) => id !== rowId);
+      } else {
+        return [...prev, rowId];
+      }
+    });
+  };
+
+  // Sélectionner toutes les lignes
+  const handleSelectAll = () => {
+    if (selectedRows.length === deliveryRows.length) {
+      setSelectedRows([]);
+    } else {
+      setSelectedRows(deliveryRows.map((row) => row.id));
+    }
+  };
+
+  // Générer le PDF
+  const generatePdf = () => {
+    const doc = new jsPDF();
+
+    // === En-tête de l'entreprise ===
+    doc.setFontSize(16);
+    doc.setFont("helvetica", "bold");
+    // Centrer le texte "SCX TECHNOLOGY"
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const text = "SCX TECHNOLOGY";
+    const textWidth = doc.getTextWidth(text);
+    const x = (pageWidth - textWidth) / 2;
+    doc.text(text, x, 15); // Centré horizontalement
+
+    doc.setFontSize(10);
+    doc.setFont("helvetica", "normal");
+    doc.text("Support : +212 767-370586", 14, 22);
+    doc.text("Email : support@scx-tech.com", 14, 27);
+
+    // === Titre du document ===
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "bold");
+    doc.text("Bon de livraison - Commandes en cours de livraison", 14, 40);
+
+    // === Préparation des données ===
+    const selectedItems = deliveryRows.filter((row) =>
+      selectedRows.includes(row.id)
+    );
+
+    const headers = [
+      [
+        "Article",
+        "Site",
+        "Besoin",
+        "Quantité",
+
+        "Région",
+        "Province",
+        "Date de création",
+      ],
+    ];
+
+    const data = selectedItems.map((item, index) => [
+      ` ${index + 1}`,
+      item.name,
+      item.besoin,
+      item.quantite,
+      item.province,
+      item.region,
+      new Date(item.dateCreation).toLocaleDateString("fr-FR"),
+    ]);
+
+    // === Tableau ===
+    doc.autoTable({
+      head: headers,
+      body: data,
+      startY: 50,
+      theme: "grid",
+      styles: { fontSize: 9, cellPadding: 3 },
+      headStyles: { fillColor: [41, 115, 178], textColor: 255 },
+    });
+
+    const finalY = doc.lastAutoTable.finalY;
+
+    // === Pied de page ===
+    const today = new Date();
+    doc.setFontSize(10);
+
+    // Signature à gauche
+    doc.text("Signature de l’expéditeur :", 14, finalY + 30);
+    doc.line(14, finalY + 32, 80, finalY + 32); // ligne pour signature
+
+    // Date à droite (expéditeur)
+    const formattedDate = today.toLocaleDateString("fr-FR", {
+      day: "2-digit",
+      month: "long",
+      year: "numeric",
+    });
+    doc.text(`Fait le : ${formattedDate}`, 150, finalY + 30, {
+      align: "right",
+    });
+
+    // Signature du réceptionnaire à droite
+    doc.text("Signature du réceptionnaire :", 120, finalY + 50);
+    doc.line(120, finalY + 52, 190, finalY + 52); // ligne pour signature
+
+    // Date de réception à gauche
+    doc.text("Date de réception :", 14, finalY + 50);
+    doc.line(14, finalY + 52, 80, finalY + 52); // ligne pour écrire la date
+
+    // Sauvegarder le PDF
+    doc.save("bon_de_livraison_SCX.pdf");
+
+    // Fermer le dialogue
+    handleClosePdfDialog();
+  };
 
   const calculateTimeDifference = (startTimestamp, endTimestamp) => {
     const startDate = new Date(startTimestamp);
@@ -1337,6 +906,13 @@ const ListeBesoin = () => {
   return (
     <>
       <div className="flex justify-end gap-4">
+        <Button
+          onClick={handleOpenPdfDialog}
+          variant="contained"
+          color="primary"
+        >
+          Générer PDF bon de Livraisons
+        </Button>
         <Button onClick={handleDownloadExcel} variant="outlined">
           Télécharger Excel
         </Button>
@@ -1604,6 +1180,103 @@ const ListeBesoin = () => {
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseStatusDialog}>Fermer</Button>
+          </DialogActions>
+        </Dialog>
+
+        <Dialog
+          open={openPdfDialog}
+          onClose={handleClosePdfDialog}
+          maxWidth="md"
+          fullWidth
+        >
+          <DialogTitle className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <PictureAsPdfIcon color="primary" />
+              <Typography variant="h6">
+                Sélectionner les commandes à inclure dans le bon de livraison
+              </Typography>
+            </div>
+            <IconButton onClick={handleClosePdfDialog}>
+              <CloseIcon />
+            </IconButton>
+          </DialogTitle>
+
+          <DialogContent dividers>
+            {deliveryRows.length > 0 ? (
+              <>
+                <div className="flex items-center mb-4">
+                  <Checkbox
+                    checked={
+                      selectedRows.length === deliveryRows.length &&
+                      deliveryRows.length > 0
+                    }
+                    onChange={handleSelectAll}
+                    color="primary"
+                  />
+                  <SelectAllIcon className="mr-1 text-gray-600" />
+                  <Typography>Sélectionner tout</Typography>
+                </div>
+
+                <Divider className="mb-2" />
+
+                <List>
+                  {deliveryRows.map((row) => (
+                    <ListItem
+                      key={row.id}
+                      dense
+                      button
+                      onClick={() => handleToggleRow(row.id)}
+                      className="hover:bg-gray-100 dark:hover:bg-gray-800 rounded-lg"
+                    >
+                      <ListItemIcon>
+                        <Checkbox
+                          edge="start"
+                          checked={selectedRows.includes(row.id)}
+                          tabIndex={-1}
+                          disableRipple
+                          color="primary"
+                        />
+                      </ListItemIcon>
+                      <ListItemText
+                        primary={
+                          <div className="flex items-center gap-2">
+                            {/* <InventoryIcon fontSize="small" color="action" /> */}
+                            <span>{`${row.name}: ${row.besoin} || (Quantite: ${row.quantite})`}</span>
+                          </div>
+                        }
+                        secondary={` Région: ${row.region}  Province: ${
+                          row.province
+                        } | Demandeur: ${row.technicien || "Non spécifié"}`}
+                      />
+                    </ListItem>
+                  ))}
+                </List>
+              </>
+            ) : (
+              <Typography>
+                Aucune commande avec le statut "En cours de livraison" n'est
+                disponible.
+              </Typography>
+            )}
+          </DialogContent>
+
+          <DialogActions>
+            <Button
+              onClick={handleClosePdfDialog}
+              color="primary"
+              startIcon={<CloseIcon />}
+            >
+              Annuler
+            </Button>
+            <Button
+              onClick={generatePdf}
+              color="primary"
+              variant="contained"
+              startIcon={<PictureAsPdfIcon />}
+              disabled={selectedRows.length === 0}
+            >
+              Générer PDF
+            </Button>
           </DialogActions>
         </Dialog>
       </div>

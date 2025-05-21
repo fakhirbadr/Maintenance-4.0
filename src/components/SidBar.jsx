@@ -13,6 +13,7 @@ import ConstructionOutlinedIcon from "@mui/icons-material/ConstructionOutlined";
 import BookOnlineOutlinedIcon from "@mui/icons-material/BookOnlineOutlined";
 import ListAltIcon from "@mui/icons-material/ListAlt";
 import DirectionsCarRoundedIcon from "@mui/icons-material/DirectionsCarRounded";
+import HighlightOffRoundedIcon from "@mui/icons-material/HighlightOffRounded";
 import RemoveRedEyeRoundedIcon from "@mui/icons-material/RemoveRedEyeRounded";
 import SettingsIcon from "@mui/icons-material/Settings";
 import DashboardIcon from "@mui/icons-material/Dashboard";
@@ -23,6 +24,7 @@ import AttachMoneyIcon from "@mui/icons-material/AttachMoney";
 import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
+import DesktopWindowsRoundedIcon from "@mui/icons-material/DesktopWindowsRounded";
 import { HistoryIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -35,6 +37,7 @@ import {
   Box,
   Tooltip,
 } from "@mui/material";
+import BrowserUpdatedRoundedIcon from "@mui/icons-material/BrowserUpdatedRounded";
 import { useLocation, useNavigate } from "react-router-dom";
 import avatarImage from "../../public/scx.png";
 
@@ -216,6 +219,16 @@ const Array1 = [
         path: "/BesoinVehicule",
         roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
+      {
+        text: "Portail de tickets SI",
+        icon: (
+          <IconWrapper>
+            <DesktopWindowsRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/TicketSI",
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
+      },
     ],
   },
   {
@@ -253,6 +266,24 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/Historiquevehicule",
+      },
+      {
+        text: "Historique SI",
+        icon: (
+          <IconWrapper>
+            <DesktopWindowsRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriqueSI",
+      },
+      {
+        text: "Historique des rejets",
+        icon: (
+          <IconWrapper>
+            <HighlightOffRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriqueDesRejets",
       },
     ],
   },
@@ -295,6 +326,16 @@ const Array1 = [
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
+  // {
+  //   text: "Configuration Asset",
+  //   icon: (
+  //     <IconWrapper>
+  //       <BrowserUpdatedRoundedIcon />
+  //     </IconWrapper>
+  //   ),
+  //   path: "/ConfigurationAsset",
+  //   roleRequired: ["superviseur"],
+  // },
 ];
 
 export default function SidBar({ open, handleDrawerClose }) {

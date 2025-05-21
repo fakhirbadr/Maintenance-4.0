@@ -11,11 +11,13 @@ import myImage from "./4.jpg";
 import myImage2 from "./3.jpg";
 import myImage5 from "./5.jpg";
 import myImage6 from "./6.png";
+import myImage7 from "./9.png";
 import ModelVehicule from "./ModelVehicule";
 import ModelRetour from "./ModelRetour";
 import { Grid, useTheme, Box, Container, Fade, Grow } from "@mui/material";
 import { alpha } from "@mui/material/styles";
 import { motion } from "framer-motion";
+import ModalSi from "./ModalSi";
 
 const Ticket = () => {
   const theme = useTheme();
@@ -24,10 +26,11 @@ const Ticket = () => {
   const [openVehicule, setOpenVehicule] = useState(false);
   const [openRetour, setOpenRetour] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
+  const [openProblemeSI, setOpenProblemeSI] = useState(false);
 
   // Styles améliorés avec animation
   const cardStyles = {
-    maxWidth: "100%",
+    width: "100%", // Changé de maxWidth à width pour forcer la largeur
     height: "100%",
     bgcolor: theme.palette.background.paper,
     borderRadius: 2,
@@ -42,7 +45,7 @@ const Ticket = () => {
   };
 
   const cardMediaStyles = {
-    height: { xs: 120, md: 200 },
+    height: { xs: 140, md: 220 }, // Augmenté légèrement la hauteur
     objectFit: "cover",
     transition: "transform 0.5s ease, filter 0.5s ease",
     filter: "brightness(0.85)",
@@ -96,13 +99,19 @@ const Ticket = () => {
         "Réservation de véhicule ou demande d'intervention mécanique d'urgence.",
       onClick: () => setOpenVehicule(true),
     },
-    // Gardé en commentaire comme dans votre code original
     // {
     //   title: "Retour d'Équipement",
     //   image: myImage6,
     //   description:
     //     "Signalement d'un équipement défectueux ou demande de retour de matériel en fin d'utilisation.",
     //   onClick: () => setOpenRetour(true),
+    // },
+    // {
+    //   title: "Problème Système d'Information",
+    //   image: myImage7,
+    //   description:
+    //     "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
+    //   onClick: () => setOpenProblemeSI(true),
     // },
   ];
 
@@ -120,7 +129,9 @@ const Ticket = () => {
           pb: 8,
         }}
       >
-        <Container maxWidth="lg">
+        <Container maxWidth="xl">
+          {" "}
+          {/* Changé de lg à xl pour plus de largeur */}
           <Typography
             variant="h4"
             component="h1"
@@ -142,19 +153,33 @@ const Ticket = () => {
           >
             Services Disponibles
           </Typography>
-
           <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={4} justifyContent="center">
+            <Grid container spacing={3} justifyContent="center">
+              {" "}
+              {/* Espacement réduit à 3 */}
               {cardData.map((card, index) => (
-                <Grow
-                  in={true}
+                <Grid
+                  item
+                  xs={12}
+                  md={6}
+                  lg={2.4} // 12/5 = 2.4 pour 5 cartes sur une ligne
                   key={index}
-                  timeout={(index + 1) * 400}
-                  style={{ transformOrigin: "0 0 0" }}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "center",
+                  }}
                 >
-                  <Grid item xs={12} sm={6} md={3}>
+                  <Grow
+                    in={true}
+                    timeout={(index + 1) * 400}
+                    style={{ transformOrigin: "0 0 0" }}
+                  >
                     <Card
-                      sx={cardStyles}
+                      sx={{
+                        ...cardStyles,
+                        width: "90%", // Largeur à 90% du conteneur
+                        maxWidth: 300, // Largeur maximale augmentée
+                      }}
                       onMouseEnter={() => handleCardHover(index)}
                       onMouseLeave={handleCardLeave}
                     >
@@ -222,8 +247,8 @@ const Ticket = () => {
                         </CardContent>
                       </CardActionArea>
                     </Card>
-                  </Grid>
-                </Grow>
+                  </Grow>
+                </Grid>
               ))}
             </Grid>
           </Box>
@@ -244,6 +269,7 @@ const Ticket = () => {
         onClose={() => setOpenVehicule(false)}
       />
       {/* <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} /> */}
+      <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
     </>
   );
 };

@@ -622,6 +622,10 @@ const Validation = () => {
   const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
   const [updatedStatus, setUpdatedStatus] = useState("");
   const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
+
+  const [openRejectDialog, setOpenRejectDialog] = useState(false); // État pour ouvrir/fermer le dialogue
+  const [rejectReason, setRejectReason] = useState(""); // Raison de rejet
+  const [selectedRowIndex, setSelectedRowIndex] = useState(null); // Index de la ligne sélectionnée
   const fetchFournitures = async () => {
     try {
       // Effectuer les deux requêtes en parallèle
@@ -912,7 +916,6 @@ const Validation = () => {
 
     // Vérifiez les données avant la suppression
     if (!rowData || !rowData.id || !rowData.source) {
-      // Utilisez 'id' au lieu de '_id'
       alert("Données invalides pour la suppression.");
       console.error(
         "Erreur: Données invalides pour la suppression. rowData:",
@@ -921,27 +924,15 @@ const Validation = () => {
       return;
     }
 
-    if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
-      try {
-        if (rowData.source === "source1") {
-          const deletedBy = JSON.parse(
-            localStorage.getItem("userInfo")
-          )?.nomComplet;
-          if (!deletedBy) {
-            alert("Erreur : utilisateur non identifié.");
-            return;
-          }
-          // Suppression pour source1
-          console.log(`Suppression de fourniture avec ID: ${rowData.id}`);
-          const response = await axios.patch(
-            `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
-            { isDeleted: true, deletedBy: deletedBy }
-          );
-          console.log("Réponse après suppression de source1:", response);
-          alert("Fourniture supprimée avec succès.");
-        } else if (rowData.source === "source2") {
-          // Suppression pour source2
-          const { parentId, id: subTicketId } = rowData; // Extraction des IDs nécessaires
+    if (rowData.source === "source1") {
+      // Ouvrir le dialogue pour la raison de rejet
+      setSelectedRowIndex(rowIndex);
+      setOpenRejectDialog(true);
+    } else if (rowData.source === "source2") {
+      if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
+        try {
+          const { parentId, id: subTicketId } = rowData;
+
           if (!parentId || !subTicketId) {
             alert("Parent ID ou Sub-ticket ID manquant.");
             console.error(
@@ -959,19 +950,71 @@ const Validation = () => {
           );
           console.log("Réponse après suppression de source2:", response);
           alert("Sous-ticket supprimé avec succès.");
-        }
 
-        // Mise à jour de l'état local après suppression
-        setRows((prevRows) =>
-          prevRows.filter((_, index) => index !== rowIndex)
-        );
-      } catch (error) {
-        console.error("Erreur lors de la suppression de l'élément :", error);
-        alert(
-          "Erreur lors de la suppression de l'élément. Veuillez réessayer."
-        );
+          // Mise à jour de l'état local après suppression
+          setRows((prevRows) =>
+            prevRows.filter((_, index) => index !== rowIndex)
+          );
+        } catch (error) {
+          console.error("Erreur lors de la suppression de l'élément :", error);
+          alert(
+            "Erreur lors de la suppression de l'élément. Veuillez réessayer."
+          );
+        }
       }
     }
+  };
+  const handleRejectSubmit = async () => {
+    if (!rejectReason.trim()) {
+      alert("Veuillez fournir une raison de rejet.");
+      return;
+    }
+
+    const rowData = rows[selectedRowIndex];
+    try {
+      const deletedBy = JSON.parse(
+        localStorage.getItem("userInfo")
+      )?.nomComplet;
+      if (!deletedBy) {
+        alert("Erreur : utilisateur non identifié.");
+        return;
+      }
+
+      console.log(
+        `Suppression de fourniture avec ID: ${rowData.id} et Raison: ${rejectReason}`
+      );
+      const response = await axios.patch(
+        `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
+        {
+          isDeleted: true,
+          deletedBy: deletedBy,
+          raisonRejet: rejectReason, // Inclure la raison de rejet
+        }
+      );
+
+      console.log(
+        "Réponse après suppression de source1 avec raison :",
+        response
+      );
+      alert("Fourniture supprimée avec succès.");
+
+      // Mise à jour de l'état local après suppression
+      setRows((prevRows) =>
+        prevRows.filter((_, index) => index !== selectedRowIndex)
+      );
+
+      // Réinitialiser et fermer le dialogue
+      setRejectReason("");
+      setOpenRejectDialog(false);
+    } catch (error) {
+      console.error("Erreur lors de la suppression avec raison :", error);
+      alert("Erreur lors de la suppression. Veuillez réessayer.");
+    }
+  };
+
+  const handleRejectCancel = () => {
+    setRejectReason(""); // Réinitialiser la raison
+    setOpenRejectDialog(false); // Fermer le dialogue
   };
 
   const styles = {
@@ -1328,6 +1371,28 @@ const Validation = () => {
           </DialogActions>
         </Dialog>
       </div>
+      <Dialog open={openRejectDialog} onClose={handleRejectCancel}>
+        <DialogTitle>Raison de rejet</DialogTitle>
+        <DialogContent>
+          <TextField
+            autoFocus
+            margin="dense"
+            label="Veuillez entrer la raison de rejet"
+            type="text"
+            fullWidth
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+          />
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleRejectCancel} color="primary">
+            Annuler
+          </Button>
+          <Button onClick={handleRejectSubmit} color="secondary">
+            Soumettre
+          </Button>
+        </DialogActions>
+      </Dialog>
     </>
   );
 };

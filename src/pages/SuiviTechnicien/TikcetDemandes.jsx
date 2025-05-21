@@ -29,7 +29,7 @@ const TicketDemandes = () => {
       if (!name) return; // Évite de faire une requête si name est vide
       try {
         const response = await axios.get(
-          `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}`
+          `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}&isDeleted=false`
         );
         setRows(response.data.fournitures);
       } catch (error) {
@@ -69,7 +69,7 @@ const TicketDemandes = () => {
     filterType: "checkbox",
     selectableRows: "none",
 
-    rowsPerPage: 10,
+    rowsPerPage: 100,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: true,

@@ -32,12 +32,17 @@ import Info from "./pages/Informations/Info";
 import HistoriqueBesoin from "./pages/historique_besoin/historiqueBesoin";
 import ProtectedRoute from "./ProtectedRoute";
 import BesoinVehicule from "./pages/besoin_vehicule/besoinVehicule";
+import TicketSi from "./pages/TicketSi/GestionTicketSi";
 import Inventaire from "./pages/Inventaire des actifs/Inventaire";
 import HistoriqueVehicule from "./pages/historique_vehicule/HistoriqueVehicule";
+import HistoriqueSi from "./pages/historiqueSi/HistoriqueSi";
+import HistoriqueDesRejets from "./pages/demandeRejet/DemandeRejat";
+
 import Parametre from "./pages/parametre/Parametre";
 import ProfilUser from "./pages/ProfilUser/ProfilUser";
 import SuiviDemandeTechnicien from "./pages/SuiviTechnicien/SuiviDemandeTechnicien";
 import Alerte from "./pages/Alertes/Alerte";
+import ConfigurationAsset from "./pages/configActif/ConfigurationAsset";
 import Validation from "./pages/ValidationTicket/Validation";
 import Homepage from "./pages/Homepage/Homepage";
 import ModuleAchat from "./pages/Interface_Achat/ModuleAchat";
@@ -49,66 +54,6 @@ import ListeDemandes from "./pages/HR/ListeDemandes";
 import Reclamation from "./pages/HR/Reclamation";
 import NetworkPatientData from "./pages/NetworkPatientData/NetworkPatientData";
 import NetworkPatient from "./pages/NetworkPatientData/NetworkPatient";
-
-// Création des routes
-// const router = createBrowserRouter(
-//   createRoutesFromElements(
-//     <Routes>
-//       <Route path="login" element={<Login />} />
-//       <Route path="/" element={<App />}>
-//         {/* Routes publiques */}
-//         {/* <Route path="login" element={<Login />} /> */}
-
-//         {/* Routes protégées */}
-//         {/* <Route
-//           path="actifs"
-//           element={<ProtectedRoute element={<Actifs />} />}
-//         /> */}
-//         <Route
-//           path="Inventaire"
-//           element={<ProtectedRoute element={<Inventaire />} />}
-//         />
-
-//         <Route
-//           path="ticket"
-//           element={<ProtectedRoute element={<Ticket />} />}
-//         />
-//         <Route
-//           path="BesoinVehicule"
-//           element={<ProtectedRoute element={<BesoinVehicule />} />}
-//         />
-//         <Route
-//           // path="tickets"
-//           index
-//           element={<ProtectedRoute element={<Tickets />} />}
-//         />
-//         <Route
-//           path="besoin"
-//           element={<ProtectedRoute element={<Besoin />} />}
-//         />
-//         <Route
-//           path="HistoriqueIntervention"
-//           element={<ProtectedRoute element={<HistoriqueIntervention />} />}
-//         />
-//         <Route
-//           path="HistoriqueBesoin"
-//           element={<ProtectedRoute element={<HistoriqueBesoin />} />}
-//         />
-//         <Route
-//           path="HistoriqueVehicule"
-//           element={<ProtectedRoute element={<HistoriqueVehicule />} />}
-//         />
-//         <Route path="test" element={<ProtectedRoute element={<Test />} />} />
-
-//         {/* Routes non protégées */}
-//         {/* Other public routes can be listed here */}
-//       </Route>
-
-//       {/* Route pour la page 404 */}
-//       <Route path="*" element={<Notfound />} />
-//     </Routes>
-//   )
-// );
 
 const router = createBrowserRouter([
   {
@@ -157,6 +102,10 @@ const router = createBrowserRouter([
         element: <ProtectedRoute element={<BesoinVehicule />} />,
       },
       {
+        path: "TicketSI",
+        element: <ProtectedRoute element={<TicketSi />} />,
+      },
+      {
         path: "HistoriqueIntervention",
         element: <ProtectedRoute element={<HistoriqueIntervention />} />,
       },
@@ -167,6 +116,14 @@ const router = createBrowserRouter([
       {
         path: "HistoriqueVehicule",
         element: <ProtectedRoute element={<HistoriqueVehicule />} />,
+      },
+      {
+        path: "HistoriqueSI",
+        element: <ProtectedRoute element={<HistoriqueSi />} />,
+      },
+      {
+        path: "HistoriqueDesRejets",
+        element: <ProtectedRoute element={<HistoriqueDesRejets />} />,
       },
       {
         path: "parametres",
@@ -203,6 +160,10 @@ const router = createBrowserRouter([
       {
         path: "NetworkPatient",
         element: <ProtectedRoute element={<NetworkPatient />} />,
+      },
+      {
+        path: "ConfigurationAsset",
+        element: <ProtectedRoute element={<ConfigurationAsset />} />,
       },
     ],
   },
