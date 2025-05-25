@@ -74,6 +74,7 @@ const TicketForm = ({ open, onClose }) => {
       "Système de lavage pare-brise",
       "Batterie",
     ],
+    RechargeGasoil: ["Recharge de gasoil"],
   };
 
   const handleChange = (e) => {

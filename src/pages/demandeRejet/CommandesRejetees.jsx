@@ -6,6 +6,9 @@ import { ThemeProvider, createTheme } from "@mui/material/styles";
 import axios from "axios";
 import * as XLSX from "xlsx"; // ✅ Import pour Excel
 
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
+
 const CommandesRejetees = () => {
   const [rows, setRows] = useState([]);
 

@@ -219,16 +219,16 @@ const Array1 = [
         path: "/BesoinVehicule",
         roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
-      {
-        text: "Portail de tickets SI",
-        icon: (
-          <IconWrapper>
-            <DesktopWindowsRoundedIcon />
-          </IconWrapper>
-        ),
-        path: "/TicketSI",
-        roleRequired: ["admin", "superviseur", "chargés de performance"],
-      },
+      // {
+      //   text: "Portail de tickets SI",
+      //   icon: (
+      //     <IconWrapper>
+      //       <DesktopWindowsRoundedIcon />
+      //     </IconWrapper>
+      //   ),
+      //   path: "/TicketSI",
+      //   roleRequired: ["admin", "superviseur", "chargés de performance"],
+      // },
     ],
   },
   {
@@ -267,15 +267,15 @@ const Array1 = [
         ),
         path: "/Historiquevehicule",
       },
-      {
-        text: "Historique SI",
-        icon: (
-          <IconWrapper>
-            <DesktopWindowsRoundedIcon />
-          </IconWrapper>
-        ),
-        path: "/HistoriqueSI",
-      },
+      // {
+      //   text: "Historique SI",
+      //   icon: (
+      //     <IconWrapper>
+      //       <DesktopWindowsRoundedIcon />
+      //     </IconWrapper>
+      //   ),
+      //   path: "/HistoriqueSI",
+      // },
       {
         text: "Historique des rejets",
         icon: (

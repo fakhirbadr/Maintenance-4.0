@@ -11,6 +11,7 @@ import SelectAllIcon from "@mui/icons-material/SelectAll";
 import CloseIcon from "@mui/icons-material/Close";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
 import InventoryIcon from "@mui/icons-material/Inventory";
+import Logo from "../../../public/scx.png";
 import {
   IconButton,
   Dialog,
@@ -90,6 +91,8 @@ const ListeBesoin = () => {
   const [openPdfDialog, setOpenPdfDialog] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [deliveryRows, setDeliveryRows] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState(""); // Utilisé uniquement pour la dialog PDF
+  const [selectedActif, setSelectedActif] = useState(""); // Nouveau : filtre actif
 
   // Fonction pour ouvrir le dialogue de sélection PDF
   const handleOpenPdfDialog = () => {
@@ -127,103 +130,592 @@ const ListeBesoin = () => {
       setSelectedRows(deliveryRows.map((row) => row.id));
     }
   };
+  // Liste des régions et des actifs disponibles pour les dropdown dans la dialog
 
+  const pdfActifs = Array.from(
+    new Set(
+      deliveryRows
+        .filter((row) => !selectedRegion || row.region === selectedRegion)
+        .map((row) => row.name)
+    )
+  ).filter(Boolean);
+  // Liste des régions disponibles pour le dropdown dans la dialog
+  const pdfRegions = Array.from(
+    new Set(deliveryRows.map((r) => r.region))
+  ).filter(Boolean);
+  // Applique le filtre uniquement sur la liste de la dialog PDF
+  // Applique le(s) filtre(s) uniquement sur la liste de la dialog PDF
+  // Applique les filtres (région + nom d'actif) uniquement dans la dialog PDF
+  const filteredDeliveryRows = deliveryRows.filter((row) => {
+    const regionMatch = selectedRegion ? row.region === selectedRegion : true;
+    const actifMatch = selectedActif ? row.name === selectedActif : true;
+    return regionMatch && actifMatch;
+  });
   // Générer le PDF
+  // Générer le PDF avec une page par actif et header répété
   const generatePdf = () => {
     const doc = new jsPDF();
 
-    // === En-tête de l'entreprise ===
-    doc.setFontSize(16);
-    doc.setFont("helvetica", "bold");
-    // Centrer le texte "SCX TECHNOLOGY"
+    try {
+      // Convertir l'image en base64 si nécessaire
+      const img = new Image();
+      img.onload = function () {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("2d");
+        canvas.width = img.width;
+        canvas.height = img.height;
+        ctx.drawImage(img, 0, 0);
+        const imgData = canvas.toDataURL("image/png");
+
+        generatePdfWithActifPages(doc, imgData);
+      };
+      img.src = Logo;
+    } catch (error) {
+      console.log("Logo non disponible, génération sans logo");
+      generatePdfWithActifPages(doc, null);
+    }
+  };
+
+  const generatePdfWithActifPages = (doc, logoData) => {
     const pageWidth = doc.internal.pageSize.getWidth();
-    const text = "SCX TECHNOLOGY";
-    const textWidth = doc.getTextWidth(text);
-    const x = (pageWidth - textWidth) / 2;
-    doc.text(text, x, 15); // Centré horizontalement
+    const pageHeight = doc.internal.pageSize.getHeight();
 
-    doc.setFontSize(10);
-    doc.setFont("helvetica", "normal");
-    doc.text("Support : +212 767-370586", 14, 22);
-    doc.text("Email : support@scx-tech.com", 14, 27);
-
-    // === Titre du document ===
-    doc.setFontSize(14);
-    doc.setFont("helvetica", "bold");
-    doc.text("Bon de livraison - Commandes en cours de livraison", 14, 40);
-
-    // === Préparation des données ===
+    // Récupérer les éléments sélectionnés
     const selectedItems = deliveryRows.filter((row) =>
       selectedRows.includes(row.id)
     );
 
-    const headers = [
-      [
-        "Article",
-        "Site",
-        "Besoin",
-        "Quantité",
+    // Grouper les articles par actif/site
+    const groupedByActif = selectedItems.reduce((acc, item) => {
+      const actifName = item.name || "Actif non défini";
+      if (!acc[actifName]) {
+        acc[actifName] = [];
+      }
+      acc[actifName].push(item);
+      return acc;
+    }, {});
 
-        "Région",
-        "Province",
-        "Date de création",
-      ],
-    ];
+    const actifNames = Object.keys(groupedByActif);
+    const totalPages = actifNames.length;
 
-    const data = selectedItems.map((item, index) => [
-      ` ${index + 1}`,
-      item.name,
-      item.besoin,
-      item.quantite,
-      item.province,
-      item.region,
-      new Date(item.dateCreation).toLocaleDateString("fr-FR"),
-    ]);
+    // Fonction pour créer l'en-tête sur chaque page
+    const createHeader = (pageNumber, actifName) => {
+      let currentY = 20;
 
-    // === Tableau ===
-    doc.autoTable({
-      head: headers,
-      body: data,
-      startY: 50,
-      theme: "grid",
-      styles: { fontSize: 9, cellPadding: 3 },
-      headStyles: { fillColor: [41, 115, 178], textColor: 255 },
+      // === Logo centré ===
+      if (logoData) {
+        const logoWidth = 40;
+        const logoHeight = 20;
+        const logoX = (pageWidth - logoWidth) / 2;
+        doc.addImage(logoData, "PNG", logoX, currentY, logoWidth, logoHeight);
+        currentY += 35;
+      }
+
+      // === Titre du document ===
+      doc.setTextColor(0, 0, 0);
+      doc.setFillColor(245, 245, 245);
+      doc.rect(14, currentY, pageWidth - 28, 12, "F");
+
+      doc.setFontSize(12);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(41, 115, 178);
+      const title = "BON DE LIVRAISON";
+      const titleWidth = doc.getTextWidth(title);
+      const titleX = (pageWidth - titleWidth) / 2;
+      doc.text(title, titleX, currentY + 8);
+
+      currentY += 20;
+
+      // === Informations de la page ===
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(10);
+      doc.setFont("helvetica", "bold");
+      doc.setFillColor(240, 248, 255);
+      doc.rect(14, currentY, pageWidth - 28, 15, "F");
+
+      // Nom de l'actif centré
+      doc.setTextColor(41, 115, 178);
+      const actifTitle = `SITE/ACTIF: ${actifName.toUpperCase()}`;
+      const actifTitleWidth = doc.getTextWidth(actifTitle);
+      const actifTitleX = (pageWidth - actifTitleWidth) / 2;
+      doc.text(actifTitle, actifTitleX, currentY + 10);
+
+      currentY += 25;
+
+      // === Ligne de séparation ===
+      doc.setDrawColor(41, 115, 178);
+      doc.setLineWidth(0.5);
+      doc.line(14, currentY, pageWidth - 14, currentY);
+
+      return currentY + 10;
+    };
+
+    // === Génération d'une page par actif ===
+    actifNames.forEach((actifName, index) => {
+      // Ajouter une nouvelle page (sauf pour la première)
+      if (index > 0) {
+        doc.addPage();
+      }
+
+      // Créer l'en-tête
+      let currentY = createHeader(index + 1, actifName);
+
+      // Récupérer les articles pour cet actif
+      const actifItems = groupedByActif[actifName];
+
+      // === Informations de l'actif ===
+      if (actifItems.length > 0) {
+        const firstItem = actifItems[0];
+
+        doc.setFontSize(8);
+        doc.setFont("helvetica", "bold");
+        doc.text("INFORMATIONS DU SITE:", 14, currentY);
+
+        currentY += 6;
+        doc.setFont("helvetica", "normal");
+        doc.text(`Région: ${firstItem.region || "N/A"}`, 14, currentY);
+        doc.text(`Province: ${firstItem.province || "N/A"}`, 120, currentY);
+        doc.text(`Nombre d'articles: ${actifItems.length}`, 14, currentY + 5);
+
+        currentY += 15;
+      }
+
+      // === Tableau des articles ===
+      const headers = [
+        [
+          "N°",
+          "Catégorie",
+          "Besoin/Article",
+          "Quantité",
+          "Unité",
+          "Technicien",
+          "Date création",
+        ],
+      ];
+
+      const data = actifItems.map((item, itemIndex) => [
+        (itemIndex + 1).toString(),
+        item.categorie || "N/A",
+        item.besoin || "N/A",
+        item.quantite?.toString() || "0",
+        item.unite || "Pce", // Nouvelle colonne unité avec valeur par défaut
+        item.technicien || "N/A",
+        new Date(item.dateCreation).toLocaleDateString("fr-FR"),
+      ]);
+
+      doc.autoTable({
+        head: headers,
+        body: data,
+        startY: currentY,
+        theme: "grid",
+        styles: {
+          fontSize: 7, // Réduction de la taille de police
+          cellPadding: 3,
+          lineColor: [200, 200, 200],
+          lineWidth: 0.1,
+        },
+        headStyles: {
+          fillColor: [41, 115, 178],
+          textColor: 255,
+          fontStyle: "bold",
+          halign: "center",
+          fontSize: 8, // Taille de police pour les en-têtes
+        },
+        alternateRowStyles: {
+          fillColor: [248, 249, 250],
+        },
+        columnStyles: {
+          0: { halign: "center", cellWidth: 12 }, // N°
+          1: { cellWidth: 25 }, // Catégorie
+          2: { cellWidth: 45 }, // Besoin
+          3: { halign: "center", cellWidth: 18 }, // Quantité
+          4: { halign: "center", cellWidth: 15 }, // Unité
+          5: { cellWidth: 35 }, // Technicien
+          6: { halign: "center", cellWidth: 25 }, // Date
+        },
+        margin: { left: 14, right: 14 },
+      });
+
+      const tableEndY = doc.lastAutoTable.finalY + 10;
+
+      // === Section des signatures ===
+      const signatureStartY = Math.max(tableEndY + 10, pageHeight - 70);
+
+      // Vérifier s'il faut une nouvelle page pour les signatures
+      if (signatureStartY > pageHeight - 65) {
+        doc.addPage();
+        currentY = 30;
+      } else {
+        currentY = signatureStartY;
+      }
+
+      // Cadre pour les signatures
+      doc.setDrawColor(41, 115, 178);
+      doc.setLineWidth(0.5);
+      doc.rect(14, currentY, pageWidth - 28, 45);
+
+      // Titre signatures
+      doc.setFillColor(41, 115, 178);
+      doc.rect(14, currentY, pageWidth - 28, 10, "F");
+      doc.setFontSize(9);
+      doc.setFont("helvetica", "bold");
+      doc.setTextColor(255, 255, 255);
+      doc.text("SIGNATURES ET VALIDATION", pageWidth / 2 - 22, currentY + 6);
+
+      doc.setTextColor(0, 0, 0);
+      doc.setFontSize(8);
+      doc.setFont("helvetica", "normal");
+
+      // Expéditeur (gauche)
+      doc.text("EXPÉDITEUR", 20, currentY + 16);
+      doc.text("Nom:", 20, currentY + 22);
+      doc.line(30, currentY + 22, 85, currentY + 22);
+      doc.text("Signature:", 20, currentY + 32);
+      doc.rect(20, currentY + 35, 65, 8);
+
+      // Ligne verticale
+      doc.line(pageWidth / 2, currentY + 12, pageWidth / 2, currentY + 45);
+
+      // Réceptionnaire (droite)
+      const rightX = pageWidth / 2 + 10;
+      doc.text("RÉCEPTIONNAIRE", rightX, currentY + 16);
+      doc.text("Nom:", rightX, currentY + 22);
+      // doc.line(rightX + 15, rightX + 22, rightX + 65, currentY + 22);
+      doc.text("Date réception:", rightX, currentY + 27);
+      doc.line(rightX + 25, currentY + 27, rightX + 65, currentY + 27);
+      doc.text("Signature:", rightX, currentY + 32);
+      doc.rect(rightX, currentY + 35, 65, 8);
+
+      // === Pied de page ===
+      const footerY = pageHeight - 10;
+      doc.setFontSize(6);
+      doc.setTextColor(150, 150, 150);
+      doc.text(`Document généré automatiquement`, pageWidth / 2, footerY, {
+        align: "center",
+      });
+
+      // Ligne décorative
+      doc.setDrawColor(41, 115, 178);
+      doc.setLineWidth(0.5);
+      doc.line(14, footerY - 3, pageWidth - 14, footerY - 3);
     });
 
-    const finalY = doc.lastAutoTable.finalY;
-
-    // === Pied de page ===
+    // === Sauvegarder le PDF ===
     const today = new Date();
-    doc.setFontSize(10);
-
-    // Signature à gauche
-    doc.text("Signature de l’expéditeur :", 14, finalY + 30);
-    doc.line(14, finalY + 32, 80, finalY + 32); // ligne pour signature
-
-    // Date à droite (expéditeur)
-    const formattedDate = today.toLocaleDateString("fr-FR", {
-      day: "2-digit",
-      month: "long",
-      year: "numeric",
-    });
-    doc.text(`Fait le : ${formattedDate}`, 150, finalY + 30, {
-      align: "right",
-    });
-
-    // Signature du réceptionnaire à droite
-    doc.text("Signature du réceptionnaire :", 120, finalY + 50);
-    doc.line(120, finalY + 52, 190, finalY + 52); // ligne pour signature
-
-    // Date de réception à gauche
-    doc.text("Date de réception :", 14, finalY + 50);
-    doc.line(14, finalY + 52, 80, finalY + 52); // ligne pour écrire la date
-
-    // Sauvegarder le PDF
-    doc.save("bon_de_livraison_SCX.pdf");
+    const dateStr = `${today.getFullYear()}${(today.getMonth() + 1)
+      .toString()
+      .padStart(2, "0")}${today.getDate().toString().padStart(2, "0")}`;
+    const fileName = `bons_livraison_par_actif_SCX_${dateStr}.pdf`;
+    doc.save(fileName);
 
     // Fermer le dialogue
     handleClosePdfDialog();
   };
+  // const generatePdfWithActifPages = (doc, logoData) => {
+  //   const pageWidth = doc.internal.pageSize.getWidth();
+  //   const pageHeight = doc.internal.pageSize.getHeight();
+
+  //   // Récupérer les éléments sélectionnés
+  //   const selectedItems = deliveryRows.filter((row) =>
+  //     selectedRows.includes(row.id)
+  //   );
+
+  //   // Grouper les articles par actif/site
+  //   const groupedByActif = selectedItems.reduce((acc, item) => {
+  //     const actifName = item.name || "Actif non défini";
+  //     if (!acc[actifName]) {
+  //       acc[actifName] = [];
+  //     }
+  //     acc[actifName].push(item);
+  //     return acc;
+  //   }, {});
+
+  //   const actifNames = Object.keys(groupedByActif);
+  //   const totalPages = actifNames.length;
+
+  //   // Fonction pour créer l'en-tête sur chaque page
+  //   const createHeader = (pageNumber, actifName) => {
+  //     let currentY = 20;
+
+  //     // === Logo ===
+  //     if (logoData) {
+  //       doc.addImage(logoData, "PNG", 14, currentY, 30, 15);
+  //       currentY += 20;
+  //     }
+
+  //     // === Bandeau entreprise ===
+  //     doc.setFillColor(41, 115, 178);
+  //     doc.rect(0, currentY, pageWidth, 25, "F");
+
+  //     doc.setTextColor(255, 255, 255);
+  //     doc.setFontSize(18);
+  //     doc.setFont("helvetica", "bold");
+
+  //     const companyName = "SCX TECHNOLOGY";
+  //     const companyTextWidth = doc.getTextWidth(companyName);
+  //     const companyX = (pageWidth - companyTextWidth) / 2;
+  //     doc.text(companyName, companyX, currentY + 10);
+
+  //     doc.setFontSize(10);
+  //     doc.setFont("helvetica", "normal");
+  //     doc.text("Support : +212 767-370586", 14, currentY + 17);
+  //     doc.text("Email : support@scx-tech.com", 14, currentY + 22);
+
+  //     currentY += 35;
+
+  //     // === Titre du document ===
+  //     doc.setTextColor(0, 0, 0);
+  //     doc.setFillColor(245, 245, 245);
+  //     doc.rect(14, currentY, pageWidth - 28, 15, "F");
+
+  //     doc.setFontSize(14);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.setTextColor(41, 115, 178);
+  //     const title = "BON DE LIVRAISON";
+  //     const titleWidth = doc.getTextWidth(title);
+  //     const titleX = (pageWidth - titleWidth) / 2;
+  //     doc.text(title, titleX, currentY + 10);
+
+  //     currentY += 25;
+
+  //     // === Informations de la page ===
+  //     doc.setTextColor(0, 0, 0);
+  //     doc.setFontSize(12);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.setFillColor(240, 248, 255);
+  //     doc.rect(14, currentY, pageWidth - 28, 20, "F");
+
+  //     // Nom de l'actif centré
+  //     doc.setTextColor(41, 115, 178);
+  //     const actifTitle = `SITE/ACTIF: ${actifName.toUpperCase()}`;
+  //     const actifTitleWidth = doc.getTextWidth(actifTitle);
+  //     const actifTitleX = (pageWidth - actifTitleWidth) / 2;
+  //     doc.text(actifTitle, actifTitleX, currentY + 8);
+
+  //     // Informations sur les côtés
+  //     doc.setFontSize(10);
+  //     doc.setFont("helvetica", "normal");
+  //     doc.setTextColor(0, 0, 0);
+
+  //     const today = new Date();
+  //     const formattedDate = today.toLocaleDateString("fr-FR", {
+  //       day: "2-digit",
+  //       month: "long",
+  //       year: "numeric",
+  //     });
+  //     const formattedTime = today.toLocaleTimeString("fr-FR", {
+  //       hour: "2-digit",
+  //       minute: "2-digit",
+  //     });
+
+  //     doc.text(`Date: ${formattedDate}`, 14, currentY + 15);
+  //     doc.text(`Heure: ${formattedTime}`, 14, currentY + 19);
+  //     doc.text(
+  //       `Page ${pageNumber}/${totalPages}`,
+  //       pageWidth - 40,
+  //       currentY + 15
+  //     );
+
+  //     currentY += 30;
+
+  //     // === Ligne de séparation ===
+  //     doc.setDrawColor(41, 115, 178);
+  //     doc.setLineWidth(0.8);
+  //     doc.line(14, currentY, pageWidth - 14, currentY);
+
+  //     return currentY + 10;
+  //   };
+
+  //   // === Génération d'une page par actif ===
+  //   actifNames.forEach((actifName, index) => {
+  //     // Ajouter une nouvelle page (sauf pour la première)
+  //     if (index > 0) {
+  //       doc.addPage();
+  //     }
+
+  //     // Créer l'en-tête
+  //     let currentY = createHeader(index + 1, actifName);
+
+  //     // Récupérer les articles pour cet actif
+  //     const actifItems = groupedByActif[actifName];
+
+  //     // === Informations de l'actif ===
+  //     if (actifItems.length > 0) {
+  //       const firstItem = actifItems[0];
+
+  //       doc.setFontSize(10);
+  //       doc.setFont("helvetica", "bold");
+  //       doc.text("INFORMATIONS DU SITE:", 14, currentY);
+
+  //       currentY += 8;
+  //       doc.setFont("helvetica", "normal");
+  //       doc.text(`Région: ${firstItem.region || "N/A"}`, 14, currentY);
+  //       doc.text(`Province: ${firstItem.province || "N/A"}`, 120, currentY);
+  //       doc.text(`Nombre d'articles: ${actifItems.length}`, 14, currentY + 6);
+
+  //       currentY += 20;
+  //     }
+
+  //     // === Tableau des articles ===
+  //     const headers = [
+  //       [
+  //         "N°",
+  //         "Catégorie",
+  //         "Besoin/Article",
+  //         "Quantité",
+  //         "Technicien",
+  //         "Date création",
+  //         "Statut",
+  //       ],
+  //     ];
+
+  //     const data = actifItems.map((item, itemIndex) => [
+  //       (itemIndex + 1).toString(),
+  //       item.categorie || "N/A",
+  //       item.besoin || "N/A",
+  //       item.quantite?.toString() || "0",
+  //       item.technicien || "N/A",
+  //       new Date(item.dateCreation).toLocaleDateString("fr-FR"),
+  //       item.status || "N/A",
+  //     ]);
+
+  //     doc.autoTable({
+  //       head: headers,
+  //       body: data,
+  //       startY: currentY,
+  //       theme: "grid",
+  //       styles: {
+  //         fontSize: 9,
+  //         cellPadding: 4,
+  //         lineColor: [200, 200, 200],
+  //         lineWidth: 0.1,
+  //       },
+  //       headStyles: {
+  //         fillColor: [41, 115, 178],
+  //         textColor: 255,
+  //         fontStyle: "bold",
+  //         halign: "center",
+  //       },
+  //       alternateRowStyles: {
+  //         fillColor: [248, 249, 250],
+  //       },
+  //       columnStyles: {
+  //         0: { halign: "center", cellWidth: 15 }, // N°
+  //         1: { cellWidth: 25 }, // Catégorie
+  //         2: { cellWidth: 40 }, // Besoin
+  //         3: { halign: "center", cellWidth: 20 }, // Quantité
+  //         4: { cellWidth: 30 }, // Technicien
+  //         5: { halign: "center", cellWidth: 25 }, // Date
+  //         6: { halign: "center", cellWidth: 25 }, // Statut
+  //       },
+  //       margin: { left: 14, right: 14 },
+  //     });
+
+  //     const tableEndY = doc.lastAutoTable.finalY + 15;
+
+  //     // === Section commentaires (si applicable) ===
+  //     const itemsWithComments = actifItems.filter(
+  //       (item) => item.commentaire && item.commentaire.trim()
+  //     );
+  //     if (itemsWithComments.length > 0) {
+  //       currentY = tableEndY;
+
+  //       doc.setFontSize(11);
+  //       doc.setFont("helvetica", "bold");
+  //       doc.text("COMMENTAIRES:", 14, currentY);
+
+  //       currentY += 8;
+  //       doc.setFontSize(9);
+  //       doc.setFont("helvetica", "normal");
+
+  //       itemsWithComments.forEach((item, commentIndex) => {
+  //         const commentText = `• ${item.besoin}: ${item.commentaire}`;
+  //         const splitComment = doc.splitTextToSize(commentText, pageWidth - 40);
+  //         doc.text(splitComment, 20, currentY);
+  //         currentY += splitComment.length * 4 + 3;
+  //       });
+
+  //       currentY += 10;
+  //     } else {
+  //       currentY = tableEndY;
+  //     }
+
+  //     // === Section des signatures ===
+  //     const signatureStartY = Math.max(currentY, pageHeight - 85);
+
+  //     // Vérifier s'il faut une nouvelle page pour les signatures
+  //     if (signatureStartY > pageHeight - 80) {
+  //       doc.addPage();
+  //       currentY = 30;
+  //     } else {
+  //       currentY = signatureStartY;
+  //     }
+
+  //     // Cadre pour les signatures
+  //     doc.setDrawColor(41, 115, 178);
+  //     doc.setLineWidth(0.5);
+  //     doc.rect(14, currentY, pageWidth - 28, 55);
+
+  //     // Titre signatures
+  //     doc.setFillColor(41, 115, 178);
+  //     doc.rect(14, currentY, pageWidth - 28, 12, "F");
+  //     doc.setFontSize(11);
+  //     doc.setFont("helvetica", "bold");
+  //     doc.setTextColor(255, 255, 255);
+  //     doc.text("SIGNATURES ET VALIDATION", pageWidth / 2 - 25, currentY + 8);
+
+  //     doc.setTextColor(0, 0, 0);
+  //     doc.setFontSize(9);
+  //     doc.setFont("helvetica", "normal");
+
+  //     // Expéditeur (gauche)
+  //     doc.text("EXPÉDITEUR", 20, currentY + 20);
+  //     doc.text("Nom:", 20, currentY + 27);
+  //     doc.line(30, currentY + 27, 85, currentY + 27);
+  //     doc.text("Signature:", 20, currentY + 40);
+  //     doc.rect(20, currentY + 43, 65, 10);
+
+  //     // Ligne verticale
+  //     doc.line(pageWidth / 2, currentY + 15, pageWidth / 2, currentY + 55);
+
+  //     // Réceptionnaire (droite)
+  //     const rightX = pageWidth / 2 + 10;
+  //     doc.text("RÉCEPTIONNAIRE", rightX, currentY + 20);
+  //     doc.text("Nom:", rightX, currentY + 27);
+  //     doc.line(rightX + 15, currentY + 27, rightX + 65, currentY + 27);
+  //     doc.text("Date réception:", rightX, currentY + 33);
+  //     doc.line(rightX + 25, currentY + 33, rightX + 65, currentY + 33);
+  //     doc.text("Signature:", rightX, currentY + 40);
+  //     doc.rect(rightX, currentY + 43, 65, 10);
+
+  //     // === Pied de page ===
+  //     const footerY = pageHeight - 15;
+  //     doc.setFontSize(7);
+  //     doc.setTextColor(150, 150, 150);
+  //     doc.text(
+  //       `Document généré automatiquement - SCX Technology - ${actifName}`,
+  //       pageWidth / 2,
+  //       footerY,
+  //       { align: "center" }
+  //     );
+
+  //     // Ligne décorative
+  //     doc.setDrawColor(41, 115, 178);
+  //     doc.setLineWidth(1);
+  //     doc.line(14, footerY - 3, pageWidth - 14, footerY - 3);
+  //   });
+
+  //   // === Sauvegarder le PDF ===
+  //   const today = new Date();
+  //   const dateStr = `${today.getFullYear()}${(today.getMonth() + 1)
+  //     .toString()
+  //     .padStart(2, "0")}${today.getDate().toString().padStart(2, "0")}`;
+  //   const fileName = `bons_livraison_par_actif_SCX_${dateStr}.pdf`;
+  //   doc.save(fileName);
+
+  //   // Fermer le dialogue
+  //   handleClosePdfDialog();
+  // };
 
   const calculateTimeDifference = (startTimestamp, endTimestamp) => {
     const startDate = new Date(startTimestamp);
@@ -847,13 +1339,13 @@ const ListeBesoin = () => {
                 onClick={() => handleDelete(rowIndex)}
                 color="secondary"
               >
-                <Delete style={{ width: "18px", height: "18px" }} />
+                {/* <Delete style={{ width: "18px", height: "18px" }} />
               </IconButton>
               <IconButton
                 title="cloturer"
                 onClick={async () => await handleClose(rowIndex)} // Wrap handleClose with async/await
                 color="success"
-              >
+              > */}
                 <CheckCircle style={{ width: "18px", height: "18px" }} />
               </IconButton>
             </div>
@@ -1183,6 +1675,7 @@ const ListeBesoin = () => {
           </DialogActions>
         </Dialog>
 
+        {/* Dialog de génération PDF avec filtre région et filtre nom */}
         <Dialog
           open={openPdfDialog}
           onClose={handleClosePdfDialog}
@@ -1200,15 +1693,49 @@ const ListeBesoin = () => {
               <CloseIcon />
             </IconButton>
           </DialogTitle>
-
           <DialogContent dividers>
-            {deliveryRows.length > 0 ? (
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Filtrer par région</InputLabel>
+              <Select
+                value={selectedRegion}
+                label="Filtrer par région"
+                onChange={(e) => {
+                  setSelectedRegion(e.target.value);
+                  setSelectedActif(""); // reset actif si la région change
+                }}
+              >
+                <MenuItem value="">Toutes les régions</MenuItem>
+                {pdfRegions.map((region) => (
+                  <MenuItem value={region} key={region}>
+                    {region}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Filtrer par actif</InputLabel>
+              <Select
+                value={selectedActif}
+                label="Filtrer par actif"
+                onChange={(e) => setSelectedActif(e.target.value)}
+              >
+                <MenuItem value="">Tous les actifs</MenuItem>
+                {pdfActifs.map((name) => (
+                  <MenuItem value={name} key={name}>
+                    {name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            {/* ... reste inchangé : sélection, liste, PDF ... */}
+            <Divider className="mb-2" />
+            {filteredDeliveryRows.length > 0 ? (
               <>
                 <div className="flex items-center mb-4">
                   <Checkbox
                     checked={
-                      selectedRows.length === deliveryRows.length &&
-                      deliveryRows.length > 0
+                      selectedRows.length === filteredDeliveryRows.length &&
+                      filteredDeliveryRows.length > 0
                     }
                     onChange={handleSelectAll}
                     color="primary"
@@ -1216,11 +1743,8 @@ const ListeBesoin = () => {
                   <SelectAllIcon className="mr-1 text-gray-600" />
                   <Typography>Sélectionner tout</Typography>
                 </div>
-
-                <Divider className="mb-2" />
-
                 <List>
-                  {deliveryRows.map((row) => (
+                  {filteredDeliveryRows.map((row) => (
                     <ListItem
                       key={row.id}
                       dense
@@ -1239,12 +1763,9 @@ const ListeBesoin = () => {
                       </ListItemIcon>
                       <ListItemText
                         primary={
-                          <div className="flex items-center gap-2">
-                            {/* <InventoryIcon fontSize="small" color="action" /> */}
-                            <span>{`${row.name}: ${row.besoin} || (Quantite: ${row.quantite})`}</span>
-                          </div>
+                          <span>{`${row.name}: ${row.besoin} || (Quantite: ${row.quantite})`}</span>
                         }
-                        secondary={` Région: ${row.region}  Province: ${
+                        secondary={`Région: ${row.region}  Province: ${
                           row.province
                         } | Demandeur: ${row.technicien || "Non spécifié"}`}
                       />
@@ -1255,11 +1776,10 @@ const ListeBesoin = () => {
             ) : (
               <Typography>
                 Aucune commande avec le statut "En cours de livraison" n'est
-                disponible.
+                disponible pour les filtres choisis.
               </Typography>
             )}
           </DialogContent>
-
           <DialogActions>
             <Button
               onClick={handleClosePdfDialog}

@@ -9,7 +9,8 @@ import { Tooltip, IconButton, Collapse, Box, Chip } from "@mui/material";
 import MUIDataTable from "mui-datatables";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import axios from "axios";
-
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 const MaintenanceRejetees = () => {
   const [rows, setRows] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
@@ -18,7 +19,7 @@ const MaintenanceRejetees = () => {
     const fetchData = async () => {
       try {
         const response = await axios.get(
-          "http://localhost:3000/api/v1/ticketMaintenance?isClosed=true&isDeleted=false"
+          `${apiUrl}/api/v1/ticketMaintenance?isClosed=true&isDeleted=false`
         );
         setRows(response.data);
       } catch (error) {

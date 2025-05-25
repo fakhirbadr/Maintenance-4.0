@@ -51,11 +51,11 @@ function formatDate(val) {
   return new Date(val).toLocaleString("fr-FR");
 }
 
-// Regroupe les pointages par jour (clé = date locale FR)
+// Regroupe les pointages par jour (clé = date locale FR, basé sur dateRequest)
 function groupByDay(pointages) {
   return pointages.reduce((acc, ptg) => {
-    const dateStr = ptg.createdAt
-      ? new Date(ptg.createdAt).toLocaleDateString("fr-FR")
+    const dateStr = ptg.dateRequest
+      ? new Date(ptg.dateRequest).toLocaleDateString("fr-FR")
       : "Date inconnue";
     if (!acc[dateStr]) acc[dateStr] = [];
     acc[dateStr].push(ptg);
@@ -230,9 +230,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         <DialogTitle>Pointage - Admin</DialogTitle>
         <DialogContent sx={{ p: 2 }}>
           <Box mb={2}>
-            <Typography variant="body1">
-              Vous êtes connecté en tant qu'administrateur ou superviseur.
-            </Typography>
             <Typography variant="body2" mt={1} mb={2}>
               Liste des pointages pour les 30 derniers jours.
               <br />

@@ -23,7 +23,18 @@ const apiUrl = import.meta.env.VITE_API_URL;
 
 // Utils
 function getTodayDateString() {
-  return new Date().toISOString().slice(0, 10);
+  // Format 'YYYY-MM-DD' en local
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = String(today.getMonth() + 1).padStart(2, "0");
+  const day = String(today.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
+// Force minuit UTC (et non local)
+function getDateRequestUtc(dateStr) {
+  // dateStr au format 'YYYY-MM-DD'
+  return new Date(dateStr + "T00:00:00Z");
 }
 
 // Convertit "HH:mm" + "YYYY-MM-DD" en Date (sans 'Z' pour éviter le décalage d'heure)
@@ -162,9 +173,7 @@ export default function UniteEtatModal({ open, onClose, onSave }) {
     setSelectedUnitName("");
   };
 
-  // Prépare l'objet à envoyer au backend selon l'état
   function buildPayload() {
-    // Utilise la région/province trouvées via l’API
     const base = {
       region: regionCurrent || "",
       province: provinceCurrent || "",
@@ -175,6 +184,8 @@ export default function UniteEtatModal({ open, onClose, onSave }) {
       siteActif: etat === "actif", // True si l'unité est active
     };
 
+    const todayStr = getTodayDateString();
+
     if (etat === "actif") {
       return {
         ...base,
@@ -184,7 +195,7 @@ export default function UniteEtatModal({ open, onClose, onSave }) {
         infirmiere1Present: personnel.infirmiere1.present,
         infirmiere2Present: personnel.infirmiere2.present,
         motifInactivite: null,
-        dateRequest: new Date(`${getTodayDateString()}T00:00:00`),
+        dateRequest: getDateRequestUtc(todayStr), // CORRECTION ICI
         heureInactivite: null,
         heureOuvertureEstimee: null,
       };
@@ -197,7 +208,7 @@ export default function UniteEtatModal({ open, onClose, onSave }) {
         infirmiere1Present: null,
         infirmiere2Present: null,
         motifInactivite,
-        dateRequest: new Date(`${dateInactivite}T00:00:00`),
+        dateRequest: getDateRequestUtc(dateInactivite), // CORRECTION ICI
         heureInactivite: timeStringToDate(heureInactivite, dateInactivite),
         heureOuvertureEstimee: timeStringToDate(
           heureOuvertureEstimee,
@@ -212,16 +223,22 @@ export default function UniteEtatModal({ open, onClose, onSave }) {
     e.preventDefault();
     const payload = buildPayload();
 
+    console.log("Payload envoyé au backend :", payload);
+
     try {
       const response = await fetch(`${apiUrl}/api/v1/pointage`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
-      if (!response.ok) {
-        throw new Error("Erreur lors de l'enregistrement du pointage");
-      }
 
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("Erreur backend:", response.status, errorText, payload);
+        throw new Error(
+          `Erreur lors de l'enregistrement du pointage (${response.status}): ${errorText}`
+        );
+      }
       setSnackbar({
         open: true,
         message:
