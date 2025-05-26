@@ -1334,18 +1334,18 @@ const ListeBesoin = () => {
               >
                 <Edit style={{ width: "18px", height: "18px" }} />
               </IconButton>
-              <IconButton
+              {/* <IconButton
                 title="supprimer "
                 onClick={() => handleDelete(rowIndex)}
                 color="secondary"
               >
-                {/* <Delete style={{ width: "18px", height: "18px" }} />
-              </IconButton>
+                <Delete style={{ width: "18px", height: "18px" }} />
+              </IconButton> */}
               <IconButton
                 title="cloturer"
                 onClick={async () => await handleClose(rowIndex)} // Wrap handleClose with async/await
                 color="success"
-              > */}
+              >
                 <CheckCircle style={{ width: "18px", height: "18px" }} />
               </IconButton>
             </div>
@@ -1505,6 +1505,7 @@ const ListeBesoin = () => {
                 name="status"
               >
                 {[
+                  "créé",
                   "Ouvert",
                   "En cours",
                   "Reçu par le support",
