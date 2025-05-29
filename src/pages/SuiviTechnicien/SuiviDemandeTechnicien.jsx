@@ -5,6 +5,7 @@ import Tab from "@mui/material/Tab";
 import Box from "@mui/material/Box";
 import TicketMaintenance from "./TicketMaintenance";
 import TicketDemandes from "./TikcetDemandes";
+import TicketVehicule from "./TicketVehicule";
 
 function CustomTabPanel(props) {
   const { children, value, index, ...other } = props;
@@ -48,7 +49,7 @@ const SuiviDemandeTechnicien = () => {
         <Tabs value={value} onChange={handleChange} aria-label="suivi tabs">
           <Tab label="Ticket intervention 🛠️" {...a11yProps(0)} />
           <Tab label="Ticket commandes 📦" {...a11yProps(1)} />
-          <Tab label="Ticket véhicule 🛻" {...a11yProps(2)} disabled />
+          <Tab label="Ticket véhicule 🛻" {...a11yProps(2)}  />
         </Tabs>
       </Box>
       <CustomTabPanel value={value} index={0}>
@@ -58,7 +59,7 @@ const SuiviDemandeTechnicien = () => {
         <TicketDemandes />
       </CustomTabPanel>
       <CustomTabPanel value={value} index={2}>
-        Contenu de la Demande 3
+        <TicketVehicule/>
       </CustomTabPanel>
     </Box>
   );

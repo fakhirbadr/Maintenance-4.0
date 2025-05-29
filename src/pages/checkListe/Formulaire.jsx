@@ -20,7 +20,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-// Divided categories of items
 const categories = {
   electrical: [
     "Ecran tactile 32 pouces ( BOX 1 )",
@@ -177,6 +176,38 @@ const FormulaireSimplifie = () => {
     }
   }, []);
 
+  // Initialise chaque équipement comme présent par défaut
+  useEffect(() => {
+    const initialData = {};
+    Object.keys(categories).forEach((category) => {
+      categories[category].forEach((item) => {
+        initialData[item] = {
+          presence: true,
+          quantite: 1,
+          fonctionnel: true,
+        };
+      });
+    });
+    setActifsData(initialData);
+  }, []);
+
+  const handlePresenceChange = (event, actif) => {
+    const { checked } = event.target;
+    setActifsData((prevState) => ({
+      ...prevState,
+      [actif]: {
+        ...prevState[actif],
+        presence: checked,
+        ...(checked
+          ? {}
+          : {
+              quantite: 1,
+              fonctionnel: true,
+            }),
+      },
+    }));
+  };
+
   const handleInputChange = (event, actif) => {
     const { name, value } = event.target;
     setActifsData((prevState) => ({
@@ -194,32 +225,24 @@ const FormulaireSimplifie = () => {
       ...prevState,
       [actif]: {
         ...prevState[actif],
-        fonctionnel: checked, // Gardez la valeur booléenne
+        fonctionnel: checked,
       },
     }));
   };
 
   const handleSubmit = async () => {
     try {
-      // Préparer les données d'équipement
       const equipmentData = {};
 
-      // Parcourir toutes les catégories et tous les items
       Object.keys(categories).forEach((category) => {
         categories[category].forEach((item) => {
-          // Récupérer les données de l'item ou utiliser les valeurs par défaut
-          const itemData = actifsData[item] || {
-            quantite: 1,
-            fonctionnel: true,
-          };
-
-          // Convertir la valeur fonctionnel en "Oui"/"Non"
+          const itemData = actifsData[item] || {};
           equipmentData[item] = {
-            quantite: itemData.quantite || 1,
-            fonctionnel:
-              itemData.fonctionnel === true || itemData.fonctionnel === "Oui"
-                ? "Oui"
-                : "Non",
+            presence: !!itemData.presence,
+            quantite: itemData.presence ? Number(itemData.quantite) || 1 : 0,
+            ...(itemData.presence && {
+              fonctionnel: itemData.fonctionnel === true || itemData.fonctionnel === "Oui" ? "Oui" : "Non"
+            })
           };
         });
       });
@@ -230,8 +253,6 @@ const FormulaireSimplifie = () => {
         date: new Date().toISOString(),
         equipment: equipmentData,
       };
-
-      console.log("Données envoyées:", requestData); // Pour débogage
 
       const response = await fetch(
         `${apiUrl}/api/v1/inventaire/actifsInventaire`,
@@ -259,14 +280,17 @@ const FormulaireSimplifie = () => {
     }
   };
 
-  // Initialize default values for each item
   const getDefaultValue = (item) => {
     return {
+      presence:
+        typeof actifsData[item]?.presence === "boolean"
+          ? actifsData[item].presence
+          : true,
       quantite: actifsData[item]?.quantite || 1,
       fonctionnel:
         actifsData[item]?.fonctionnel !== undefined
           ? actifsData[item].fonctionnel
-          : true, // true par défaut
+          : true,
     };
   };
 
@@ -342,6 +366,18 @@ const FormulaireSimplifie = () => {
                   }}
                 >
                   <Typography sx={{ flex: 1 }}>{item}</Typography>
+                  <FormControlLabel
+                    control={
+                      <Switch
+                        checked={defaultValue.presence}
+                        onChange={(e) => handlePresenceChange(e, item)}
+                        color="primary"
+                      />
+                    }
+                    label="Présent"
+                    labelPlacement="start"
+                    sx={{ minWidth: 120, mr: 2 }}
+                  />
                   <TextField
                     label="Quantité"
                     variant="outlined"
@@ -350,31 +386,39 @@ const FormulaireSimplifie = () => {
                     size="small"
                     value={defaultValue.quantite}
                     onChange={(e) => handleInputChange(e, item)}
+                    inputProps={{ min: 0 }}
                     sx={{ width: "100px", mx: 2 }}
-                    inputProps={{ min: 1 }}
+                    disabled={!defaultValue.presence}
                   />
                   <Box display="flex" alignItems="center">
                     <Typography variant="body2" sx={{ mr: 1 }}>
                       État:
                     </Typography>
-                    <FormControlLabel
-                      control={
-                        <Switch
-                          checked={
-                            defaultValue.fonctionnel === true ||
-                            defaultValue.fonctionnel === "Oui"
-                          }
-                          onChange={(e) => handleSwitchChange(e, item)}
-                          color="primary"
-                        />
-                      }
-                      label={
-                        defaultValue.fonctionnel === "Oui"
-                          ? "Fonctionnel"
-                          : "Défectueux"
-                      }
-                      labelPlacement="start"
-                    />
+                    {defaultValue.presence ? (
+                      <FormControlLabel
+                        control={
+                          <Switch
+                            checked={
+                              defaultValue.fonctionnel === true ||
+                              defaultValue.fonctionnel === "Oui"
+                            }
+                            onChange={(e) => handleSwitchChange(e, item)}
+                            color="primary"
+                          />
+                        }
+                        label={
+                          defaultValue.fonctionnel === true ||
+                          defaultValue.fonctionnel === "Oui"
+                            ? "Fonctionnel"
+                            : "Non fonctionnel"
+                        }
+                        labelPlacement="start"
+                      />
+                    ) : (
+                      <Typography variant="body2" color="textSecondary">
+                        Non applicable
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               );
@@ -390,6 +434,7 @@ const FormulaireSimplifie = () => {
           onClick={handleSubmit}
           size="large"
           sx={{ width: "200px" }}
+          disabled={!selectedUnite}
         >
           Soumettre
         </Button>

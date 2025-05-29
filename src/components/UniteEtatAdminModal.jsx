@@ -96,6 +96,7 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
   const [editModalOpen, setEditModalOpen] = useState(false);
   const [selectedPointage, setSelectedPointage] = useState(null);
   const [sendingMail, setSendingMail] = useState(false);
+  const [sendingBoth, setSendingBoth] = useState(false);
   const [sendMailMsg, setSendMailMsg] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
   const [unites, setUnites] = useState([]);
@@ -203,6 +204,84 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setSendingMail(false);
   };
 
+  // Envoi des deux rapports simultanément
+  const sendBothReports = async () => {
+    setSendingBoth(true);
+    setSendMailMsg("");
+    try {
+      if (!selectedDay) {
+        setSendMailMsg("Aucun jour sélectionné.");
+        setSendingBoth(false);
+        return;
+      }
+      
+      // Formatage de la date
+      const [d, m, y] = selectedDay.split("/");
+      const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
+      
+      // Envoi des deux rapports en parallèle
+      const responses = await Promise.allSettled([
+        fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: dayStr }),
+        }),
+        fetch(`${apiUrl}/api/v1/pointage/send-inactives-report`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ date: dayStr }),
+        })
+      ]);
+
+      // Traitement des réponses
+      const results = [];
+      
+      for (let i = 0; i < responses.length; i++) {
+        const name = i === 0 ? "Quotidien" : "Inactifs";
+        const response = responses[i];
+        
+        if (response.status === 'rejected') {
+          results.push(`${name}: Erreur réseau - ${response.reason.message}`);
+          continue;
+        }
+        
+        const res = response.value;
+        try {
+          const text = await res.text();
+          
+          // Détecter les réponses HTML
+          if (text.trim().startsWith("<!DOCTYPE html>") || 
+              text.includes("<html>") || 
+              text.includes("<head>")) {
+            results.push(`${name}: Erreur serveur (500)`);
+            continue;
+          }
+          
+          try {
+            const data = JSON.parse(text);
+            if (res.ok) {
+              results.push(`${name}: Succès`);
+            } else {
+              // Extraire le message d'erreur du JSON
+              const errorMsg = data.message || data.error || res.statusText;
+              results.push(`${name}: ${errorMsg}`);
+            }
+          } catch (e) {
+            results.push(`${name}: Réponse invalide - ${text.substring(0, 50)}`);
+          }
+        } catch (e) {
+          results.push(`${name}: Erreur de lecture - ${e.message}`);
+        }
+      }
+
+      setSendMailMsg(results.join(" | "));
+    } catch (e) {
+      setSendMailMsg("Erreur inattendue: " + e.message);
+    } finally {
+      setSendingBoth(false);
+    }
+  };
+
   // --- Groupement par région pour le jour sélectionné
   const pointagesDuJour =
     selectedDay && grouped[selectedDay] ? grouped[selectedDay] : [];
@@ -251,6 +330,23 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
               </Select>
             </FormControl>
             <Button
+              onClick={sendBothReports}
+              disabled={sendingBoth || !selectedDay}
+              color="primary"
+              variant="contained"
+              sx={{ 
+                mb: 2, 
+                mt: 0, 
+                ml: 2,
+                backgroundColor: '#4caf50',
+                '&:hover': { backgroundColor: '#388e3c' }
+              }}
+            >
+              {sendingBoth
+                ? "Envoi des rapports..."
+                : "Envoyer les deux rapports"}
+            </Button>
+            <Button
               onClick={sendRecapEmail}
               disabled={sendingMail || !selectedDay}
               color="secondary"
@@ -259,10 +355,12 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
             >
               {sendingMail
                 ? "Envoi en cours..."
-                : "Envoyer le récapitulatif du jour"}
+                : "Rapport quotidien seulement"}
             </Button>
             {sendMailMsg && (
-              <Typography color="info.main">{sendMailMsg}</Typography>
+              <Typography color="info.main" sx={{ mt: 1, mb: 1 }}>
+                {sendMailMsg}
+              </Typography>
             )}
           </Box>
           {loading ? (

@@ -145,6 +145,10 @@ const HistoriqueBesoin = () => {
       label: "Statut",
     },
     {
+      name: "cloturerPar",
+      label: "cloturerPar",
+    },
+    {
       name: "tempsreponse",
       label: "Temps de reponse",
       options: {
@@ -195,6 +199,7 @@ const HistoriqueBesoin = () => {
           commentaire: item.commentaire,
           dateCreation: new Date(item.dateCreation),
           dateCloture: new Date(item.dateCloture),
+          cloturerPar: item.cloturerPar,
           source: "source1",
         }));
 

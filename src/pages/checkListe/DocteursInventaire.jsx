@@ -27,6 +27,14 @@ import { useEffect, useState, useMemo, useCallback } from "react";
 
 const apiUrl = import.meta.env.VITE_API_URL;
 
+// Vérifie si au moins un équipement est présent dans un inventaire
+function hasAtLeastOneEquipmentPresent(inventaire) {
+  if (!inventaire.equipment) return false;
+  return Object.values(inventaire.equipment).some(
+    (eq) => eq.presence === true
+  );
+}
+
 const DocteursInventaire = () => {
   const [data, setData] = useState([]);
   const [openDialog, setOpenDialog] = useState(false);
@@ -52,7 +60,7 @@ const DocteursInventaire = () => {
         setAllUnits(units);
         // Calcul stats
         const groupedData = groupInventoriesByWeek(resp.data);
-        const stats = calculateStatisticsByWeek(groupedData, units);
+        const stats = calculateStatisticsByWeek(groupedData, units, resp.data);
         setStatisticsByDate(stats);
       } catch (e) {
         console.error("[ERROR] Impossible de charger les inventaires:", e);
@@ -89,30 +97,40 @@ const DocteursInventaire = () => {
     return groupedData;
   }
 
-  function calculateStatisticsByWeek(groupedData, allUnits) {
+  function calculateStatisticsByWeek(groupedData, allUnits, rawData) {
     const statistics = [];
     const normalizedAllUnits = allUnits.map((unit) => normalizeUnitName(unit));
     Object.keys(groupedData).forEach((weekStart) => {
-      const unitsWithInventory = groupedData[weekStart];
+      // Pour chaque unité, récupérer les inventaires de la semaine
+      const weekInventaires = rawData.filter((item) => {
+        const date = new Date(item.date);
+        const day = date.getDay();
+        const diff = day === 0 ? 6 : day - 1;
+        const monday = new Date(date);
+        monday.setDate(date.getDate() - diff);
+        monday.setHours(0, 0, 0, 0);
+        return monday.toISOString().split("T")[0] === weekStart;
+      });
+      
+      // Unités ayant réalisé l'inventaire
+      const unitsWithInventory = Array.from(
+  new Set(weekInventaires.map(inv => normalizeUnitName(inv.selectedUnite)))
+).map(name => ({ name }));
+
+      // Unités sans inventaire
       const unitsWithoutInventory = normalizedAllUnits.filter(
-        (unit) => !unitsWithInventory.has(unit)
-      );
+        unit => !unitsWithInventory.some(u => u.name === unit)
+      ).map(name => ({ name }));
+
       const startDate = new Date(weekStart);
       const endDate = new Date(startDate);
       endDate.setDate(startDate.getDate() + 6);
-      const unitsWithInventoryData = Array.from(unitsWithInventory).map(
-        (unit) => ({
-          name: unit,
-        })
-      );
-      const unitsWithoutInventoryData = unitsWithoutInventory.map((unit) => ({
-        name: unit,
-      }));
+
       statistics.push({
         startDate: weekStart,
         endDate: endDate.toISOString().split("T")[0],
-        unitsWithInventory: unitsWithInventoryData,
-        unitsWithoutInventory: unitsWithoutInventoryData,
+        unitsWithInventory,    // Unités ayant fait l'inventaire
+        unitsWithoutInventory, // Unités n'ayant pas fait l'inventaire
       });
     });
     return statistics;
@@ -137,21 +155,24 @@ const DocteursInventaire = () => {
 
     const dataExcel = Array.from(allUnitsSet).map((unitName) => {
       const weekStatus = lastFourWeeks.map((week) => {
-        const isPresent = week.unitsWithInventory.some(
+        const hasInventory = week.unitsWithInventory.some(
           (u) => normalizeUnitName(u.name) === unitName
         );
-        return isPresent ? "Fait" : "Non fait";
+        return hasInventory ? "Fait" : "Non fait";
       });
+      
       const doneCount = weekStatus.filter((s) => s === "Fait").length;
       const percentage = (doneCount / lastFourWeeks.length) * 100;
+      
       const weekData = lastFourWeeks.reduce((acc, week, index) => {
         acc[weekHeaders[index]] = weekStatus[index];
         return acc;
       }, {});
+      
       return {
         Unité: unitName,
         ...weekData,
-        "% Réalisation": `${percentage.toFixed(0)}%`,
+        "Taux de réalisation": `${percentage.toFixed(0)}%`,
       };
     });
 
@@ -205,8 +226,17 @@ const DocteursInventaire = () => {
       action: item.equipment
         ? Object.entries(item.equipment).map(([key, val]) => ({
             name: key,
-            quantite: val.quantite ?? "Inconnu",
-            fonctionnel: val.fonctionnel ?? "Inconnu",
+            quantite: val.presence === false ? 0 : val.quantite ?? "Inconnu",
+            // CORRECTION : Vérifier d'abord la présence avec un statut dédié
+            statut: val.presence === false 
+              ? "Non Disponible"  // Nouveau statut pour les équipements absents
+              : val.fonctionnel === "Oui"
+              ? "Fonctionnel"     // Si présent et fonctionnel = "Oui"
+              : val.fonctionnel === "Non"
+              ? "Défectueux"      // Si présent et fonctionnel = "Non"
+              : "Inconnu",        // Si présent mais fonctionnel non défini
+            presence: val.presence,
+            fonctionnel: val.fonctionnel,
           }))
         : [],
       validation: item.validation,
@@ -339,6 +369,7 @@ const DocteursInventaire = () => {
         onClose={handleCloseDialog}
         equipmentData={selectedItem}
       />
+
       {/* --------- Statistiques Dialog --------- */}
       <Dialog
         open={statisticsDialogOpen}
@@ -361,15 +392,16 @@ const DocteursInventaire = () => {
               const unitsWithInventoryByRegion = groupByRegion(
                 weekStats.unitsWithInventory
               );
+              
               const allRegions = [
                 ...new Set([
                   ...Object.keys(unitsWithoutInventoryByRegion),
                   ...Object.keys(unitsWithInventoryByRegion),
                 ]),
               ];
-              const sortedRegions = allRegions.sort((a, b) =>
-                a.localeCompare(b)
-              );
+              
+              const sortedRegions = allRegions.sort((a, b) => a.localeCompare(b));
+              
               return (
                 <Box
                   key={weekStats.startDate}
@@ -389,22 +421,14 @@ const DocteursInventaire = () => {
                     Semaine du{" "}
                     {formatWeekRange(weekStats.startDate, weekStats.endDate)}
                   </Typography>
+                  
                   <Grid container spacing={2}>
+                    {/* Colonne: Unités sans inventaire */}
                     <Grid item xs={6}>
-                      <Box
-                        sx={{
-                          p: 2,
-                          borderRight: "1px solid #e0e0e0",
-                          height: "100%",
-                        }}
-                      >
+                      <Box sx={{ p: 2, borderRight: "1px solid #e0e0e0", height: "100%" }}>
                         <Typography
                           variant="body1"
-                          sx={{
-                            color: "error.main",
-                            fontWeight: "bold",
-                            mb: 1,
-                          }}
+                          sx={{ color: "error.main", fontWeight: "bold", mb: 1 }}
                         >
                           Unités sans inventaire
                         </Typography>
@@ -412,11 +436,7 @@ const DocteursInventaire = () => {
                           <Box key={region} sx={{ mb: 2 }}>
                             <Typography
                               variant="body2"
-                              sx={{
-                                fontWeight: "bold",
-                                color: "text.primary",
-                                mb: 1,
-                              }}
+                              sx={{ fontWeight: "bold", color: "text.primary", mb: 1 }}
                             >
                               {region}{" "}
                               <span style={{ color: "", fontSize: "0.8rem" }}>
@@ -432,7 +452,7 @@ const DocteursInventaire = () => {
                               {(
                                 unitsWithoutInventoryByRegion[region] || []
                               ).map((unit, index) => (
-                                <Grid item key={index} xs={4}>
+                                <Grid item key={index} xs={12}>
                                   <Box
                                     sx={{
                                       display: "block",
@@ -468,20 +488,18 @@ const DocteursInventaire = () => {
                             variant="body2"
                             sx={{ color: "text.secondary" }}
                           >
-                            Aucune unité sans inventaire
+                            Toutes les unités ont fait l'inventaire
                           </Typography>
                         )}
                       </Box>
                     </Grid>
+                    
+                    {/* Colonne: Unités avec inventaire */}
                     <Grid item xs={6}>
                       <Box sx={{ p: 2 }}>
                         <Typography
                           variant="body1"
-                          sx={{
-                            color: "success.main",
-                            fontWeight: "bold",
-                            mb: 1,
-                          }}
+                          sx={{ color: "success.main", fontWeight: "bold", mb: 1 }}
                         >
                           Unités avec inventaire
                         </Typography>
@@ -489,11 +507,7 @@ const DocteursInventaire = () => {
                           <Box key={region} sx={{ mb: 2 }}>
                             <Typography
                               variant="body2"
-                              sx={{
-                                fontWeight: "bold",
-                                color: "text.primary",
-                                mb: 1,
-                              }}
+                              sx={{ fontWeight: "bold", color: "text.primary", mb: 1 }}
                             >
                               {region}{" "}
                               <span style={{ color: "", fontSize: "0.8rem" }}>
@@ -508,7 +522,7 @@ const DocteursInventaire = () => {
                             <Grid container spacing={1}>
                               {(unitsWithInventoryByRegion[region] || []).map(
                                 (unit, index) => (
-                                  <Grid item key={index} xs={4}>
+                                  <Grid item key={index} xs={12}>
                                     <Box
                                       sx={{
                                         display: "block",
@@ -545,7 +559,7 @@ const DocteursInventaire = () => {
                             variant="body2"
                             sx={{ color: "text.secondary" }}
                           >
-                            Aucune unité avec inventaire
+                            Aucune unité n'a fait l'inventaire
                           </Typography>
                         )}
                       </Box>

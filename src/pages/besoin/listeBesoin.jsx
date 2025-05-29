@@ -1508,6 +1508,8 @@ const ListeBesoin = () => {
                   "créé",
                   "Ouvert",
                   "En cours",
+                  "Achat par le support",
+                   "En attendant le déblocage de la caisse",
                   "Reçu par le support",
                   "Expédié",
                   "Demandé aux achats",

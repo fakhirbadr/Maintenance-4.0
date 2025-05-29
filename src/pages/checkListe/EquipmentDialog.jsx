@@ -12,7 +12,7 @@ import {
   Box,
   useTheme,
 } from "@mui/material";
-import { CheckCircle, Cancel, PictureAsPdf } from "@mui/icons-material";
+import { CheckCircle, Cancel, PictureAsPdf, RemoveCircle } from "@mui/icons-material";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
 
@@ -155,7 +155,6 @@ const generatePDF = (equipmentData) => {
     return acc;
   }, {});
 
-  // Add title and date
   doc.setFontSize(18);
   doc.text(title, 105, 15, { align: "center" });
   doc.setFontSize(12);
@@ -164,7 +163,6 @@ const generatePDF = (equipmentData) => {
   let yPosition = 40;
 
   Object.entries(groupedEquipment).forEach(([category, items]) => {
-    // Add category title
     doc.setFontSize(14);
     doc.text(
       category.charAt(0).toUpperCase() + category.slice(1).replace("_", " "),
@@ -173,14 +171,16 @@ const generatePDF = (equipmentData) => {
     );
     yPosition += 10;
 
-    // Prepare table data
     const tableData = items.map((item) => [
       item.name,
-      item.quantite,
-      item.fonctionnel === "Oui" ? "Fonctionnel" : "Défectueux",
+      item.presence === false ? "0" : item.quantite,
+      item.presence === false 
+        ? "Absent" 
+        : item.fonctionnel === "Oui" 
+          ? "Fonctionnel" 
+          : "Défectueux",
     ]);
 
-    // Add table
     doc.autoTable({
       startY: yPosition,
       head: [["Équipement", "Quantité", "Statut"]],
@@ -192,18 +192,21 @@ const generatePDF = (equipmentData) => {
 
     yPosition = doc.lastAutoTable.finalY + 10;
 
-    // Add new page if needed
     if (yPosition > 280) {
       doc.addPage();
       yPosition = 20;
     }
   });
 
-  // Add summary
   const functionalCount = equipmentData.filter(
-    (item) => item.fonctionnel === "Oui"
+    (item) => item.presence !== false && item.fonctionnel === "Oui"
   ).length;
-  const defectiveCount = equipmentData.length - functionalCount;
+  const defectiveCount = equipmentData.filter(
+    (item) => item.presence !== false && item.fonctionnel !== "Oui"
+  ).length;
+  const absentCount = equipmentData.filter(
+    (item) => item.presence === false
+  ).length;
 
   doc.setFontSize(14);
   doc.text("Résumé", 105, yPosition, { align: "center" });
@@ -221,14 +224,36 @@ const generatePDF = (equipmentData) => {
   doc.text(`Défectueux: ${defectiveCount}`, 105, yPosition, {
     align: "center",
   });
+  yPosition += 7;
+  doc.text(`Absents: ${absentCount}`, 105, yPosition, {
+    align: "center",
+  });
 
   doc.save(`rapport-equipements_${date.replace(/\//g, "-")}.pdf`);
 };
 
 const EquipmentDialog = ({ open, onClose, equipmentData }) => {
   const theme = useTheme();
-
-  const isFunctional = (value) => value === "Oui";
+  
+  const getEquipmentStatus = (equipment) => {
+    if (equipment.presence === false) {
+      return {
+        status: "Absent",
+        icon: <RemoveCircle sx={{ color: theme.palette.warning.main, mr: 1 }} />,
+        color: theme.palette.warning.main,
+      };
+    }
+    const functional = equipment.fonctionnel === "Oui";
+    return {
+      status: functional ? "Fonctionnel" : "Défectueux",
+      icon: functional ? (
+        <CheckCircle sx={{ color: theme.palette.success.main, mr: 1 }} />
+      ) : (
+        <Cancel sx={{ color: theme.palette.error.main, mr: 1 }} />
+      ),
+      color: functional ? theme.palette.success.main : theme.palette.error.main,
+    };
+  };
 
   const groupedEquipment = (equipmentData || []).reduce((acc, equipment) => {
     const category = getCategory(equipment.name);
@@ -272,7 +297,7 @@ const EquipmentDialog = ({ open, onClose, equipmentData }) => {
               </Typography>
               <Grid container spacing={2}>
                 {items.map((equipment, index) => {
-                  const functional = isFunctional(equipment.fonctionnel);
+                  const { status, icon, color } = getEquipmentStatus(equipment);
 
                   return (
                     <Grid item xs={12} sm={6} key={index}>
@@ -281,56 +306,22 @@ const EquipmentDialog = ({ open, onClose, equipmentData }) => {
                         sx={{
                           p: 2,
                           borderRadius: 2,
-                          borderLeft: `4px solid ${
-                            functional
-                              ? theme.palette.success.main
-                              : theme.palette.error.main
-                          }`,
+                          borderLeft: `4px solid ${color}`,
                         }}
                       >
-                        <Box
-                          display="flex"
-                          justifyContent="space-between"
-                          alignItems="center"
-                        >
+                        <Box display="flex" alignItems="center" mb={1}>
+                          {icon}
                           <Typography variant="subtitle1" fontWeight="bold">
                             {equipment.name}
                           </Typography>
-                          {functional ? (
-                            <CheckCircle color="success" />
-                          ) : (
-                            <Cancel color="error" />
-                          )}
                         </Box>
-                        <Divider sx={{ my: 1 }} />
-                        <Box
-                          display="flex"
-                          justifyContent="space-between"
-                          mt={1}
-                        >
-                          <Typography variant="body2" color="text.secondary">
-                            Quantité:
-                          </Typography>
-                          <Typography variant="body2" fontWeight="bold">
-                            {equipment.quantite}
-                          </Typography>
-                        </Box>
-                        <Box display="flex" justifyContent="space-between">
-                          <Typography variant="body2" color="text.secondary">
-                            Statut:
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            fontWeight="bold"
-                            color={
-                              functional
-                                ? theme.palette.success.main
-                                : theme.palette.error.main
-                            }
-                          >
-                            {functional ? "Fonctionnel" : "Défectueux"}
-                          </Typography>
-                        </Box>
+                        <Divider sx={{ mb: 1 }} />
+                        <Typography variant="body2">
+                          Quantité : {equipment.presence === false ? "0" : equipment.quantite}
+                        </Typography>
+                        <Typography variant="body2">
+                          Statut : {status}
+                        </Typography>
                       </Paper>
                     </Grid>
                   );
@@ -339,25 +330,11 @@ const EquipmentDialog = ({ open, onClose, equipmentData }) => {
             </Box>
           ))
         ) : (
-          <Box
-            display="flex"
-            justifyContent="center"
-            alignItems="center"
-            minHeight="100px"
-          >
-            <Typography variant="body1" color="text.secondary">
-              Aucun équipement disponible pour cette entrée.
-            </Typography>
-          </Box>
+          <Typography>Aucun équipement disponible.</Typography>
         )}
       </DialogContent>
-      <DialogActions sx={{ p: 2 }}>
-        <Button
-          onClick={onClose}
-          variant="contained"
-          color="primary"
-          sx={{ borderRadius: 2 }}
-        >
+      <DialogActions>
+        <Button onClick={onClose} color="primary" variant="outlined">
           Fermer
         </Button>
       </DialogActions>
