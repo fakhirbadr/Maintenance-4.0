@@ -326,16 +326,16 @@ const Array1 = [
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
-  {
-    text: "Configuration Asset",
-    icon: (
-      <IconWrapper>
-        <BrowserUpdatedRoundedIcon />
-      </IconWrapper>
-    ),
-    path: "/ConfigurationAsset",
-    roleRequired: ["superviseur"],
-  },
+  // {
+  //   text: "Configuration Asset",
+  //   icon: (
+  //     <IconWrapper>
+  //       <BrowserUpdatedRoundedIcon />
+  //     </IconWrapper>
+  //   ),
+  //   path: "/ConfigurationAsset",
+  //   roleRequired: ["superviseur"],
+  // },
 ];
 
 export default function SidBar({ open, handleDrawerClose }) {
