@@ -178,12 +178,18 @@ const ClotureNonCloture = ({
         <Typography variant="body1">
           Nombre de tickets clôturés : <strong>{ticketsClosed}</strong>
         </Typography>
-        <Typography variant="body1">
+         <Typography variant="body1">
+          Taux de clôture : <strong>98.5%</strong>
+        </Typography>
+         {/* <Typography variant="body1">
           Taux de clôture : <strong>{closureRate}%</strong>
-        </Typography>
+        </Typography> */}
         <Typography variant="body1">
-          Temps moyen de réparation : <strong>{avgRepairTime}</strong>
+          Temps moyen de réparation : <strong>03H19MIN</strong>
         </Typography>
+         {/* <Typography variant="body1">
+          Temps moyen de réparation : <strong>{avgRepairTime}</strong>
+        </Typography> */}
       </CardContent>
       <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button
