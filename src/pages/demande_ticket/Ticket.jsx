@@ -106,13 +106,13 @@ const Ticket = () => {
     //     "Signalement d'un équipement défectueux ou demande de retour de matériel en fin d'utilisation.",
     //   onClick: () => setOpenRetour(true),
     // },
-    // {
-    //   title: "Problème Système d'Information",
-    //   image: myImage7,
-    //   description:
-    //     "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
-    //   onClick: () => setOpenProblemeSI(true),
-    // },
+    {
+      title: "Problème Système d'Information",
+      image: myImage7,
+      description:
+        "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
+      onClick: () => setOpenProblemeSI(true),
+    },
   ];
 
   return (
@@ -268,6 +268,10 @@ const Ticket = () => {
         open={openVehicule}
         onClose={() => setOpenVehicule(false)}
       />
+
+      <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
+
+      
       {/* <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} /> */}
       <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
     </>

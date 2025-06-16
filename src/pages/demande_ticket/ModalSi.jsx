@@ -16,33 +16,33 @@ import axios from "axios";
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const categories = [
-  { label: "Réseau", value: "reseau" },
-  { label: "Logiciel", value: "logiciel" },
-  { label: "Matériel", value: "materiel" },
-  { label: "Sécurité", value: "securite" },
+  { label: "Visiostation", value: "Visiostation" },
+  // { label: "Logiciel", value: "logiciel" },
+  // { label: "Matériel", value: "materiel" },
+  // { label: "Sécurité", value: "securite" },
 ];
 
 const problemesParCategorie = {
-  reseau: [
-    { label: "Connexion lente", value: "connexion_lente" },
-    { label: "Perte de connexion", value: "perte_connexion" },
-    { label: "Coupure Internet", value: "coupure_internet" },
+  Visiostation: [
+    { label: "Camera", value: "camera" },
+    { label: "Audio", value: "audio" },
+    { label: "Erreur de sauvegarde", value: "erreur_de_sauvegarde" },
   ],
-  logiciel: [
-    { label: "Application plante", value: "application_plante" },
-    { label: "Erreur de licence", value: "erreur_licence" },
-    { label: "Mise à jour impossible", value: "maj_impossible" },
-  ],
-  materiel: [
-    { label: "Écran bleu", value: "ecran_bleu" },
-    { label: "Panne d'alimentation", value: "panne_alimentation" },
-    { label: "Surchauffe", value: "surchauffe" },
-  ],
-  securite: [
-    { label: "Virus détecté", value: "virus" },
-    { label: "Tentative d'intrusion", value: "intrusion" },
-    { label: "Mot de passe compromis", value: "mdp_compromis" },
-  ],
+  // logiciel: [
+  //   { label: "Application plante", value: "application_plante" },
+  //   { label: "Erreur de licence", value: "erreur_licence" },
+  //   { label: "Mise à jour impossible", value: "maj_impossible" },
+  // ],
+  // materiel: [
+  //   { label: "Écran bleu", value: "ecran_bleu" },
+  //   { label: "Panne d'alimentation", value: "panne_alimentation" },
+  //   { label: "Surchauffe", value: "surchauffe" },
+  // ],
+  // securite: [
+  //   { label: "Virus détecté", value: "virus" },
+  //   { label: "Tentative d'intrusion", value: "intrusion" },
+  //   { label: "Mot de passe compromis", value: "mdp_compromis" },
+  // ],
 };
 
 const ModalSi = ({ open, onClose, onTicketCreated }) => {

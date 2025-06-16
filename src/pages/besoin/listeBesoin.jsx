@@ -98,7 +98,7 @@ const ListeBesoin = () => {
   const handleOpenPdfDialog = () => {
     // Filtrer seulement les commandes "En cours de livraison"
     const filteredRows = rows.filter(
-      (row) => row.status === "En cours de livraison"
+      (row) => row.status === "Expédié"
     );
     setDeliveryRows(filteredRows);
     setSelectedRows([]);

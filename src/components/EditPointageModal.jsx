@@ -11,11 +11,27 @@ import {
   Box,
 } from "@mui/material";
 
+// Helper pour formater une date ISO en format "YYYY-MM-DDTHH:mm" local
+const toDatetimeLocal = (isoString) => {
+  if (!isoString) return "";
+  const date = new Date(isoString);
+  const offset = date.getTimezoneOffset();
+  const localDate = new Date(date.getTime() - offset * 60 * 1000);
+  return localDate.toISOString().slice(0, 16);
+};
+
 const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
   const [form, setForm] = useState(pointage || {});
 
   React.useEffect(() => {
-    setForm(pointage || {});
+    if (pointage) {
+      setForm({
+        ...pointage,
+        heureDebut: toDatetimeLocal(pointage.heureDebut),
+      });
+    } else {
+      setForm({});
+    }
   }, [pointage]);
 
   const handleChange = (e) => {
@@ -28,7 +44,7 @@ const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // onSave doit faire l'appel API dans le parent
+    // onSave doit faire l'appel API dans le parent, penser à retransformer le format si besoin côté parent
     onSave(form);
   };
 
@@ -55,6 +71,7 @@ const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
             value={form.region || ""}
             onChange={handleChange}
             fullWidth
+            disabled
           />
           <TextField
             margin="dense"
@@ -63,6 +80,7 @@ const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
             value={form.province || ""}
             onChange={handleChange}
             fullWidth
+            disabled
           />
           <TextField
             margin="dense"
@@ -71,6 +89,7 @@ const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
             value={form.user || ""}
             onChange={handleChange}
             fullWidth
+            disabled
           />
           <TextField
             margin="dense"
@@ -79,6 +98,18 @@ const EditPointageModal = ({ open, onClose, pointage, onSave }) => {
             value={form.motifInactivite || ""}
             onChange={handleChange}
             fullWidth
+          />
+          <TextField
+            margin="dense"
+            label="Heure Début"
+            name="heureDebut"
+            value={form.heureDebut || ""}
+            onChange={handleChange}
+            fullWidth
+            type="datetime-local"
+            InputLabelProps={{
+              shrink: true,
+            }}
           />
           <Box mt={1}>
             <FormControlLabel

@@ -129,8 +129,6 @@ function CreateAccountForm() {
   const [actifs, setActifs] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Fonction pour mettre à jour la valeur de la recherche
-
   // Fetch actifs depuis l'API
   useEffect(() => {
     const fetchActifs = async () => {
@@ -187,8 +185,16 @@ function CreateAccountForm() {
       // Alerte de succès
       alert("L'utilisateur a été enregistré avec succès !");
 
-      // Recharger la page
-      window.location.reload();
+      // Reset form
+      setFormData({
+        nomComplet: "",
+        email: "",
+        password: "",
+        role: "",
+        region: "",
+        province: "",
+        actifIds: [],
+      });
     } catch (error) {
       console.error(
         "Erreur lors de l'envoi des données :",
@@ -196,7 +202,11 @@ function CreateAccountForm() {
       );
 
       // Alerte en cas d'erreur
-      alert("Une erreur s'est produite lors de l'enregistrement.");
+      if (error.response && error.response.data && error.response.data.message) {
+        alert(`Erreur: ${error.response.data.message}`);
+      } else {
+        alert("Une erreur s'est produite lors de l'enregistrement.");
+      }
     }
   };
 
@@ -257,10 +267,10 @@ function CreateAccountForm() {
           >
             <MenuItem value="admin">Admin</MenuItem>
             <MenuItem value="user">User</MenuItem>
-            <MenuItem value="docteurs">docteurs</MenuItem>
-            <MenuItem value="chargé de stock">chargé de stock</MenuItem>
+            <MenuItem value="docteurs">Docteurs</MenuItem>
+            <MenuItem value="chargé de stock">Chargé de stock</MenuItem>
             <MenuItem value="chargés de performance">
-              chargés de performance
+              Chargés de performance
             </MenuItem>
           </TextField>
         </Grid>
@@ -305,32 +315,31 @@ function CreateAccountForm() {
             label="Actifs"
             name="actifIds"
             select
-            value={formData.actifIds} // Should be an array for multiple selection
+            value={formData.actifIds}
             onChange={(event) => {
               const { value } = event.target;
               // Si "All" est sélectionné, on sélectionne tous les actifs
               if (value.includes("all")) {
                 setFormData((prevData) => ({
                   ...prevData,
-                  actifIds: actifs.map((actif) => actif._id), // Sélectionne tous les actifs
+                  actifIds: actifs.map((actif) => actif._id),
                 }));
               } else {
                 setFormData((prevData) => ({
                   ...prevData,
-                  actifIds:
-                    typeof value === "string" ? value.split(",") : value, // Handle arrays
+                  actifIds: typeof value === "string" ? value.split(",") : value,
                 }));
               }
             }}
             fullWidth
             required
             SelectProps={{
-              multiple: true, // Enable multiple selection
+              multiple: true,
               renderValue: (selected) =>
                 selected.length === 0
                   ? ""
                   : selected.includes("all")
-                  ? "All" // Affiche "All" si tous les actifs sont sélectionnés
+                  ? "All"
                   : actifs
                       .filter((actif) => selected.includes(actif._id))
                       .map((actif) => actif.name)
@@ -374,107 +383,102 @@ function CreateAccountForm() {
 
 function UpdateAccountForm() {
   const [users, setUsers] = useState([]);
-  const [actifs, setActifs] = useState({}); // Dictionnaire pour stocker les noms des actifs
+  const [actifs, setActifs] = useState({});
+  const [allActifs, setAllActifs] = useState([]);
   const [open, setOpen] = useState(false);
-  const [selectedUser, setSelectedUser] = useState(null); // Utilisateur sélectionné
-  const [searchQuery, setSearchQuery] = useState(""); // État pour gérer la recherche
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [searchQuery, setSearchQuery] = useState("");
 
-  // Fonction pour mettre à jour la valeur de la recherche
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  // Filtrer les actifs en fonction de la recherche
-  const filteredActifs = Object.keys(actifs).filter((actifId) =>
-    actifs[actifId].includes(searchQuery)
+  // Filter actifs based on search query
+  const filteredActifs = allActifs.filter((actif) =>
+    actif.name.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
+  // Fetch users
   useEffect(() => {
-    axios
-      .get(`${apiUrl}/api/v1/users/user`)
-      .then((response) => {
-        console.log(response.data); // Log the API response to inspect its structure
+    const fetchUsers = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/api/v1/users/user`);
+        console.log("Users response:", response.data);
+        
         if (Array.isArray(response.data)) {
-          setUsers(response.data); // Si c'est un tableau, on le définit
+          setUsers(response.data);
         } else if (response.data && Array.isArray(response.data.users)) {
-          setUsers(response.data.users); // Si les utilisateurs sont dans une propriété "users"
+          setUsers(response.data.users);
+        } else {
+          console.error("Unexpected response format:", response.data);
+          setUsers([]);
         }
-      })
-      .catch((error) => {
-        console.error("There was an error fetching users!", error);
-      });
+      } catch (error) {
+        console.error("Error fetching users:", error);
+        alert("Erreur lors de la récupération des utilisateurs.");
+      }
+    };
+
+    fetchUsers();
   }, []);
 
+  // Fetch all actifs for dropdown and create actifs map
   useEffect(() => {
-    if (!Array.isArray(users) || users.length === 0) {
-      console.warn(
-        "Aucun utilisateur valide trouvé ou 'users' n'est pas un tableau."
-      );
-      return;
-    }
-
-    // Extraire les actifIds des utilisateurs
-    const allActifIds = users.flatMap((user) => user.actifIds || []); // Ajout d'une validation pour éviter les erreurs
-    const uniqueActifIds = [...new Set(allActifIds)]; // Éviter les doublons
-
-    if (uniqueActifIds.length === 0) {
-      console.warn("Aucun actifId unique trouvé.");
-      return;
-    }
-
-    // Requête pour récupérer les informations des actifs
-    axios
-      .get(`${apiUrl}/api/actifs`, {
-        params: { ids: uniqueActifIds.join(",") }, // Passer les ids des actifs sous forme de chaîne
-      })
-      .then((response) => {
+    const fetchActifs = async () => {
+      try {
+        const response = await axios.get(`${apiUrl}/api/actifs`);
+        console.log("Actifs response:", response.data);
+        
         if (Array.isArray(response.data)) {
+          setAllActifs(response.data);
+          
+          // Create actifs map for display
           const actifsMap = response.data.reduce((acc, actif) => {
-            acc[actif._id] = actif.name || "Nom inconnu"; // Gestion des noms manquants
+            acc[actif._id] = actif.name || "Nom inconnu";
             return acc;
           }, {});
-          setActifs(actifsMap); // Mettre à jour l'état
+          setActifs(actifsMap);
         } else {
-          console.error(
-            "Réponse inattendue : les données des actifs ne sont pas un tableau.",
-            response.data
-          );
+          console.error("Unexpected actifs response format:", response.data);
         }
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la récupération des actifs :", error);
-      });
-  }, [users]);
-  // La dépendance ici garantit que l'effet sera exécuté quand `users` changera
+      } catch (error) {
+        console.error("Error fetching actifs:", error);
+      }
+    };
+
+    fetchActifs();
+  }, []);
 
   const handleOpenDialog = (user) => {
-    setSelectedUser(user); // Définir l'utilisateur sélectionné
-    setOpen(true); // Ouvrir le dialogue
+    // Create a deep copy of the user object to avoid direct mutation
+    setSelectedUser({
+      ...user,
+      actifIds: user.actifIds || [] // Ensure actifIds is always an array
+    });
+    setSearchQuery(""); // Reset search query when opening dialog
+    setOpen(true);
   };
 
   const handleCloseDialog = () => {
     setOpen(false);
-    setSelectedUser(null); // Réinitialiser l'utilisateur sélectionné
-  };
-
-  const handleUpdate = (userId) => {
-    setOpen(true);
+    setSelectedUser(null);
+    setSearchQuery("");
   };
 
   const handleDelete = async (userId) => {
+    if (!window.confirm("Êtes-vous sûr de vouloir supprimer cet utilisateur ?")) {
+      return;
+    }
+
     try {
-      const response = await axios.delete(
-        `${apiUrl}/api/v1/users/delete/${userId}`
-      );
+      const response = await axios.delete(`${apiUrl}/api/v1/users/delete/${userId}`);
 
       if (response.status === 200) {
         console.log("Utilisateur supprimé avec succès");
-
-        // Affiche une alerte pour indiquer la réussite
         alert("Utilisateur supprimé avec succès.");
-
-        // Rafraîchit la page pour recharger la liste des utilisateurs
-        window.location.reload();
+        
+        // Update the users list instead of reloading the page
+        setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
       }
     } catch (error) {
       console.error("Erreur lors de la suppression de l'utilisateur:", error);
@@ -482,24 +486,76 @@ function UpdateAccountForm() {
     }
   };
 
-  const handleSave = () => {
-    // Exemple d'appel à une API pour mettre à jour l'utilisateur
-    const { _id, ...userData } = selectedUser;
-    axios
-      .put(`${apiUrl}/api/v1/users/users/${_id}`, userData)
-      .then((response) => {
-        console.log("User updated successfully:", response.data);
-        alert("Utilisateur mis à jour avec succès.");
-        setOpen(false);
-        // Rafraîchir la liste des utilisateurs
-        axios
-          .get(`${apiUrl}/api/v1/users/user`)
-          .then((response) => setUsers(response.data));
-      })
-      .catch((error) => {
-        console.error("Erreur lors de la mise à jour:", error);
-        alert("Une erreur est survenue lors de la mise à jour.");
-      });
+  const handleSave = async () => {
+    if (!selectedUser) return;
+
+    try {
+      // Prepare the data to send - exclude _id and other non-updatable fields
+      const { _id, __v, createdAt, updatedAt, ...userData } = selectedUser;
+      
+      // Validate required fields
+      if (!userData.email || !userData.nomComplet) {
+        alert("Email et nom complet sont requis.");
+        return;
+      }
+
+      // Ensure actifIds is an array
+      if (!Array.isArray(userData.actifIds)) {
+        userData.actifIds = [];
+      }
+
+      // Filtrer les IDs d'actifs qui existent dans allActifs
+      const validActifIds = userData.actifIds.filter(actifId => 
+        allActifs.some(actif => actif._id === actifId)
+      );
+
+      const invalidActifIds = userData.actifIds.filter(actifId => 
+        !allActifs.some(actif => actif._id === actifId)
+      );
+
+      // Mettre à jour les actifIds avec seulement les valides
+      userData.actifIds = validActifIds;
+
+      console.log("Sending update data:", userData);
+      console.log("User ID:", _id);
+      console.log("API URL:", `${apiUrl}/api/v1/users/users/${_id}`);
+
+      const response = await axios.put(`${apiUrl}/api/v1/users/users/${_id}`, userData);
+      
+      console.log("User updated successfully:", response.data);
+      alert("Utilisateur mis à jour avec succès.");
+      
+      // Update the local users state instead of refetching
+      setUsers(prevUsers => 
+        prevUsers.map(user => 
+          user._id === _id ? { ...user, ...userData } : user
+        )
+      );
+      
+      if (invalidActifIds.length > 0) {
+        alert(`Attention : ${invalidActifIds.length} actif(s) introuvable(s) ont été ignorés.`);
+      }
+      
+      handleCloseDialog();
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour:", error);
+      
+      // More detailed error handling
+      if (error.response) {
+        console.error("Error response data:", error.response.data);
+        console.error("Error response status:", error.response.status);
+        
+        if (error.response.data && error.response.data.message) {
+          alert(`Erreur: ${error.response.data.message}`);
+        } else {
+          alert(`Erreur ${error.response.status}: ${error.response.statusText}`);
+        }
+      } else if (error.request) {
+        alert("Erreur de réseau: Impossible de contacter le serveur.");
+      } else {
+        alert("Une erreur inattendue est survenue.");
+      }
+    }
   };
 
   const handleInputChange = (field, value) => {
@@ -525,12 +581,9 @@ function UpdateAccountForm() {
             </TableHead>
             <TableBody>
               {users.map((user) => (
-                <TableRow key={user.email}>
+                <TableRow key={user._id || user.email}>
                   <TableCell>{user.email}</TableCell>
-                  <TableCell>
-                    {user.nomComplet || "Nom non disponible"}
-                  </TableCell>{" "}
-                  {/* Affiche un message par défaut si nomComplet est vide ou manquant */}
+                  <TableCell>{user.nomComplet || "Nom non disponible"}</TableCell>
                   <TableCell>
                     <Box
                       sx={{
@@ -540,7 +593,7 @@ function UpdateAccountForm() {
                         overflow: "hidden",
                         textOverflow: "ellipsis",
                         lineHeight: "1.5rem",
-                        maxHeight: "3rem", // 2 lignes × 1.5rem
+                        maxHeight: "3rem",
                       }}
                     >
                       {user.actifIds && user.actifIds.length > 0
@@ -552,7 +605,6 @@ function UpdateAccountForm() {
                         : "Aucun actif"}
                     </Box>
                   </TableCell>
-                  {/* Affiche "Aucun actif" si actifIds est vide ou manquant */}
                   <TableCell>{user.role}</TableCell>
                   <TableCell>
                     <Box display="flex" alignItems="center">
@@ -567,7 +619,7 @@ function UpdateAccountForm() {
                       <Button
                         variant="outlined"
                         color="error"
-                        onClick={() => handleDelete(user._id)} // Pass the user ID
+                        onClick={() => handleDelete(user._id)}
                       >
                         Delete
                       </Button>
@@ -579,89 +631,110 @@ function UpdateAccountForm() {
           </Table>
         </TableContainer>
       ) : (
-        <p>No users found.</p>
+        <Typography>Aucun utilisateur trouvé.</Typography>
       )}
-      {/* Dialog de mise à jour */}
+
+      {/* Update Dialog */}
       {selectedUser && (
-        <Dialog open={open} onClose={handleCloseDialog} className="w-full">
+        <Dialog open={open} onClose={handleCloseDialog} maxWidth="md" fullWidth>
           <DialogTitle>Mettre à jour l'utilisateur</DialogTitle>
           <DialogContent>
-            <TextField
-              label="Nom complet"
-              value={selectedUser.nomComplet || ""}
-              onChange={(e) => handleInputChange("nomComplet", e.target.value)}
-              fullWidth
-              margin="dense"
-              className="w-full" // Garantir que la largeur est pleine
-            />
-            <div>
-              <label>Role</label>
-              <Select
-                value={selectedUser.role || ""}
-                onChange={(e) => handleInputChange("role", e.target.value)}
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 1 }}>
+              <TextField
+                label="Nom complet"
+                value={selectedUser.nomComplet || ""}
+                onChange={(e) => handleInputChange("nomComplet", e.target.value)}
                 fullWidth
-                className="w-full" // Forcer la largeur à 100%
-              >
-                <MenuItem value="user">Technicien</MenuItem>
-                {/* <MenuItem value="admin">Admin</MenuItem> */}
-              </Select>
-            </div>
-            <TextField
-              label="Email"
-              value={selectedUser.email || ""}
-              onChange={(e) => handleInputChange("email", e.target.value)}
-              fullWidth
-              margin="dense"
-              className="w-full" // Garantir que la largeur est pleine
-            />
-            {/* Liste des actifs */}
-            <div>
-              <InputLabel>Actifs</InputLabel>
-              <FormControl fullWidth>
+                required
+                margin="dense"
+              />
+              
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Role</InputLabel>
+                <Select
+                  value={selectedUser.role || ""}
+                  onChange={(e) => handleInputChange("role", e.target.value)}
+                  label="Role"
+                >
+                  <MenuItem value="admin">Admin</MenuItem>
+                  <MenuItem value="user">User</MenuItem>
+                  <MenuItem value="docteurs">Docteurs</MenuItem>
+                  <MenuItem value="chargé de stock">Chargé de stock</MenuItem>
+                  <MenuItem value="chargés de performance">Chargés de performance</MenuItem>
+                </Select>
+              </FormControl>
+
+              <TextField
+                label="Email"
+                value={selectedUser.email || ""}
+                onChange={(e) => handleInputChange("email", e.target.value)}
+                fullWidth
+                required
+                type="email"
+                margin="dense"
+              />
+
+              {/* Actifs Selection */}
+              <FormControl fullWidth margin="dense">
+                <InputLabel>Actifs</InputLabel>
                 <Select
                   multiple
                   value={selectedUser.actifIds || []}
-                  onChange={(e) =>
-                    handleInputChange("actifIds", e.target.value)
-                  }
+                  onChange={(e) => handleInputChange("actifIds", e.target.value)}
+                  label="Actifs"
                   renderValue={(selected) => {
+                    if (selected.length === 0) return "Aucun actif sélectionné";
                     return selected
                       .map((actifId) => actifs[actifId] || "Actif inconnu")
                       .join(", ");
                   }}
-                  className="w-full"
+                  MenuProps={{
+                    PaperProps: {
+                      style: {
+                        maxHeight: 300,
+                      },
+                    },
+                  }}
                 >
-                  {/* Champ de recherche */}
-                  <TextField
-                    fullWidth
-                    label="Rechercher"
-                    value={searchQuery}
-                    onChange={handleSearchChange}
-                    variant="outlined"
-                    size="small"
-                    style={{ marginBottom: "8px" }} // Style optionnel pour le champ de recherche
-                  />
+                  {/* Search field inside the dropdown */}
+                  <Box sx={{ p: 1 }}>
+                    <TextField
+                      fullWidth
+                      size="small"
+                      placeholder="Rechercher un actif..."
+                      value={searchQuery}
+                      onChange={handleSearchChange}
+                      onClick={(e) => e.stopPropagation()}
+                    />
+                  </Box>
 
-                  {/* MenuItems filtrés selon la recherche */}
+                  {/* Filtered actifs */}
                   {filteredActifs.length > 0 ? (
-                    filteredActifs.map((actifId) => (
-                      <MenuItem key={actifId} value={actifId}>
-                        {actifs[actifId] || "Actif inconnu"}
+                    filteredActifs.map((actif) => (
+                      <MenuItem key={actif._id} value={actif._id}>
+                        <Checkbox 
+                          checked={(selectedUser.actifIds || []).includes(actif._id)} 
+                        />
+                        <ListItemText 
+                          primary={`${actif.name} - ${actif.province || 'Province inconnue'}`} 
+                        />
                       </MenuItem>
                     ))
                   ) : (
-                    <MenuItem disabled>Aucun actif trouvé</MenuItem> // Message lorsque rien n'est trouvé
+                    <MenuItem disabled>
+                      {searchQuery ? "Aucun actif trouvé" : "Aucun actif disponible"}
+                    </MenuItem>
                   )}
                 </Select>
               </FormControl>
-            </div>
+            </Box>
           </DialogContent>
 
           <DialogActions>
             <Button onClick={handleCloseDialog} color="secondary">
               Annuler
             </Button>
-            <Button onClick={handleSave} color="primary">
+            <Button onClick={handleSave} color="primary" variant="contained">
               Enregistrer
             </Button>
           </DialogActions>
@@ -679,9 +752,8 @@ function Parametre() {
   };
 
   const tabContents = [
-    <CreateAccountForm />,
-    <UpdateAccountForm />,
-    <Typography>Autre contenu</Typography>, // Il semble qu'il manque un composant ici pour le troisième tab
+    <CreateAccountForm key="create" />,
+    <UpdateAccountForm key="update" />,
   ];
 
   return (

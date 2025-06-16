@@ -219,16 +219,16 @@ const Array1 = [
         path: "/BesoinVehicule",
         roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
-      // {
-      //   text: "Portail de tickets SI",
-      //   icon: (
-      //     <IconWrapper>
-      //       <DesktopWindowsRoundedIcon />
-      //     </IconWrapper>
-      //   ),
-      //   path: "/TicketSI",
-      //   roleRequired: ["admin", "superviseur", "chargés de performance"],
-      // },
+      {
+        text: "Portail de tickets SI",
+        icon: (
+          <IconWrapper>
+            <DesktopWindowsRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/TicketSI",
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
+      },
     ],
   },
   {
@@ -267,15 +267,15 @@ const Array1 = [
         ),
         path: "/Historiquevehicule",
       },
-      // {
-      //   text: "Historique SI",
-      //   icon: (
-      //     <IconWrapper>
-      //       <DesktopWindowsRoundedIcon />
-      //     </IconWrapper>
-      //   ),
-      //   path: "/HistoriqueSI",
-      // },
+      {
+        text: "Historique SI",
+        icon: (
+          <IconWrapper>
+            <DesktopWindowsRoundedIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriqueSI",
+      },
       {
         text: "Historique des rejets",
         icon: (
@@ -326,16 +326,16 @@ const Array1 = [
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
-  {
-    text: "Configuration Asset",
-    icon: (
-      <IconWrapper>
-        <BrowserUpdatedRoundedIcon />
-      </IconWrapper>
-    ),
-    path: "/ConfigurationAsset",
-    roleRequired: ["superviseur"],
-  },
+  // {
+  //   text: "Configuration Asset",
+  //   icon: (
+  //     <IconWrapper>
+  //       <BrowserUpdatedRoundedIcon />
+  //     </IconWrapper>
+  //   ),
+  //   path: "/ConfigurationAsset",
+  //   roleRequired: ["superviseur"],
+  // },
 ];
 
 export default function SidBar({ open, handleDrawerClose }) {

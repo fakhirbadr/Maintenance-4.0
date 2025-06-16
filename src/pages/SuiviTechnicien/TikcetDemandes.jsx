@@ -1,32 +1,29 @@
 import React, { useEffect, useState } from "react";
 import {
-  IconButton,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
-  Button,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import MUIDataTable from "mui-datatables";
 import * as XLSX from "xlsx";
-import moment from "moment";
 import axios from "axios";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
+
 const TicketDemandes = () => {
   const [name, setName] = useState("");
   const [rows, setRows] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!name) return; // Évite de faire une requête si name est vide
+      if (!name) return;
       try {
         const response = await axios.get(
           `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}&isDeleted=false`
@@ -37,7 +34,7 @@ const TicketDemandes = () => {
       }
     };
     fetchData();
-  }, [name]); // Ajout de name comme dépendance
+  }, [name]);
 
   const handleDownloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
@@ -45,6 +42,7 @@ const TicketDemandes = () => {
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
     XLSX.writeFile(workbook, "demande_fourniture.xlsx");
   };
+
   const getMuiTheme = () =>
     createTheme({
       typography: { fontFamily: "sans-serif" },
@@ -65,39 +63,75 @@ const TicketDemandes = () => {
         },
       },
     });
+
+  const handleReceptionClick = (rowData) => {
+    setSelectedRow(rowData);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmReception = async () => {
+    const id = selectedRow._id || selectedRow.id;
+    setLoadingId(id);
+    setConfirmDialogOpen(false);
+    try {
+      // PATCH sur l'API
+      await axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${id}`, {
+        status: "recu",
+        technicienReception: name,
+      });
+      // Mise à jour locale
+      setRows((prevRows) =>
+        prevRows.map((row) =>
+          (row._id || row.id) === id
+            ? {
+                ...row,
+                status: "recu",
+                technicienReception: name,
+              }
+            : row
+        )
+      );
+    } catch (error) {
+      console.error("Erreur lors de l'accusé de réception :", error);
+      alert("Erreur lors de l'accusé de réception !");
+    }
+    setLoadingId(null);
+    setSelectedRow(null);
+  };
+
+  const handleCancelReception = () => {
+    setConfirmDialogOpen(false);
+    setSelectedRow(null);
+  };
+
   const options = {
     filterType: "checkbox",
     selectableRows: "none",
-
     rowsPerPage: 100,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: true,
     setRowProps: (_, dataIndex) => {
-      // Check if the ticket is closed
       const rowData = rows[dataIndex];
       return {
         style: {
-          backgroundColor: rowData.isClosed ? "" : "inherit", // Green if closed
+          backgroundColor: rowData.isClosed ? "" : "inherit",
         },
       };
     },
   };
+
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
-      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
-
+      const userInfo = JSON.parse(storedUserInfo);
       if (userInfo.nomComplet) {
         setName(userInfo.nomComplet);
-        // Mise à jour du technicien
       }
-
-      console.log(name);
     }
   }, []);
+
   const columns = [
-    // { name: "id", options: { filter: false } },
     {
       name: "name",
       label: "Nom",
@@ -125,20 +159,20 @@ const TicketDemandes = () => {
     },
     {
       name: "status",
-      label: "status",
+      label: "Status",
       options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "isClosed",
-      label: "etat",
+      label: "État",
       options: {
         filter: true,
         filterType: "dropdown",
         customBodyRender: (value) => (value ? "traité" : "en cours"),
         filterOptions: {
-          names: ["traité", "en cours"], // Valeurs personnalisées dans la liste déroulante
+          names: ["traité", "en cours"],
           logic: (value, filterValue) => {
-            if (filterValue.length === 0) return false; // Aucune condition si aucun filtre sélectionné
+            if (filterValue.length === 0) return false;
             return (
               (filterValue.includes("traité") && !value) ||
               (filterValue.includes("en cours") && value)
@@ -158,7 +192,7 @@ const TicketDemandes = () => {
       options: {
         filter: true,
         sort: false,
-        filterType: "dropdown", // Liste déroulante pour les dates
+        filterType: "dropdown",
         customBodyRender: (value) => {
           const date = new Date(value);
           return date.toLocaleString("fr-FR", {
@@ -171,6 +205,35 @@ const TicketDemandes = () => {
         },
       },
     },
+    {
+      name: "technicienReception",
+      label: "Technicien réception",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRenderLite: (dataIndex) => {
+          const row = rows[dataIndex];
+          if (row.status === "recu") {
+            return row.technicienReception || "—";
+          }
+          if (row.status === "En cours de livraison") {
+            return (
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                disabled={loadingId === (row._id || row.id)}
+                onClick={() => handleReceptionClick(row)}
+              >
+                {loadingId === (row._id || row.id) ? "..." : "Accuser réception"}
+              </Button>
+            );
+          }
+          return "—";
+        },
+      },
+    },
   ];
 
   return (
@@ -180,7 +243,6 @@ const TicketDemandes = () => {
           Télécharger Excel
         </Button>
       </div>
-
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>
           <MUIDataTable
@@ -191,6 +253,29 @@ const TicketDemandes = () => {
           />
         </ThemeProvider>
       </div>
+
+      {/* Dialog de confirmation */}
+      <Dialog open={confirmDialogOpen} onClose={handleCancelReception}>
+        <DialogTitle>Confirmation</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Voulez-vous vraiment accuser la réception de cette demande ?
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelReception} color="secondary">
+            Annuler
+          </Button>
+          <Button
+            onClick={handleConfirmReception}
+            color="primary"
+            variant="contained"
+            disabled={loadingId === (selectedRow?._id || selectedRow?.id)}
+          >
+            Confirmer
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };

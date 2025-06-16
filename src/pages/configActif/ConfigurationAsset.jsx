@@ -1,10 +1,14 @@
 import React, { useEffect, useState } from "react";
 import axios from "axios";
+import AddActifDialog from "./AddActifDialog";
+import EquipmentHistoryDialog from "./EquipmentHistoryDialog"; // Import du nouveau composant
 
 const ConfigurationAsset = () => {
   const [actifs, setActifs] = useState([]);
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedEquipment, setSelectedEquipment] = useState(null);
+  const [historyDialogOpen, setHistoryDialogOpen] = useState(false);
 
-  // Charger les actifs
   useEffect(() => {
     const fetchActifs = async () => {
       try {
@@ -17,6 +21,24 @@ const ConfigurationAsset = () => {
 
     fetchActifs();
   }, []);
+
+  const handleAddActif = async (newActif) => {
+    try {
+      const res = await axios.post("http://localhost:3000/api/actifs", {
+        name: newActif.name,
+        region: newActif.region,
+        province: newActif.province,
+        categories: [],
+      });
+      setActifs([...actifs, res.data]);
+    } catch (error) {
+      console.error("Erreur lors de l'ajout de l'actif :", error);
+      alert(
+        "Erreur lors de la création: " +
+          (error.response?.data?.error || error.message)
+      );
+    }
+  };
 
   const handleAddCategory = async (actifId) => {
     const name = prompt("Nom de la nouvelle catégorie :");
@@ -42,9 +64,17 @@ const ConfigurationAsset = () => {
         `http://localhost:3000/api/actifs/${actifId}/categories/${categoryId}/equipments`,
         { equipment: { name, isFunctionel: true, description: "" } }
       );
+
       setActifs(actifs.map((a) => (a._id === actifId ? res.data : a)));
     } catch (error) {
       console.error("Erreur lors de l'ajout de l'équipement :", error);
+
+      const errorMessage =
+        error.response?.data?.error ||
+        error.response?.data?.message ||
+        error.message;
+
+      alert(`Échec de l'ajout : ${errorMessage}`);
     }
   };
 
@@ -114,13 +144,36 @@ const ConfigurationAsset = () => {
     }
   };
 
+  // Ouvrir le dialog d'historique
+  const handleShowHistory = (equipment) => {
+    setSelectedEquipment(equipment);
+    setHistoryDialogOpen(true);
+  };
+
   return (
     <div className="p-4">
-      <h2 className="text-xl font-bold mb-4">Configuration des Actifs</h2>
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">Configuration des Actifs</h2>
+        <button
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          onClick={() => setOpenDialog(true)}
+        >
+          ➕ Ajouter un Actif
+        </button>
+      </div>
+
+      <AddActifDialog
+        open={openDialog}
+        onClose={() => setOpenDialog(false)}
+        onAddActif={handleAddActif}
+      />
+
       {actifs.map((actif) => (
         <div key={actif._id} className="border p-4 mb-4 rounded shadow">
           <h3 className="text-lg font-semibold">{actif.name}</h3>
-          <p className="text-sm text-gray-500">{actif.region}</p>
+          <p className="text-sm text-gray-500">
+            {actif.region} {actif.province && `- ${actif.province}`}
+          </p>
 
           <button
             className="mt-2 mb-4 px-3 py-1 bg-blue-500 text-white rounded"
@@ -148,7 +201,15 @@ const ConfigurationAsset = () => {
                   >
                     <div className="flex flex-col">
                       <span>
-                        {eq.name} —
+                        <button
+                          className="text-blue-700 underline font-medium hover:text-blue-900"
+                          style={{ background: "none", border: "none", padding: 0, cursor: "pointer" }}
+                          onClick={() => handleShowHistory(eq)}
+                          title="Voir l'historique de l'équipement"
+                        >
+                          {eq.name}
+                        </button>
+                        {" — "}
                         <span
                           className={
                             eq.isFunctionel ? "text-green-600" : "text-red-500"
@@ -178,6 +239,12 @@ const ConfigurationAsset = () => {
           ))}
         </div>
       ))}
+
+      <EquipmentHistoryDialog
+        open={historyDialogOpen}
+        onClose={() => setHistoryDialogOpen(false)}
+        equipment={selectedEquipment}
+      />
     </div>
   );
 };

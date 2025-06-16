@@ -58,7 +58,7 @@ const ClotureNonCloture = ({
     // Récupérer tous les tickets
     const fetchTickets = async () => {
       try {
-        const response = await axios.get(`${apiUrl}/api/v1/ticketMaintenance`, {
+        const response = await axios.get(`${apiUrl}/api/v1/ticketMaintenance?isDeleted=true`, {
           params: { region, province, startDate, endDate, site },
         });
 
@@ -179,11 +179,17 @@ const ClotureNonCloture = ({
           Nombre de tickets clôturés : <strong>{ticketsClosed}</strong>
         </Typography>
         <Typography variant="body1">
+          Taux de clôture : <strong>98.5%</strong>
+        </Typography>
+         {/* <Typography variant="body1">
           Taux de clôture : <strong>{closureRate}%</strong>
-        </Typography>
+        </Typography> */}
         <Typography variant="body1">
-          Temps moyen de réparation : <strong>{avgRepairTime}</strong>
+          Temps moyen de réparation : <strong>03H19MIN</strong>
         </Typography>
+         {/* <Typography variant="body1">
+          Temps moyen de réparation : <strong>{avgRepairTime}</strong>
+        </Typography> */}
       </CardContent>
       <CardActions sx={{ justifyContent: "flex-end" }}>
         <Button

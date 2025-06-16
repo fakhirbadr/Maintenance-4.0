@@ -100,8 +100,25 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
   const [sendMailMsg, setSendMailMsg] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
   const [unites, setUnites] = useState([]);
+  const [userRole, setUserRole] = useState("");
+  const [userEmail, setUserEmail] = useState("");
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
+
+  // Récupère le rôle et l'email de l'utilisateur depuis le localStorage
+  useEffect(() => {
+    try {
+      const userInfo = localStorage.getItem("userInfo");
+      if (userInfo) {
+        const obj = JSON.parse(userInfo);
+        setUserRole(obj.role || "");
+        setUserEmail(obj.email || "");
+      }
+    } catch (e) {
+      setUserRole("");
+      setUserEmail("");
+    }
+  }, []);
 
   // Récupère les pointages (à chaque ouverture)
   const fetchData = () => {
@@ -156,7 +173,19 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setEditModalOpen(true);
   };
 
-  // Correction ici : on cible bien /pointage/:customId
+  // Ouvre la modale EditPointageModal vide (mode admin)
+  const handleAdminEditClick = () => {
+    setSelectedPointage(null); // On passe null pour ouvrir en mode vide
+    setEditModalOpen(true);
+  };
+
+  // Ferme la modale
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedPointage(null);
+  };
+
+  // Reste inchangé (édition uniquement)
   const handleEditSave = async (form) => {
     try {
       if (!form.customId) throw new Error("ID manquant pour la mise à jour");
@@ -214,11 +243,11 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         setSendingBoth(false);
         return;
       }
-      
+
       // Formatage de la date
       const [d, m, y] = selectedDay.split("/");
       const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-      
+
       // Envoi des deux rapports en parallèle
       const responses = await Promise.allSettled([
         fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
@@ -230,33 +259,35 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date: dayStr }),
-        })
+        }),
       ]);
 
       // Traitement des réponses
       const results = [];
-      
+
       for (let i = 0; i < responses.length; i++) {
         const name = i === 0 ? "Quotidien" : "Inactifs";
         const response = responses[i];
-        
-        if (response.status === 'rejected') {
+
+        if (response.status === "rejected") {
           results.push(`${name}: Erreur réseau - ${response.reason.message}`);
           continue;
         }
-        
+
         const res = response.value;
         try {
           const text = await res.text();
-          
+
           // Détecter les réponses HTML
-          if (text.trim().startsWith("<!DOCTYPE html>") || 
-              text.includes("<html>") || 
-              text.includes("<head>")) {
+          if (
+            text.trim().startsWith("<!DOCTYPE html>") ||
+            text.includes("<html>") ||
+            text.includes("<head>")
+          ) {
             results.push(`${name}: Erreur serveur (500)`);
             continue;
           }
-          
+
           try {
             const data = JSON.parse(text);
             if (res.ok) {
@@ -267,7 +298,9 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
               results.push(`${name}: ${errorMsg}`);
             }
           } catch (e) {
-            results.push(`${name}: Réponse invalide - ${text.substring(0, 50)}`);
+            results.push(
+              `${name}: Réponse invalide - ${text.substring(0, 50)}`
+            );
           }
         } catch (e) {
           results.push(`${name}: Erreur de lecture - ${e.message}`);
@@ -290,6 +323,17 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     unites,
     pointagesDuJour
   );
+
+  // Seuls les utilisateurs ayant le rôle 'chargés de performance' voient le bouton "Mode Admin"
+  const showAdminButton = userRole === "chargés de performance";
+
+  // Seuls les utilisateurs ayant le rôle 'chargés de performance' OU qui sont l'utilisateur du pointage voient le bouton "Modifier"
+  function canEdit(row) {
+    return (
+      userRole === "chargés de performance" ||
+      (row.user && row.user.toLowerCase() === userEmail.toLowerCase())
+    );
+  }
 
   return (
     <>
@@ -334,12 +378,12 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
               disabled={sendingBoth || !selectedDay}
               color="primary"
               variant="contained"
-              sx={{ 
-                mb: 2, 
-                mt: 0, 
+              sx={{
+                mb: 2,
+                mt: 0,
                 ml: 2,
-                backgroundColor: '#4caf50',
-                '&:hover': { backgroundColor: '#388e3c' }
+                backgroundColor: "#4caf50",
+                "&:hover": { backgroundColor: "#388e3c" },
               }}
             >
               {sendingBoth
@@ -421,13 +465,15 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell>{formatBool(row.siteActif)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => handleEditClick(row)}
-                          >
-                            Modifier
-                          </Button>
+                          {canEdit(row) && (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleEditClick(row)}
+                            >
+                              Modifier
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
@@ -459,6 +505,15 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           )}
         </DialogContent>
         <DialogActions>
+          {showAdminButton && (
+            <Button
+              onClick={handleAdminEditClick}
+              color="info"
+              variant="contained"
+            >
+              Mode Admin *
+            </Button>
+          )}
           <Button onClick={onClose} color="primary" variant="contained">
             Fermer
           </Button>
@@ -466,7 +521,7 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
       </Dialog>
       <EditPointageModal
         open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleEditModalClose}
         pointage={selectedPointage}
         onSave={handleEditSave}
       />
