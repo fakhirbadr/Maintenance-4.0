@@ -21,6 +21,10 @@ import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/Cancel";
 
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
+
+
 // Pour les listes déroulantes du formulaire
 const statusList = [
   { label: "Créé", value: "créé" },
@@ -283,7 +287,7 @@ const GestionTicketSi = () => {
     setLoading(true);
     setError(null);
     axios
-      .get("http://localhost:3000/api/v1/ticketSi?isClosed=false")
+      .get(`${apiUrl}/api/v1/ticketSi?isClosed=false`)
       .then((res) => {
         setRows(res.data);
         setLoading(false);
@@ -303,7 +307,7 @@ const GestionTicketSi = () => {
   const handleCloturer = async (customId) => {
     try {
       await axios.put(
-        `http://localhost:3000/api/v1/ticketSi/${customId}/close`,
+        `${apiUrl}/api/v1/ticketSi/${customId}/close`,
         { dateCloture: new Date().toISOString() }
       );
       fetchTickets();
@@ -328,7 +332,7 @@ const GestionTicketSi = () => {
   const handleUpdateSubmit = async (form) => {
     try {
       await axios.put(
-        `http://localhost:3000/api/v1/ticketSi/${ticketToEdit.customId}`,
+        `${apiUrl}/api/v1/ticketSi/${ticketToEdit.customId}`,
         form
       );
       setModalOpen(false);
@@ -344,7 +348,7 @@ const GestionTicketSi = () => {
   const handleRejeter = async (customId) => {
     if (!window.confirm("Voulez-vous vraiment rejeter ce ticket ?")) return;
     try {
-      await axios.delete(`http://localhost:3000/api/v1/ticketSi/${customId}`);
+      await axios.delete(`${apiUrl}/api/v1/ticketSi/${customId}`);
       fetchTickets();
     } catch (err) {
       setError(`Erreur lors du rejet du ticket: ${err.message}`);
