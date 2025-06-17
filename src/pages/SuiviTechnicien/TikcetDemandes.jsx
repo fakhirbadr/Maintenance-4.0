@@ -217,7 +217,7 @@ const TicketDemandes = () => {
           if (row.status === "recu") {
             return row.technicienReception || "—";
           }
-          if (row.status === "En cours de livraison") {
+          if (row.status === "En cours de livraison" || row.status === "Achat sur place") {
             return (
               <Button
                 variant="contained"

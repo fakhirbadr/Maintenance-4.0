@@ -426,6 +426,7 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
                       <TableRow key={row._id}>
                         <TableCell>{row.customId}</TableCell>
                         <TableCell>{row.site}</TableCell>
+                        
                         <TableCell>{row.actif}</TableCell>
                         <TableCell>{row.region}</TableCell>
                         <TableCell>{row.province}</TableCell>
