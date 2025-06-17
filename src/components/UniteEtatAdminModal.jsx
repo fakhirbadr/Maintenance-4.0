@@ -21,6 +21,8 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import EditPointageModal from "./EditPointageModal";
+import UniteEtatModal from "./UniteEtatModal"; // <-- Ajout de l'import
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 const columns = [
@@ -75,18 +77,15 @@ function groupByRegion(pointages) {
 
 // Retourne les unités actives sans pointage pour un jour donné, groupées par région
 function getUnitesSansPointage(unites, pointagesDuJour) {
-  // Set des noms d'unité ayant pointé ce jour
   const pointageUniteNames = new Set(pointagesDuJour.map((p) => p.site));
-  // Regroupe les unités par région
   const grouped = {};
   for (const unite of unites) {
     if (!grouped[unite.region]) grouped[unite.region] = [];
-    // On ajoute seulement si l'unité n'a PAS fait de pointage ce jour
     if (!pointageUniteNames.has(unite.name)) {
       grouped[unite.region].push(unite);
     }
   }
-  return grouped; // {region: [unites sans pointage]}
+  return grouped;
 }
 
 const UniteEtatAdminModal = ({ open, onClose }) => {
@@ -102,6 +101,8 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
   const [unites, setUnites] = useState([]);
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
+  const [adminModalOpen, setAdminModalOpen] = useState(false); // <-- Ajout de l'état pour le modal admin
+
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
@@ -127,7 +128,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
       .then(async (res) => {
         if (!res.ok) throw new Error("Erreur lors du chargement");
         let data = await res.json();
-        // Filtrer sur les 30 derniers jours (par rapport à createdAt)
         const now = new Date();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
@@ -158,7 +158,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Regroupe les pointages par jour
   const grouped = groupByDay(pointages);
   const days = Object.keys(grouped);
 
@@ -173,19 +172,20 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setEditModalOpen(true);
   };
 
-  // Ouvre la modale EditPointageModal vide (mode admin)
+  // Ouvre la modale UniteEtatModal (mode admin)
   const handleAdminEditClick = () => {
-    setSelectedPointage(null); // On passe null pour ouvrir en mode vide
-    setEditModalOpen(true);
+    setAdminModalOpen(true);
   };
 
-  // Ferme la modale
+  const handleAdminModalClose = () => {
+    setAdminModalOpen(false);
+  };
+
   const handleEditModalClose = () => {
     setEditModalOpen(false);
     setSelectedPointage(null);
   };
 
-  // Reste inchangé (édition uniquement)
   const handleEditSave = async (form) => {
     try {
       if (!form.customId) throw new Error("ID manquant pour la mise à jour");
@@ -203,7 +203,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     }
   };
 
-  // Envoi le recapitulatif du jour sélectionné par mail
   const sendRecapEmail = async () => {
     setSendingMail(true);
     setSendMailMsg("");
@@ -213,7 +212,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         setSendingMail(false);
         return;
       }
-      // Transforme le format '20/05/2025' en '2025-05-20'
       const [d, m, y] = selectedDay.split("/");
       const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
       const res = await fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
@@ -233,7 +231,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setSendingMail(false);
   };
 
-  // Envoi des deux rapports simultanément
   const sendBothReports = async () => {
     setSendingBoth(true);
     setSendMailMsg("");
@@ -243,12 +240,8 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         setSendingBoth(false);
         return;
       }
-
-      // Formatage de la date
       const [d, m, y] = selectedDay.split("/");
       const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-
-      // Envoi des deux rapports en parallèle
       const responses = await Promise.allSettled([
         fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
           method: "POST",
@@ -261,24 +254,17 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           body: JSON.stringify({ date: dayStr }),
         }),
       ]);
-
-      // Traitement des réponses
       const results = [];
-
       for (let i = 0; i < responses.length; i++) {
         const name = i === 0 ? "Quotidien" : "Inactifs";
         const response = responses[i];
-
         if (response.status === "rejected") {
           results.push(`${name}: Erreur réseau - ${response.reason.message}`);
           continue;
         }
-
         const res = response.value;
         try {
           const text = await res.text();
-
-          // Détecter les réponses HTML
           if (
             text.trim().startsWith("<!DOCTYPE html>") ||
             text.includes("<html>") ||
@@ -287,13 +273,11 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
             results.push(`${name}: Erreur serveur (500)`);
             continue;
           }
-
           try {
             const data = JSON.parse(text);
             if (res.ok) {
               results.push(`${name}: Succès`);
             } else {
-              // Extraire le message d'erreur du JSON
               const errorMsg = data.message || data.error || res.statusText;
               results.push(`${name}: ${errorMsg}`);
             }
@@ -306,7 +290,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           results.push(`${name}: Erreur de lecture - ${e.message}`);
         }
       }
-
       setSendMailMsg(results.join(" | "));
     } catch (e) {
       setSendMailMsg("Erreur inattendue: " + e.message);
@@ -315,7 +298,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     }
   };
 
-  // --- Groupement par région pour le jour sélectionné
   const pointagesDuJour =
     selectedDay && grouped[selectedDay] ? grouped[selectedDay] : [];
   const groupedByRegion = groupByRegion(pointagesDuJour);
@@ -324,10 +306,8 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     pointagesDuJour
   );
 
-  // Seuls les utilisateurs ayant le rôle 'chargés de performance' voient le bouton "Mode Admin"
   const showAdminButton = userRole === "chargés de performance";
 
-  // Seuls les utilisateurs ayant le rôle 'chargés de performance' OU qui sont l'utilisateur du pointage voient le bouton "Modifier"
   function canEdit(row) {
     return (
       userRole === "chargés de performance" ||
@@ -524,6 +504,10 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         onClose={handleEditModalClose}
         pointage={selectedPointage}
         onSave={handleEditSave}
+      />
+      <UniteEtatModal
+        open={adminModalOpen}
+        onClose={handleAdminModalClose}
       />
     </>
   );
