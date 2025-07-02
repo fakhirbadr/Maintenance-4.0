@@ -42,39 +42,60 @@ const TicketForm = ({ open, onClose }) => {
   }, []);
 
   const marques = ["Toyota", "Renault", "Ford", "Mercedes"];
-  const categories = ["Maintenance", "Besoin"];
+  const categories = [
+    "Maintenance préventive",
+    "Maintenance corrective",
+    "Besoin",
+  ];
   const urgences = ["Basse", "Moyenne", "Haute"];
 
   const commandesParCategorie = {
-    Maintenance: [
-      "Réparation moteur",
-      "Freins",
-      "Pneus",
-      "Batterie",
-      "Embrayage",
-      "Suspension",
-      "Alternateur",
-      "Climatisation",
-      "Démarreur",
-      "Éclairage",
-      "Courroie de distribution",
-      "Capteurs",
-      "Injecteurs",
-    ],
-    Besoin: [
-      "Vidange",
-      "Demande gasoil",
-      "Pneu",
-      "Plaquettes de frein",
-      "Disques de frein",
+    "Maintenance préventive": [
       "Huile moteur",
       "Filtre à air",
       "Filtre à gasoil",
       "Filtre à huile",
-      "Système de lavage pare-brise",
+      "Filtre climat",
+      "Liquide de refroidissement",
+      "Liquide de frein",
+      "Bougies d’allumage",
+      "Bougies de préchauffage",
       "Batterie",
+      "Pneus",
+      "Plaquettes de frein",
+      "Disques de frein",
+      "Courroie de distribution",
+      "Courroie accessoires",
+      "Suspension",
+      "Essuie-glaces",
+      "Éclairage",
+      "Capteurs",
     ],
-    RechargeGasoil: ["Recharge de gasoil"],
+    "Maintenance corrective": [
+      "Réparation moteur",
+      "Surchauffe moteur",
+      "Panne batterie",
+      "Embrayage défectueux",
+      "Suspension bruyante ou cassée",
+      "Alternateur HS",
+      "Démarreur en panne",
+      "Injecteurs encrassés ou défaillants",
+      "Capteurs défaillants",
+      "Courroie de distribution cassée",
+      "Boîte de vitesses",
+      "Fuite de liquide de refroidissement",
+      "Échappement troué / catalyseur HS",
+      "Turbo en panne",
+      "Freins défaillants",
+      "Pneu crevé ou éclaté",
+      "Éclairage HS",
+      "Pompe à eau HS",
+      "Calculateur moteur / électronique",
+    ],
+    "Besoin": [
+      "Demande Gasoil",
+      "Demande Solde JAWAZ",
+    ],
   };
 
   const handleChange = (e) => {
@@ -194,8 +215,9 @@ const TicketForm = ({ open, onClose }) => {
               onChange={handleChange}
               fullWidth
               margin="dense"
+              disabled={!formData.categorie}
             >
-              {commandesParCategorie[formData.categorie]?.map((commande) => (
+              {(commandesParCategorie[formData.categorie] || []).map((commande) => (
                 <MenuItem key={commande} value={commande}>
                   {commande}
                 </MenuItem>
@@ -204,7 +226,6 @@ const TicketForm = ({ open, onClose }) => {
           </Grid>
 
           <Grid item xs={12} sm={6}>
-            {" "}
             <TextField
               label="kilométrage"
               value={formData.KM}
@@ -216,7 +237,6 @@ const TicketForm = ({ open, onClose }) => {
             />
           </Grid>
           <Grid item xs={12} sm={6}>
-            {" "}
             <TextField
               label="Prix"
               value={formData.prix}
@@ -246,7 +266,6 @@ const TicketForm = ({ open, onClose }) => {
             </TextField>
           </Grid>
           <Grid item xs={12} sm={6}>
-            {" "}
             <TextField
               label="Description"
               value={formData.description}
@@ -263,7 +282,7 @@ const TicketForm = ({ open, onClose }) => {
         <Button onClick={onClose} color="secondary">
           Fermer
         </Button>
-        <Button onClick={handleSubmit} color="primary">
+        <Button onClick={handleSubmit} color="primary" disabled={loading}>
           Soumettre
         </Button>
       </DialogActions>
