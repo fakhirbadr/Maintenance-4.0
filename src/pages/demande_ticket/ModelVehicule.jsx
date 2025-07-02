@@ -262,26 +262,14 @@ const immatriculations = [
   "57077-B-7",
   "57710-B-7",
   "80630-A-13",
-  "59807-B-7"
+  "59807-B-7",
 ];
-
 
 const TicketForm = ({ open, onClose }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    technicien: "",
-    province: "",
-    immatriculation: "",
-    KM: "",
-    prix: "",
-    marque: "",
-    model: "",
-    categorie: "",
-    commande: "",
-    urgence: "Basse",
-    description: "",
-  });
+
+  
 
   useEffect(() => {
     // Récupération des données depuis le localStorage
@@ -346,11 +334,21 @@ const TicketForm = ({ open, onClose }) => {
       "Pompe à eau HS",
       "Calculateur moteur / électronique",
     ],
-    "Besoin": [
-      "Demande Gasoil",
-      "Demande Solde JAWAZ",
-    ],
+    Besoin: ["Demande Gasoil", "Demande Solde JAWAZ"],
   };
+const initialFormData = {
+  technicien: "",
+  province: "",
+  immatriculation: "",
+  KM: "",
+  prix: "",
+  marque: "",
+  model: "",
+  categorie: "",
+  commande: "",
+  urgence: "Basse",
+  description: "",
+};
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -371,32 +369,43 @@ const TicketForm = ({ open, onClose }) => {
   };
 
   const handleSubmit = async () => {
-    setLoading(true);
-    setError("");
+  if (loading) return;
 
-    try {
-      console.log(formData);
-      const response = await fetch(`${apiUrl}/api/ticketvehicules`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+  setLoading(true);
+  setError("");
 
-      if (!response.ok) {
-        throw new Error("Une erreur s'est produite lors de l'envoi du ticket");
-      }
+  try {
+    const response = await fetch(`${apiUrl}/api/ticketvehicules`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
 
-      const data = await response.json();
-      console.log("Ticket créé avec succès :", data);
-      onClose();
-    } catch (error) {
-      setError(error.message);
-    } finally {
-      setLoading(false);
+    if (!response.ok) {
+      throw new Error("Une erreur s'est produite lors de l'envoi du ticket");
     }
-  };
+
+    const data = await response.json();
+    console.log("Ticket créé avec succès :", data);
+
+    // Réinitialiser le formulaire
+    setFormData((prev) => ({
+      ...initialFormData,
+      technicien: prev.technicien,
+      province: prev.province,
+    }));
+
+    onClose();
+  } catch (error) {
+    setError(error.message);
+  } finally {
+    setLoading(false);
+  }
+};
+
+  const [formData, setFormData] = useState(initialFormData);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -484,11 +493,13 @@ const TicketForm = ({ open, onClose }) => {
               margin="dense"
               disabled={!formData.categorie}
             >
-              {(commandesParCategorie[formData.categorie] || []).map((commande) => (
-                <MenuItem key={commande} value={commande}>
-                  {commande}
-                </MenuItem>
-              ))}
+              {(commandesParCategorie[formData.categorie] || []).map(
+                (commande) => (
+                  <MenuItem key={commande} value={commande}>
+                    {commande}
+                  </MenuItem>
+                )
+              )}
             </TextField>
           </Grid>
 
@@ -549,7 +560,7 @@ const TicketForm = ({ open, onClose }) => {
           Fermer
         </Button>
         <Button onClick={handleSubmit} color="primary" disabled={loading}>
-          Soumettre
+          {loading ? "Envoi..." : "Soumettre"}
         </Button>
       </DialogActions>
     </Dialog>
