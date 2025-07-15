@@ -269,8 +269,6 @@ const TicketForm = ({ open, onClose }) => {
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
 
-  
-
   useEffect(() => {
     // Récupération des données depuis le localStorage
     const userInfo = JSON.parse(localStorage.getItem("userInfo"));
@@ -289,18 +287,15 @@ const TicketForm = ({ open, onClose }) => {
     "Maintenance corrective",
     "Besoin",
   ];
-  const urgences = ["Basse", "Moyenne", "Haute"];
 
   const commandesParCategorie = {
     "Maintenance préventive": [
-      "Huile moteur",
-      "Filtre à air",
-      "Filtre à gasoil",
-      "Filtre à huile",
+      "Vidange complet",
+      "Vidange simple",
       "Filtre climat",
       "Liquide de refroidissement",
       "Liquide de frein",
-      "Bougies d’allumage",
+      "Bougies d'allumage",
       "Bougies de préchauffage",
       "Batterie",
       "Pneus",
@@ -311,7 +306,8 @@ const TicketForm = ({ open, onClose }) => {
       "Suspension",
       "Essuie-glaces",
       "Éclairage",
-      "Capteurs",
+      "Ammortisseur avant",
+      "Ammortisseur arriére"
     ],
     "Maintenance corrective": [
       "Réparation moteur",
@@ -322,33 +318,36 @@ const TicketForm = ({ open, onClose }) => {
       "Alternateur HS",
       "Démarreur en panne",
       "Injecteurs encrassés ou défaillants",
-      "Capteurs défaillants",
       "Courroie de distribution cassée",
       "Boîte de vitesses",
       "Fuite de liquide de refroidissement",
+      "Climatisation",
       "Échappement troué / catalyseur HS",
       "Turbo en panne",
       "Freins défaillants",
       "Pneu crevé ou éclaté",
       "Éclairage HS",
-      "Pompe à eau HS",
-      "Calculateur moteur / électronique",
+      "Pompe à eau HS"
     ],
-    Besoin: ["Demande Gasoil", "Demande Solde JAWAZ"],
+    "Besoin": [
+      "Demande Gasoil",
+      "Demande Solde JAWAZ"
+    ]
   };
-const initialFormData = {
-  technicien: "",
-  province: "",
-  immatriculation: "",
-  KM: "",
-  prix: "",
-  marque: "",
-  model: "",
-  categorie: "",
-  commande: "",
-  urgence: "Basse",
-  description: "",
-};
+
+  const initialFormData = {
+    technicien: "",
+    province: "",
+    immatriculation: "",
+    KM: "",
+    marque: "",
+    model: "",
+    categorie: "",
+    commande: "",
+    description: "",
+  };
+
+  const [formData, setFormData] = useState(initialFormData);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -369,48 +368,59 @@ const initialFormData = {
   };
 
   const handleSubmit = async () => {
-  if (loading) return;
+    if (loading) return;
 
-  setLoading(true);
-  setError("");
-
-  try {
-    const response = await fetch(`${apiUrl}/api/ticketvehicules`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(formData),
-    });
-
-    if (!response.ok) {
-      throw new Error("Une erreur s'est produite lors de l'envoi du ticket");
+    // Validation des champs obligatoires
+    if (!formData.technicien || 
+        !formData.province || 
+        !formData.immatriculation || 
+        !formData.KM || 
+        !formData.categorie || 
+        !formData.commande || 
+        !formData.description) {
+      setError("Tous les champs sont obligatoires");
+      return;
     }
 
-    const data = await response.json();
-    console.log("Ticket créé avec succès :", data);
+    setLoading(true);
+    setError("");
 
-    // Réinitialiser le formulaire
-    setFormData((prev) => ({
-      ...initialFormData,
-      technicien: prev.technicien,
-      province: prev.province,
-    }));
+    try {
+      const response = await fetch(`${apiUrl}/api/ticketvehicules`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    onClose();
-  } catch (error) {
-    setError(error.message);
-  } finally {
-    setLoading(false);
-  }
-};
+      if (!response.ok) {
+        throw new Error("Une erreur s'est produite lors de l'envoi du ticket");
+      }
 
-  const [formData, setFormData] = useState(initialFormData);
+      const data = await response.json();
+      console.log("Ticket créé avec succès :", data);
+
+      // Réinitialiser le formulaire
+      setFormData((prev) => ({
+        ...initialFormData,
+        technicien: prev.technicien,
+        province: prev.province,
+      }));
+
+      onClose();
+    } catch (error) {
+      setError(error.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle>Créer un nouveau ticket pour véhicule</DialogTitle>
       <DialogContent>
+        {error && <div style={{ color: 'red', marginBottom: '10px' }}>{error}</div>}
         <Grid container spacing={2}>
           {/* 1ère ligne */}
           <Grid item xs={12} sm={6}>
@@ -418,6 +428,7 @@ const initialFormData = {
               label="Technicien"
               value={formData.technicien}
               fullWidth
+              required
               disabled
               margin="dense"
               InputProps={{
@@ -430,6 +441,7 @@ const initialFormData = {
               label="Province"
               value={formData.province}
               fullWidth
+              required
               disabled
               margin="dense"
               InputProps={{
@@ -455,6 +467,7 @@ const initialFormData = {
                   label="Immatriculation"
                   margin="dense"
                   fullWidth
+                  required
                   helperText="Commencez à taper pour rechercher"
                 />
               )}
@@ -470,6 +483,7 @@ const initialFormData = {
               value={formData.categorie}
               onChange={handleChange}
               fullWidth
+              required
               margin="dense"
             >
               {categories.map((categorie) => (
@@ -481,7 +495,6 @@ const initialFormData = {
           </Grid>
 
           {/* 3ème ligne */}
-
           <Grid item xs={12} sm={6}>
             <TextField
               select
@@ -490,6 +503,7 @@ const initialFormData = {
               value={formData.commande}
               onChange={handleChange}
               fullWidth
+              required
               margin="dense"
               disabled={!formData.categorie}
             >
@@ -505,52 +519,28 @@ const initialFormData = {
 
           <Grid item xs={12} sm={6}>
             <TextField
-              label="kilométrage"
+              label="Kilométrage"
               value={formData.KM}
               onChange={handleChange}
               name="KM"
               fullWidth
+              required
               margin="dense"
-              helperText="Entrez un commentaire pour l'urgence"
+              type="number"
             />
           </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              label="Prix"
-              value={formData.prix}
-              onChange={handleChange}
-              name="prix"
-              fullWidth
-              margin="dense"
-              helperText="Entrez un commentaire pour l'urgence"
-            />
-          </Grid>
-          <Grid item xs={12} sm={6}>
-            <TextField
-              select
-              label="Urgence"
-              name="urgence"
-              value={formData.urgence}
-              onChange={handleChange}
-              fullWidth
-              margin="dense"
-            >
-              {urgences.map((urgence) => (
-                <MenuItem key={urgence} value={urgence}>
-                  {urgence}
-                </MenuItem>
-              ))}
-            </TextField>
-          </Grid>
-          <Grid item xs={12} sm={6}>
+
+          <Grid item xs={12}>
             <TextField
               label="Description"
               value={formData.description}
               onChange={handleChange}
               name="description"
               fullWidth
+              required
               margin="dense"
-              helperText="Entrez un commentaire pour l'urgence"
+              multiline
+              rows={4}
             />
           </Grid>
         </Grid>
