@@ -272,6 +272,7 @@ function CreateAccountForm() {
             <MenuItem value="chargés de performance">
               Chargés de performance
             </MenuItem>
+            <MenuItem value="technicien">Technicien</MenuItem>
           </TextField>
         </Grid>
         <Grid item xs={12} sm={6}>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Location from "../../components/Location";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -27,6 +27,20 @@ const Ticket = () => {
   const [openRetour, setOpenRetour] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [openProblemeSI, setOpenProblemeSI] = useState(false);
+  const [userRole, setUserRole] = useState("");
+
+  // Récupérer le rôle utilisateur depuis le localStorage
+  useEffect(() => {
+    try {
+      const userInfo = localStorage.getItem("userInfo");
+      if (userInfo) {
+        const obj = JSON.parse(userInfo);
+        setUserRole(obj.role || "");
+      }
+    } catch (e) {
+      setUserRole("");
+    }
+  }, []);
 
   // Styles améliorés avec animation
   const cardStyles = {
@@ -77,7 +91,8 @@ const Ticket = () => {
     setHoveredCard(null);
   };
 
-  const cardData = [
+  // Données des cartes complètes
+  const allCardData = [
     {
       title: "Intervention Technique",
       image: myImage2,
@@ -115,6 +130,30 @@ const Ticket = () => {
     },
   ];
 
+  // Filtrer les cartes selon le rôle
+  const cardData = userRole === "technicien" 
+    ? allCardData.filter(card => card.title === "Service Véhicule")
+    : allCardData;
+
+  // Configuration de la grille selon le nombre de cartes
+  const getGridConfig = () => {
+    if (userRole === "technicien") {
+      // Pour les techniciens (1 seule carte)
+      return {
+        container: { justifyContent: "center" },
+        item: { xs: 12, md: 6, lg: 4 }
+      };
+    } else {
+      // Pour les autres rôles (5 cartes)
+      return {
+        container: { justifyContent: "center" },
+        item: { xs: 12, md: 6, lg: 2.4 }
+      };
+    }
+  };
+
+  const gridConfig = getGridConfig();
+
   return (
     <>
       <Location />
@@ -130,8 +169,6 @@ const Ticket = () => {
         }}
       >
         <Container maxWidth="xl">
-          {" "}
-          {/* Changé de lg à xl pour plus de largeur */}
           <Typography
             variant="h4"
             component="h1"
@@ -151,18 +188,14 @@ const Ticket = () => {
               },
             }}
           >
-            Services Disponibles
+            {userRole === "technicien" ? "Service Véhicule" : "Services Disponibles"}
           </Typography>
           <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={3} justifyContent="center">
-              {" "}
-              {/* Espacement réduit à 3 */}
+            <Grid container spacing={3} {...gridConfig.container}>
               {cardData.map((card, index) => (
                 <Grid
                   item
-                  xs={12}
-                  md={6}
-                  lg={2.4} // 12/5 = 2.4 pour 5 cartes sur une ligne
+                  {...gridConfig.item}
                   key={index}
                   sx={{
                     display: "flex",
@@ -177,8 +210,8 @@ const Ticket = () => {
                     <Card
                       sx={{
                         ...cardStyles,
-                        width: "90%", // Largeur à 90% du conteneur
-                        maxWidth: 300, // Largeur maximale augmentée
+                        width: userRole === "technicien" ? "100%" : "90%",
+                        maxWidth: userRole === "technicien" ? 400 : 300,
                       }}
                       onMouseEnter={() => handleCardHover(index)}
                       onMouseLeave={handleCardLeave}
@@ -255,25 +288,27 @@ const Ticket = () => {
         </Container>
       </Box>
 
-      {/* Modals */}
-      <ModelMaintenance
-        open={openMaintenance}
-        onClose={() => setOpenMaintenance(false)}
-      />
-      <ModelFourniture
-        open={openFourniture}
-        onClose={() => setOpenFourniture(false)}
-      />
+      {/* Modals - Affichage conditionnel selon le rôle */}
+      {userRole !== "technicien" && (
+        <>
+          <ModelMaintenance
+            open={openMaintenance}
+            onClose={() => setOpenMaintenance(false)}
+          />
+          <ModelFourniture
+            open={openFourniture}
+            onClose={() => setOpenFourniture(false)}
+          />
+          <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
+          <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
+        </>
+      )}
+      
+      {/* Modal Véhicule - Toujours disponible */}
       <ModelVehicule
         open={openVehicule}
         onClose={() => setOpenVehicule(false)}
       />
-
-      <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
-
-      
-      {/* <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} /> */}
-      <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
     </>
   );
 };

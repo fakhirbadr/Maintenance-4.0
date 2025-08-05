@@ -21,7 +21,8 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import EditPointageModal from "./EditPointageModal";
-import UniteEtatModal from "./UniteEtatModal"; // <-- Ajout de l'import
+import UniteEtatModal from "./UniteEtatModal";
+import * as XLSX from 'xlsx';
 
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
@@ -53,7 +54,6 @@ function formatDate(val) {
   return new Date(val).toLocaleString("fr-FR");
 }
 
-// Regroupe les pointages par jour (clé = date locale FR, basé sur dateRequest)
 function groupByDay(pointages) {
   return pointages.reduce((acc, ptg) => {
     const dateStr = ptg.dateRequest
@@ -65,7 +65,6 @@ function groupByDay(pointages) {
   }, {});
 }
 
-// Regroupe les pointages par région pour un jour donné
 function groupByRegion(pointages) {
   return pointages.reduce((acc, ptg) => {
     const region = ptg.region || "Région inconnue";
@@ -75,7 +74,6 @@ function groupByRegion(pointages) {
   }, {});
 }
 
-// Retourne les unités actives sans pointage pour un jour donné, groupées par région
 function getUnitesSansPointage(unites, pointagesDuJour) {
   const pointageUniteNames = new Set(pointagesDuJour.map((p) => p.site));
   const grouped = {};
@@ -101,12 +99,11 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
   const [unites, setUnites] = useState([]);
   const [userRole, setUserRole] = useState("");
   const [userEmail, setUserEmail] = useState("");
-  const [adminModalOpen, setAdminModalOpen] = useState(false); // <-- Ajout de l'état pour le modal admin
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
 
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Récupère le rôle et l'email de l'utilisateur depuis le localStorage
   useEffect(() => {
     try {
       const userInfo = localStorage.getItem("userInfo");
@@ -121,7 +118,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     }
   }, []);
 
-  // Récupère les pointages (à chaque ouverture)
   const fetchData = () => {
     setLoading(true);
     fetch(`${apiUrl}/api/v1/pointage`)
@@ -142,7 +138,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
       .finally(() => setLoading(false));
   };
 
-  // Récupère les unités actives (une seule fois à l'ouverture)
   const fetchUnites = () => {
     fetch(`${apiUrl}/api/actifs/nameRegionProvince`)
       .then((res) => res.json())
@@ -172,7 +167,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setEditModalOpen(true);
   };
 
-  // Ouvre la modale UniteEtatModal (mode admin)
   const handleAdminEditClick = () => {
     setAdminModalOpen(true);
   };
@@ -296,6 +290,132 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     } finally {
       setSendingBoth(false);
     }
+  };
+
+  const exportAbsencesToExcel = () => {
+    if (!selectedDay) {
+      alert("Veuillez sélectionner une date");
+      return;
+    }
+  
+    const presenceData = [];
+    
+    // Traiter les pointages existants (exclure les unités ULC)
+    pointagesDuJour.forEach(pointage => {
+      if (pointage.site && !pointage.site.startsWith("ULC")) {
+        presenceData.push({
+          Date: selectedDay,
+          Région: pointage.region || "Non spécifiée",
+          Province: pointage.province || "Non spécifiée",
+          "Unité": pointage.site,
+          "Médecin": pointage.medcinPresent === true ? "Présent" : pointage.medcinPresent === false ? "Absent" : "Non renseigné",
+          "Infirmière 1": pointage.infirmiere1Present === true ? "Présent" : pointage.infirmiere1Present === false ? "Absent" : "Non renseigné",
+          "Infirmière 2": pointage.infirmiere2Present === true ? "Présent" : pointage.infirmiere2Present === false ? "Absent" : "Non renseigné"
+        });
+      }
+    });
+  
+    // Ajouter les unités sans pointage (exclure les unités ULC)
+    Object.entries(unitesSansPointageParRegion).forEach(([region, unites]) => {
+      unites.forEach(unite => {
+        if (unite.name && !unite.name.startsWith("ULC")) {
+          presenceData.push({
+            Date: selectedDay,
+            Région: region,
+            Province: unite.province,
+            "Unité": unite.name,
+            "Médecin": "Pas de pointage",
+            "Infirmière 1": "Pas de pointage",
+            "Infirmière 2": "Pas de pointage"
+          });
+        }
+      });
+    });
+  
+    if (presenceData.length === 0) {
+      alert("Aucune donnée à exporter pour cette date");
+      return;
+    }
+  
+    // Trier par région puis par province
+    presenceData.sort((a, b) => {
+      if (a.Région !== b.Région) {
+        return a.Région.localeCompare(b.Région);
+      }
+      return a.Province.localeCompare(b.Province);
+    });
+  
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(presenceData);
+    
+    // Définir les styles de couleur
+    const greenFill = { fgColor: { rgb: "90EE90" } }; // Vert clair pour présent
+    const redFill = { fgColor: { rgb: "FFB6C1" } };   // Rouge clair pour absent
+    const grayFill = { fgColor: { rgb: "D3D3D3" } };  // Gris pour pas de pointage
+    const headerFill = { fgColor: { rgb: "FFFFAA00" } }; // Jaune pour les en-têtes
+  
+    // Appliquer les styles aux cellules
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    
+    // Style des en-têtes (première ligne)
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      ws[cellAddress].s = {
+        font: { bold: true, color: { rgb: "000000" } },
+        fill: headerFill,
+        alignment: { horizontal: "center" }
+      };
+    }
+  
+    // Style des données
+    for (let row = 1; row <= range.e.r; row++) {
+      // Colonnes du personnel (Médecin, Infirmière 1, Infirmière 2)
+      const medecinCol = 4; // Colonne E (index 4)
+      const inf1Col = 5;    // Colonne F (index 5)
+      const inf2Col = 6;    // Colonne G (index 6)
+      
+      [medecinCol, inf1Col, inf2Col].forEach(col => {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!ws[cellAddress]) return;
+        
+        const cellValue = ws[cellAddress].v;
+        let fill;
+        
+        if (cellValue === "Présent") {
+          fill = greenFill;
+        } else if (cellValue === "Absent") {
+          fill = redFill;
+        } else {
+          fill = grayFill;
+        }
+        
+        ws[cellAddress].s = {
+          fill: fill,
+          alignment: { horizontal: "center" },
+          font: { bold: cellValue === "Présent" || cellValue === "Absent" }
+        };
+      });
+    }
+    
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+      { wch: 12 }, // Date
+      { wch: 15 }, // Région
+      { wch: 15 }, // Province
+      { wch: 25 }, // Unité
+      { wch: 15 }, // Médecin
+      { wch: 15 }, // Infirmière 1
+      { wch: 15 }  // Infirmière 2
+    ];
+    
+    ws['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Présence Personnel");
+    
+    const fileName = `Presence_Personnel_${selectedDay.replace(/\//g, '-')}.xlsx`;
+    
+    XLSX.writeFile(wb, fileName);
   };
 
   const pointagesDuJour =
@@ -426,7 +546,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
                       <TableRow key={row._id}>
                         <TableCell>{row.customId}</TableCell>
                         <TableCell>{row.site}</TableCell>
-                        
                         <TableCell>{row.actif}</TableCell>
                         <TableCell>{row.region}</TableCell>
                         <TableCell>{row.province}</TableCell>
@@ -460,7 +579,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
                     ))}
                   </TableBody>
                 </Table>
-                {/* Unités sans pointage */}
                 <Box mt={1}>
                   <Typography
                     variant="subtitle2"
@@ -487,13 +605,23 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         </DialogContent>
         <DialogActions>
           {showAdminButton && (
-            <Button
-              onClick={handleAdminEditClick}
-              color="info"
-              variant="contained"
-            >
-              Mode Admin *
-            </Button>
+            <>
+             <Button
+  onClick={exportAbsencesToExcel}
+  color="success"
+  variant="contained"
+  sx={{ mr: 1 }}
+>
+  Exporter statut unités (Excel)
+</Button>
+              <Button
+                onClick={handleAdminEditClick}
+                color="info"
+                variant="contained"
+              >
+                Mode Admin *
+              </Button>
+            </>
           )}
           <Button onClick={onClose} color="primary" variant="contained">
             Fermer

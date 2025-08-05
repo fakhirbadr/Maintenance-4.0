@@ -248,6 +248,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueIntervention",
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
       },
       {
         text: "Historique commande",
@@ -257,6 +258,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueBesoin",
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
       },
       {
         text: "Historique véhicule",
@@ -275,6 +277,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueSI",
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
       },
       {
         text: "Historique des rejets",
@@ -284,6 +287,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueDesRejets",
+        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance"],
       },
     ],
   },
@@ -305,7 +309,7 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: ["admin", "docteurs", "user", "chargé de stock"],
+    roleRequired: ["admin", "docteurs", "user", "chargé de stock", "technicien"],
   },
   {
     text: "Utilisateur",
@@ -326,16 +330,16 @@ const Array1 = [
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
-  // {
-  //   text: "Configuration Asset",
-  //   icon: (
-  //     <IconWrapper>
-  //       <BrowserUpdatedRoundedIcon />
-  //     </IconWrapper>
-  //   ),
-  //   path: "/ConfigurationAsset",
-  //   roleRequired: ["superviseur"],
-  // },
+  {
+    text: "Configuration Asset",
+    icon: (
+      <IconWrapper>
+        <BrowserUpdatedRoundedIcon />
+      </IconWrapper>
+    ),
+    path: "/ConfigurationAsset",
+    roleRequired: ["superviseur"],
+  },
 ];
 
 export default function SidBar({ open, handleDrawerClose }) {
