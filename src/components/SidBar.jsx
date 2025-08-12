@@ -248,7 +248,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueIntervention",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
       },
       {
         text: "Historique commande",
@@ -258,7 +258,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueBesoin",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur"],
       },
       {
         text: "Historique véhicule",
@@ -268,6 +268,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/Historiquevehicule",
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur" , "technicien"],
       },
       {
         text: "Historique SI",
@@ -277,7 +278,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueSI",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
       },
       {
         text: "Historique des rejets",
@@ -287,7 +288,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueDesRejets",
-        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance", "superviseur"],
       },
     ],
   },
