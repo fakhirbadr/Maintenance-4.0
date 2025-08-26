@@ -12,6 +12,7 @@ import myImage2 from "./3.jpg";
 import myImage5 from "./5.jpg";
 import myImage6 from "./6.png";
 import myImage7 from "./9.png";
+import myImage8 from "./10.jpg";
 import ModelVehicule from "./ModelVehicule";
 import ModelRetour from "./ModelRetour";
 import { Grid, useTheme, Box, Container, Fade, Grow } from "@mui/material";
@@ -128,6 +129,13 @@ const Ticket = () => {
         "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
       onClick: () => setOpenProblemeSI(true),
     },
+    //  {
+    //   title: "HR Services",
+    //   image: myImage8,
+    //   description:
+    //     "Ce module regroupe toutes vos demandes RH afin de faciliter leur gestion et leur traitement.",
+    //   onClick: () => setOpenProblemeSI(true),
+    // },
   ];
 
   // Filtrer les cartes selon le rôle

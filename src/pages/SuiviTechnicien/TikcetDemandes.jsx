@@ -25,10 +25,56 @@ const TicketDemandes = () => {
     const fetchData = async () => {
       if (!name) return;
       try {
-        const response = await axios.get(
+        // Charger les commandes (fournitureRoutes)
+        const commandesResponse = await axios.get(
           `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}&isDeleted=false`
         );
-        setRows(response.data.fournitures);
+        const commandes = commandesResponse.data.fournitures || [];
+
+        // Charger les sous-tickets
+        const subticketsResponse = await axios.get(
+          `${apiUrl}/api/v1/subtickets?technicien=${name}`
+        );
+        const subtickets = subticketsResponse.data.subTickets || [];
+        console.log("Commandes:", commandes);
+        console.log("Sous-tickets:", subtickets);
+
+        // Normaliser et fusionner les données
+        // Ajout d'un champ "type" pour distinguer commandes / sous-tickets
+        const commandesNormalized = commandes.map((item) => ({
+          id: item._id || item.id,
+          name: item.name || item.titre || "—",
+          categorie: item.categorie || "—",
+          besoin: item.besoin || item.description || "—",
+          quantite: item.quantite || 0,
+          technicien: item.technicien || "—",
+          status: item.status || "—",
+          isClosed: item.isClosed || false,
+          commentaire: item.commentaire || "",
+          dateCreation: item.dateCreation || item.createdAt || "",
+          technicienReception: item.technicienReception || "",
+          type: "Commande",
+        }));
+
+        const subticketsNormalized = subtickets.map((item) => ({
+          id: item._id || item.id,
+          name: item.name || item.titre || "—",
+          categorie: item.categorie || "—",
+          besoin: item.description || "—",
+          quantite: item.quantite || 0,
+          technicien: item.technicien || "—",
+          status: item.status || "—",
+          isClosed: item.isClosed || false,
+          commentaire: item.commentaire || "",
+          dateCreation: item.dateCreation || item.createdAt || "",
+          technicienReception: item.technicienReception || "",
+          type: "Sous-ticket",
+        }));
+
+        // Fusionner les deux tableaux
+        const mergedRows = [...commandesNormalized, ...subticketsNormalized];
+
+        setRows(mergedRows);
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);
       }
@@ -39,8 +85,8 @@ const TicketDemandes = () => {
   const handleDownloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
-    XLSX.writeFile(workbook, "demande_fourniture.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+    XLSX.writeFile(workbook, "tickets_fourniture_et_subtickets.xlsx");
   };
 
   const getMuiTheme = () =>
@@ -70,19 +116,54 @@ const TicketDemandes = () => {
   };
 
   const handleConfirmReception = async () => {
-    const id = selectedRow._id || selectedRow.id;
+    const id = selectedRow.id;
     setLoadingId(id);
     setConfirmDialogOpen(false);
+    
     try {
-      // PATCH sur l'API
-      await axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${id}`, {
-        status: "recu",
-        technicienReception: name,
-      });
-      // Mise à jour locale
+      if (selectedRow.type === "Commande") {
+        // Pour les commandes (fournitures)
+        const updateData = {
+          status: "recu",
+          technicienReception: name,
+          // Conserver les autres champs existants
+          name: selectedRow.name,
+          categorie: selectedRow.categorie,
+          besoin: selectedRow.besoin,
+          quantite: selectedRow.quantite,
+          isClosed: selectedRow.isClosed,
+          commentaire: selectedRow.commentaire,
+        };
+
+        console.log(`Mise à jour fournitureRoutes avec ID:`, id);
+        console.log("Données envoyées:", updateData);
+
+        await axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${id}`, updateData);
+        
+      } else {
+        // Pour les sous-tickets - endpoint correct: /sub-tickets/:subTicketId
+        const updateData = {
+          status: "recu",
+          technicienReception: name,
+          // Conserver les autres champs existants si nécessaire
+          name: selectedRow.name,
+          categorie: selectedRow.categorie,
+          description: selectedRow.besoin,
+          quantite: selectedRow.quantite,
+          isClosed: selectedRow.isClosed,
+          commentaire: selectedRow.commentaire,
+        };
+
+        console.log(`Mise à jour sous-ticket avec ID:`, id);
+        console.log("Données envoyées:", updateData);
+
+        await axios.patch(`${apiUrl}/api/v1/sub-tickets/${id}`, updateData);
+      }
+
+      // Mise à jour locale du tableau
       setRows((prevRows) =>
         prevRows.map((row) =>
-          (row._id || row.id) === id
+          row.id === id
             ? {
                 ...row,
                 status: "recu",
@@ -91,10 +172,26 @@ const TicketDemandes = () => {
             : row
         )
       );
+
+      console.log("Accusé de réception effectué avec succès");
+      
     } catch (error) {
       console.error("Erreur lors de l'accusé de réception :", error);
-      alert("Erreur lors de l'accusé de réception !");
+      console.error("Détails de l'erreur:", error.response?.data);
+      
+      // Message d'erreur plus informatif
+      let errorMessage = "Erreur inconnue";
+      if (error.response?.status === 404) {
+        errorMessage = `L'endpoint pour ${selectedRow.type} n'existe pas. Vérifiez la configuration des routes backend.`;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else {
+        errorMessage = error.message;
+      }
+      
+      alert(`Erreur lors de l'accusé de réception : ${errorMessage}`);
     }
+    
     setLoadingId(null);
     setSelectedRow(null);
   };
@@ -194,6 +291,7 @@ const TicketDemandes = () => {
         sort: false,
         filterType: "dropdown",
         customBodyRender: (value) => {
+          if (!value) return "—";
           const date = new Date(value);
           return date.toLocaleString("fr-FR", {
             year: "numeric",
@@ -217,21 +315,33 @@ const TicketDemandes = () => {
           if (row.status === "recu") {
             return row.technicienReception || "—";
           }
-          if (row.status === "En cours de livraison" || row.status === "Achat sur place") {
+          if (
+            row.status === "En cours de livraison" ||
+            row.status === "Achat sur place"
+          ) {
             return (
               <Button
                 variant="contained"
                 color="success"
                 size="small"
-                disabled={loadingId === (row._id || row.id)}
+                disabled={loadingId === row.id}
                 onClick={() => handleReceptionClick(row)}
               >
-                {loadingId === (row._id || row.id) ? "..." : "Accuser réception"}
+                {loadingId === row.id ? "..." : "Accuser réception"}
               </Button>
             );
           }
           return "—";
         },
+      },
+    },
+    {
+      name: "type",
+      label: "Type",
+      options: {
+        filter: true,
+        sort: true,
+        filterType: "dropdown",
       },
     },
   ];
@@ -245,21 +355,21 @@ const TicketDemandes = () => {
       </div>
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>
-          <MUIDataTable
-            title={"Gestion des fournitures"}
-            data={rows}
-            columns={columns}
-            options={options}
-          />
+          <MUIDataTable title={"Gestion des Tickets"} data={rows} columns={columns} options={options} />
         </ThemeProvider>
       </div>
 
-      {/* Dialog de confirmation */}
       <Dialog open={confirmDialogOpen} onClose={handleCancelReception}>
         <DialogTitle>Confirmation</DialogTitle>
         <DialogContent>
           <Typography>
             Voulez-vous vraiment accuser la réception de cette demande ?
+            <br />
+            <strong>Type:</strong> {selectedRow?.type}
+            <br />
+            <strong>Nom:</strong> {selectedRow?.name}
+            <br />
+            Le statut sera automatiquement changé vers "recu".
           </Typography>
         </DialogContent>
         <DialogActions>
@@ -270,9 +380,9 @@ const TicketDemandes = () => {
             onClick={handleConfirmReception}
             color="primary"
             variant="contained"
-            disabled={loadingId === (selectedRow?._id || selectedRow?.id)}
+            disabled={loadingId === (selectedRow?.id)}
           >
-            Confirmer
+            {loadingId === (selectedRow?.id) ? "Traitement..." : "Confirmer"}
           </Button>
         </DialogActions>
       </Dialog>

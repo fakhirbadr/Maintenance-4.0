@@ -30,60 +30,20 @@ import { motion } from "framer-motion";
 import {
   Avatar,
   List,
-  styled,
+  styled, // We'll keep this for some styled components, but not the Drawer itself
   Typography,
   useTheme,
   Collapse,
   Box,
   Tooltip,
 } from "@mui/material";
-import BrowserUpdatedRoundedIcon from "@mui/icons-material/BrowserUpdatedRounded";
 import { useLocation, useNavigate } from "react-router-dom";
 import avatarImage from "../../public/scx.png";
 
 const drawerWidth = 240;
 
-const openedMixin = (theme) => ({
-  width: drawerWidth,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.easeOut,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: "hidden",
-  backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
-  boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-});
-
-const closedMixin = (theme) => ({
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.easeOut,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: "hidden",
-  width: `calc(${theme.spacing(7)} + 1px)`,
-  [theme.breakpoints.up("sm")]: {
-    width: `calc(${theme.spacing(8)} + 1px)`,
-  },
-  backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
-  boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
-});
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme, open }) => ({
-  width: drawerWidth,
-  flexShrink: 0,
-  whiteSpace: "nowrap",
-  boxSizing: "border-box",
-  ...(open && {
-    ...openedMixin(theme),
-    "& .MuiDrawer-paper": openedMixin(theme),
-  }),
-  ...(!open && {
-    ...closedMixin(theme),
-    "& .MuiDrawer-paper": closedMixin(theme),
-  }),
-}));
+// The Drawer is now a regular MuiDrawer component
+// The styling is handled dynamically within the component using the `sx` prop
 
 const DrawerHeader = styled("div")(({ theme }) => ({
   display: "flex",
@@ -118,6 +78,7 @@ const MotionListItemIcon = motion(ListItemIcon);
 const MotionAvatar = motion(Avatar);
 const MotionTypography = motion(Typography);
 
+// Your Array1 menu data remains unchanged
 const Array1 = [
   {
     text: "Dashboard",
@@ -248,7 +209,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueIntervention",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
       },
       {
         text: "Historique commande",
@@ -258,7 +219,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueBesoin",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur"],
       },
       {
         text: "Historique véhicule",
@@ -268,6 +229,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/Historiquevehicule",
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur" , "technicien"],
       },
       {
         text: "Historique SI",
@@ -277,7 +239,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueSI",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
       },
       {
         text: "Historique des rejets",
@@ -287,7 +249,7 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueDesRejets",
-        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance"],
+        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance", "superviseur"],
       },
     ],
   },
@@ -329,16 +291,6 @@ const Array1 = [
     ),
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
-  },
-  {
-    text: "Configuration Asset",
-    icon: (
-      <IconWrapper>
-        <BrowserUpdatedRoundedIcon />
-      </IconWrapper>
-    ),
-    path: "/ConfigurationAsset",
-    roleRequired: ["superviseur"],
   },
 ];
 
@@ -385,7 +337,35 @@ export default function SidBar({ open, handleDrawerClose }) {
   };
 
   return (
-    <Drawer variant="permanent" open={open}>
+    // Instead of a styled component, we use MuiDrawer directly and apply styles via `sx`
+    <MuiDrawer
+      variant="permanent"
+      open={open}
+      sx={{
+        width: open ? drawerWidth : `calc(${theme.spacing(7)} + 1px)`,
+        flexShrink: 0,
+        whiteSpace: "nowrap",
+        boxSizing: "border-box",
+        transition: theme.transitions.create("width", {
+          easing: theme.transitions.easing.easeOut,
+          duration: theme.transitions.duration.enteringScreen,
+        }),
+        overflowX: "hidden",
+        "& .MuiDrawer-paper": {
+          width: open ? drawerWidth : `calc(${theme.spacing(7)} + 1px)`,
+          transition: theme.transitions.create("width", {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen,
+          }),
+          overflowX: "hidden",
+          backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
+          boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
+          [theme.breakpoints.up("sm")]: {
+            width: open ? drawerWidth : `calc(${theme.spacing(8)} + 1px)`,
+          },
+        },
+      }}
+    >
       <DrawerHeader>
         <IconButton
           onClick={handleDrawerClose}
@@ -678,6 +658,6 @@ export default function SidBar({ open, handleDrawerClose }) {
       </List>
 
       <Divider sx={{ mt: 1 }} />
-    </Drawer>
+    </MuiDrawer>
   );
 }

@@ -22,6 +22,10 @@ import Graphtest from "./Graph 9/Graphtest";
 import axios from "axios";
 import { MenuItem, TextField } from "@mui/material";
 import TauxDisponibilité from "./Graphe 11/TauxDisponibilité";
+import AgeDesBesoin from "./AgeDesBesoin/ageDesBesoin";
+import RepartitionParStatus from "./repartitionParStatus/repartitionParStatus";
+
+
 import GlobalGraph from "./Graph Globale/GlobalGraph";
 import Index from "./Tablekpiv2/Index";
 
@@ -236,15 +240,16 @@ const Dashboard = () => {
   );
 
   // Extraire les propriétés communes pour les graphiques pour éviter la duplication
-  const graphProps = useMemo(
-    () => ({
-      region: filters.region,
-      province: filters.province,
-      startDate: filters.startDate,
-      endDate: filters.endDate,
-    }),
-    [filters.region, filters.province, filters.startDate, filters.endDate]
-  );
+const graphProps = useMemo(
+  () => ({
+    region: filters.region,
+    province: filters.province,
+    startDate: filters.startDate,
+    endDate: filters.endDate,
+    actif: filters.actif, // <-- AJOUTE ça
+  }),
+  [filters.region, filters.province, filters.startDate, filters.endDate, filters.actif]
+);
 
   // Élément dark pour réutilisation
   const darkItem = useMemo(() => ({ sx: { backgroundColor: "#1E1E1E" } }), []);
@@ -351,11 +356,11 @@ const Dashboard = () => {
             />
           </Grid>
           <Grid item xs={12} lg={4}>
-            <ClotureNonCloture
-              {...graphProps}
-              onTicketsClosedUpdate={updateHandlers.handleTicketsClosedUpdate}
-              site={filters.actif ? [filters.actif] : undefined}
-            />
+           <ClotureNonCloture
+  {...graphProps}
+  onTicketsClosedUpdate={updateHandlers.handleTicketsClosedUpdate}
+  site={filters.actif || undefined}
+/>
           </Grid>
           <Grid item xs={12} lg={4}>
             <BesoinTaux
@@ -371,7 +376,9 @@ const Dashboard = () => {
 
           <Grid item xs={12} lg={4}>
             <Item {...darkItem}>
-              <CategorieMaintenance {...graphProps} />
+              <CategorieMaintenance {...graphProps}
+  onTicketsClosedUpdate={updateHandlers.handleTicketsClosedUpdate}
+  site={filters.actif || undefined} />
             </Item>
           </Grid>
           <Grid item xs={12} lg={4}>
@@ -392,6 +399,16 @@ const Dashboard = () => {
           <Grid item xs={12} lg={4}>
             <Item {...darkItem}>
               <CategorieBesoin {...graphProps} />
+            </Item>
+          </Grid>
+          <Grid item xs={12} lg={4}>
+            <Item {...darkItem}>
+              <AgeDesBesoin  />
+            </Item>
+          </Grid>
+          <Grid item xs={12} lg={8}>
+            <Item {...darkItem}>
+              <RepartitionParStatus  />
             </Item>
           </Grid>
         </Grid>

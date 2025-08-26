@@ -1383,7 +1383,7 @@ const ListeBesoin = () => {
     rowsPerPage: 10,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
-    download: true,
+    download: false,
     setRowProps: (_, dataIndex) => {
       // Check if the ticket is closed
       const rowData = rows[dataIndex];
