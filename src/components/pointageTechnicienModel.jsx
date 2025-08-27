@@ -11,14 +11,13 @@ import {
   Checkbox,
   FormControlLabel,
   Stack,
-  Grid,
-  Paper,
   CircularProgress,
   Alert,
   FormControl,
   InputLabel,
   Select,
   Box,
+  Paper,
 } from "@mui/material";
 import axios from "axios";
 
@@ -26,7 +25,25 @@ import axios from "axios";
 // @ts-ignore
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
-// --- Sous-formulaire personnel (MODIFIÉ) ---
+// --- NOUVELLE FONCTION : Pour formater la date locale correctement ---
+/**
+ * Crée une chaîne de caractères date-heure au format YYYY-MM-DDTHH:mm
+ * à partir de la date locale actuelle de l'utilisateur.
+ * @returns {string} La date et l'heure formatées pour un input datetime-local.
+ */
+function getLocalDateTimeForInput() {
+  const date = new Date();
+  const year = date.getFullYear();
+  // getMonth() est 0-indexé (0 pour Janvier), donc on ajoute 1.
+  const month = (date.getMonth() + 1).toString().padStart(2, "0");
+  const day = date.getDate().toString().padStart(2, "0");
+  const hours = date.getHours().toString().padStart(2, "0");
+  const minutes = date.getMinutes().toString().padStart(2, "0");
+
+  return `${year}-${month}-${day}T${hours}:${minutes}`;
+}
+
+// --- Sous-formulaire personnel ---
 function PersonnelForm({ label, value, onChange }) {
   if (!value.titulaireNom) {
     return (
@@ -151,7 +168,6 @@ export default function PointageTechnicienModel({ open, onClose }) {
       }
       const actifsIds = JSON.parse(localStorage.getItem("userActifs") || "[]");
 
-      // --- MODIFICATION ---
       axios
         .get(`${API_BASE_URL}/api/actifs`)
         .then(({ data }) => {
@@ -180,7 +196,6 @@ export default function PointageTechnicienModel({ open, onClose }) {
 
     if (siteId) {
       try {
-        // --- MODIFICATION ---
         const res = await axios.get(`${API_BASE_URL}/api/personnel/${siteId}`);
         const personnelData = res.data?.personnel || [];
         const getPersonnel = (role) => {
@@ -228,7 +243,6 @@ export default function PointageTechnicienModel({ open, onClose }) {
     setSuccess("");
 
     try {
-      // --- MODIFICATION ---
       await axios.post(`${API_BASE_URL}/api/v1/pointagevfinal`, {
         ...form,
         dateRequest: new Date(),
@@ -298,7 +312,8 @@ export default function PointageTechnicienModel({ open, onClose }) {
                   label="Heure de début"
                   name="heureDebut"
                   type="datetime-local"
-                  defaultValue={new Date().toISOString().slice(0, 16)}
+                  // --- MODIFICATION APPLIQUÉE ICI ---
+                  defaultValue={getLocalDateTimeForInput()}
                   onChange={handleChange}
                   fullWidth
                   InputLabelProps={{ shrink: true }}

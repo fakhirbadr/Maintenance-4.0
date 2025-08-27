@@ -29,7 +29,6 @@ import {
   TextField,
   Tooltip,
   IconButton,
-  styled,
   useTheme,
 } from "@mui/material";
 import {
@@ -50,47 +49,21 @@ import ConfigActifDialog from "./ConfigActifsDialog";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 const regions = {
-  "Tanger-Tétouan-Al Hoceïma": [
-    "Tanger", "Tétouan", "Al Hoceïma", "Chefchaouen",
-    "Larache", "Ouezzane", "Fahs-Anjra",
-  ],
-  "L'Oriental": [
-    "Oujda-Angad", "Nador", "Berkane", "Driouch",
-    "Taourirt", "Jerada", "Guercif", "Figuig",
-  ],
-  "Fès-Meknès": [
-    "Fès", "Meknès", "Ifrane", "Taza", "Sefrou",
-    "Boulemane", "El Hajeb", "Moulay Yacoub", "Taounate",
-  ],
-  "Rabat-Salé-Kénitra": [
-    "Rabat", "Salé", "Kénitra", "Sidi Kacem", "Sidi Slimane",
-    "Khémisset",
-  ],
-  "Béni Mellal-Khénifra": [
-    "Béni Mellal", "Khénifra", "Azilal", "Fquih Ben Salah", "Kasba Tadla",
-  ],
-  "Casablanca-Settat": [
-    "Casablanca", "Mohammedia", "Settat", "El Jadida", "Berrechid",
-    "Nouaceur", "Médiouna", "Sidi Bennour", "Benslimane",
-  ],
-  "Marrakech-Safi": [
-    "Marrakech", "Safi", "Essaouira", "Rehamna", "Chichaoua",
-    "Al Haouz", "Youssoufia", "El Kelaâ des Sraghna",
-  ],
+  "Tanger-Tétouan-Al Hoceïma": [ "Tanger", "Tétouan", "Al Hoceïma", "Chefchaouen", "Larache", "Ouezzane", "Fahs-Anjra" ],
+  "L'Oriental": [ "Oujda-Angad", "Nador", "Berkane", "Driouch", "Taourirt", "Jerada", "Guercif", "Figuig" ],
+  "Fès-Meknès": [ "Fès", "Meknès", "Ifrane", "Taza", "Sefrou", "Boulemane", "El Hajeb", "Moulay Yacoub", "Taounate" ],
+  "Rabat-Salé-Kénitra": [ "Rabat", "Salé", "Kénitra", "Sidi Kacem", "Sidi Slimane", "Khémisset" ],
+  "Béni Mellal-Khénifra": [ "Béni Mellal", "Khénifra", "Azilal", "Fquih Ben Salah", "Kasba Tadla" ],
+  "Casablanca-Settat": [ "Casablanca", "Mohammedia", "Settat", "El Jadida", "Berrechid", "Nouaceur", "Médiouna", "Sidi Bennour", "Benslimane" ],
+  "Marrakech-Safi": [ "Marrakech", "Safi", "Essaouira", "Rehamna", "Chichaoua", "Al Haouz", "Youssoufia", "El Kelaâ des Sraghna" ],
   "Drâa-Tafilalet": ["Errachidia", "Ouarzazate", "Zagora", "Tinghir", "Midelt"],
-  "Souss-Massa": [
-    "Agadir Ida-Outanane", "Taroudant", "TATA", "Tiznit",
-    "Chtouka Aït Baha", "Inezgane-Aït Melloul",
-  ],
+  "Souss-Massa": [ "Agadir Ida-Outanane", "Taroudant", "TATA", "Tiznit", "Chtouka Aït Baha", "Inezgane-Aït Melloul" ],
   "Guelmim-Oued Noun": ["Guelmim", "Tan-Tan", "Sidi Ifni", "Assa-Zag"],
   "Laâyoune-Sakia El Hamra": ["Laâyoune", "Boujdour", "Tarfaya", "Es-Semara"],
   "Dakhla-Oued Ed-Dahab": ["Dakhla", "Oued Ed-Dahab", "Aousserd"],
 };
 
-const motifsAbsence = [
-  "Maladie", "Congé annuel", "Congé exceptionnel", "Raison familiale",
-  "Retard", "Absence non justifiée", "Mission professionnelle", "Autre",
-];
+const motifsAbsence = [ "Maladie", "Congé annuel", "Congé exceptionnel", "Raison familiale", "Retard", "Absence non justifiée", "Mission professionnelle", "Autre" ];
 
 // --- Styles & Helpers ---
 const darkTheme = createTheme({
@@ -123,10 +96,6 @@ const formatTime = (timeString) =>
     hour: "2-digit", minute: "2-digit",
   }) : "-";
 
-/**
- * Renders a chip based on the 'actif' status.
- * @param {string} actif The status string ("Oui", "Non", "Actif", "Inactif").
- */
 const getStatusChip = (actif) => {
   const isActive = actif?.toLowerCase() === "oui" || actif?.toLowerCase() === "actif";
   return (
@@ -140,24 +109,11 @@ const getStatusChip = (actif) => {
   );
 };
 
-// --- Sub-Components for better readability ---
-/**
- * Displays filtering options for the table.
- * @param {object} props - Component props.
- * @param {object} props.filters - Current filter values.
- * @param {function} props.onFilterChange - Handler for filter changes.
- */
+// --- Sub-Components ---
 const FiltersSection = ({ filters, onFilterChange }) => {
   const theme = useTheme();
   return (
-    <Card
-      sx={{
-        mb: 3,
-        backgroundColor: "background.paper",
-        border: `1px solid ${theme.palette.divider}`,
-        borderRadius: 2,
-      }}
-    >
+    <Card sx={{ mb: 3, backgroundColor: "background.paper", border: `1px solid ${theme.palette.divider}`, borderRadius: 2 }}>
       <CardContent>
         <Box sx={{ display: "flex", alignItems: "center", mb: 2 }}>
           <FilterListIcon sx={{ mr: 1, color: "primary.main" }} />
@@ -170,7 +126,7 @@ const FiltersSection = ({ filters, onFilterChange }) => {
             label="Date"
             type="date"
             size="small"
-            value={filters.date}
+            value={filters.date || ''}
             onChange={(e) => onFilterChange("date", e.target.value)}
             InputLabelProps={{ shrink: true }}
             sx={{ flex: 1, "& .MuiInputBase-root": { backgroundColor: "background.default" } }}
@@ -199,16 +155,7 @@ const FiltersSection = ({ filters, onFilterChange }) => {
   );
 };
 
-/**
- * Renders a single personnel block with status and actions.
- * @param {object} props - Component props.
- * @param {object} props.personnel - Personnel data.
- * @param {string} props.pointageId - The ID of the pointage record.
- * @param {string} props.role - The role of the personnel (e.g., "medecin").
- * @param {function} props.onUpdatePersonnel - Handler for updating personnel.
- * @param {function} props.onOpenCommentDialog - Handler for opening the comment dialog.
- * @param {boolean} props.isUpdating - Loading state.
- */
+// ... Autres sous-composants (PersonnelBlock, LoadingIndicator etc.) sont inchangés ...
 const PersonnelBlock = ({ personnel, pointageId, role, onUpdatePersonnel, onOpenCommentDialog, isUpdating }) => {
   if (!personnel) return <Typography variant="body2" sx={{ color: "text.secondary", fontSize: "0.9rem" }}>-</Typography>;
 
@@ -289,7 +236,6 @@ const PersonnelBlock = ({ personnel, pointageId, role, onUpdatePersonnel, onOpen
     </Box>
   );
 };
-
 const LoadingIndicator = () => (
   <Box display="flex" flexDirection="column" justifyContent="center" alignItems="center" p={4}>
     <CircularProgress size={40} sx={{ color: "primary.main" }} />
@@ -298,7 +244,6 @@ const LoadingIndicator = () => (
     </Typography>
   </Box>
 );
-
 const ErrorMessage = ({ error, onClose }) => (
   error && (
     <Alert severity="error" sx={{ mb: 2 }} onClose={onClose}>
@@ -306,7 +251,6 @@ const ErrorMessage = ({ error, onClose }) => (
     </Alert>
   )
 );
-
 const EmptyState = () => (
   <Paper sx={{ p: 4, textAlign: "center", backgroundColor: "background.paper", border: "1px dashed #555", borderRadius: 2 }}>
     <Typography variant="h6" sx={{ color: "text.secondary" }} gutterBottom>
@@ -317,46 +261,25 @@ const EmptyState = () => (
     </Typography>
   </Paper>
 );
-
 const StatsSection = ({ pointages }) => {
   if (!pointages || pointages.length === 0) return null;
   const totalPointages = pointages.length;
-  const actifs = pointages.filter(
-    (p) => p.actif?.toLowerCase() === "oui" || p.actif?.toLowerCase() === "actif"
-  ).length;
+  const actifs = pointages.filter(p => p.actif?.toLowerCase() === "oui" || p.actif?.toLowerCase() === "actif").length;
   const inactifs = totalPointages - actifs;
   const theme = useTheme();
 
   return (
     <Box sx={{ mb: 3 }}>
       <Stack direction="row" spacing={2} sx={{ mb: 2 }}>
-        <Paper
-          sx={{
-            p: 2, flex: 1, textAlign: "center",
-            backgroundColor: "rgba(33, 150, 243, 0.1)",
-            border: `1px solid ${theme.palette.info.light}`, borderRadius: 2,
-          }}
-        >
+        <Paper sx={{ p: 2, flex: 1, textAlign: "center", backgroundColor: "rgba(33, 150, 243, 0.1)", border: `1px solid ${theme.palette.info.light}`, borderRadius: 2 }}>
           <Typography variant="h4" sx={{ color: "info.main", fontWeight: 700 }}>{totalPointages}</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>Unités pointées</Typography>
         </Paper>
-        <Paper
-          sx={{
-            p: 2, flex: 1, textAlign: "center",
-            backgroundColor: "rgba(76, 175, 80, 0.1)",
-            border: `1px solid ${theme.palette.success.light}`, borderRadius: 2,
-          }}
-        >
+        <Paper sx={{ p: 2, flex: 1, textAlign: "center", backgroundColor: "rgba(76, 175, 80, 0.1)", border: `1px solid ${theme.palette.success.light}`, borderRadius: 2 }}>
           <Typography variant="h4" sx={{ color: "success.main", fontWeight: 700 }}>{actifs}</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>Actifs</Typography>
         </Paper>
-        <Paper
-          sx={{
-            p: 2, flex: 1, textAlign: "center",
-            backgroundColor: "rgba(244, 67, 54, 0.1)",
-            border: `1px solid ${theme.palette.error.light}`, borderRadius: 2,
-          }}
-        >
+        <Paper sx={{ p: 2, flex: 1, textAlign: "center", backgroundColor: "rgba(244, 67, 54, 0.1)", border: `1px solid ${theme.palette.error.light}`, borderRadius: 2 }}>
           <Typography variant="h4" sx={{ color: "error.main", fontWeight: 700 }}>{inactifs}</Typography>
           <Typography variant="body2" sx={{ color: "text.secondary" }}>Inactifs</Typography>
         </Paper>
@@ -364,14 +287,10 @@ const StatsSection = ({ pointages }) => {
     </Box>
   );
 };
-
 const PointagesTable = ({ pointages, sites, onUpdatePersonnel, onOpenCommentDialog, isUpdating }) => {
   const theme = useTheme();
   return (
-    <TableContainer
-      component={Paper}
-      sx={{ maxHeight: "70vh", border: `1px solid ${theme.palette.divider}`, backgroundColor: "background.paper", borderRadius: 2 }}
-    >
+    <TableContainer component={Paper} sx={{ maxHeight: "70vh", border: `1px solid ${theme.palette.divider}`, backgroundColor: "background.paper", borderRadius: 2 }}>
       <Table size="medium" stickyHeader>
         <TableHead>
           <TableRow>
@@ -407,6 +326,7 @@ const PointagesTable = ({ pointages, sites, onUpdatePersonnel, onOpenCommentDial
   );
 };
 
+
 // --- Main Component ---
 const PointagevFinalAdmin = ({ open, onClose }) => {
   const [pointages, setPointages] = useState([]);
@@ -432,7 +352,16 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
   
   const theme = useTheme();
 
-  /** Fetches all sites to create a map for display. */
+  const handleFilterChange = (key, value) => {
+    setFilters(prevFilters => {
+      const newFilters = { ...prevFilters, [key]: value };
+      if (key === 'region') {
+        newFilters.province = '';
+      }
+      return newFilters;
+    });
+  };
+
   const fetchSitesForMap = async () => {
     setLoadingSites(true);
     try {
@@ -454,12 +383,15 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     }
   };
 
-  /** Fetches pointage data based on current filters. */
   const fetchPointages = async () => {
     setLoading(true);
     setError(null);
     try {
-      const params = new URLSearchParams(filters);
+      const params = new URLSearchParams({
+        region: filters.region,
+        province: filters.province,
+        date: filters.date || formatDateToInput(new Date()),
+      });
       const response = await fetch(`${API_BASE_URL}/api/v1/pointagevfinal?${params.toString()}`);
       if (!response.ok) throw new Error(`Erreur lors de la récupération des pointages: ${response.statusText}`);
       const data = await response.json();
@@ -473,12 +405,6 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     }
   };
 
-  /**
-   * Updates a personnel record in the database.
-   * @param {object} updateData - Data to update.
-   * @param {string} pointageId - ID of the pointage record.
-   * @param {string} role - Role of the personnel to update.
-   */
   const handleUpdatePersonnel = async (updateData, pointageId, role) => {
     if (!pointageId || !role) return;
     setIsUpdating(true);
@@ -512,13 +438,11 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     }
   };
 
-  /** Saves a comment after selection or input. */
   const handleCommentSave = () => {
     const finalComment = selectedMotif === "Autre" ? customMotifText : selectedMotif;
     handleUpdatePersonnel({ commentaireAbsence: finalComment, absenceJustifiee: true }, editInfo.pointageId, editInfo.role);
   };
   
-  /** Resets component state when the dialog closes. */
   const resetStates = () => {
     setPointages([]);
     setSites({});
@@ -555,7 +479,6 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     setCustomMotifText("");
   };
 
-  // --- Effects ---
   useEffect(() => {
     if (open) {
       fetchSitesForMap();
@@ -582,7 +505,6 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     }
   }, [pointages, allActifs, filters]);
 
-  // --- Render logic ---
   const DialogContentSection = () => {
     if (loading || loadingSites) return <LoadingIndicator />;
     if (pointages.length === 0) return <EmptyState />;
@@ -646,7 +568,6 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     "Médecin (Commentaire)": p.medecin?.commentaireAbsence || "-",
     "Médecin (Remplaçant)": p.medecin?.remplacantNom || "-",
     "Infirmière 1 (Titulaire)": p.infirmiere1?.titulaireNom || "-",
-    // ... add all other fields similarly for a flat data structure
     "Motif Inactivité": p.motifInactivite || "-",
     "Date Requête": formatDate(p.dateRequest),
     "Heure Inactivité": formatTime(p.heureInactivite),
@@ -660,53 +581,31 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
         onClose={onClose}
         maxWidth={false}
         fullWidth
-        sx={{
-          "& .MuiDialog-paper": {
-            height: "98vh",
-            maxHeight: "98vh",
-            backgroundColor: "background.default",
-            minWidth: { xs: "95vw", sm: "90vw" },
-            maxWidth: "98vw",
-          },
-        }}
+        sx={{ "& .MuiDialog-paper": { height: "98vh", maxHeight: "98vh", backgroundColor: "background.default", minWidth: { xs: "95vw", sm: "90vw" }, maxWidth: "98vw" } }}
       >
-        <DialogTitle
-          sx={{
-            backgroundColor: "primary.dark", color: "white", textAlign: "center", fontWeight: 700,
-            fontSize: "1.3rem", borderBottom: `1px solid ${theme.palette.divider}`,
-          }}
-        >
+        <DialogTitle sx={{ backgroundColor: "primary.dark", color: "white", textAlign: "center", fontWeight: 700, fontSize: "1.3rem", borderBottom: `1px solid ${theme.palette.divider}` }}>
           🌙 Suivi des Pointages - Administration
         </DialogTitle>
 
-        <DialogContent
-          dividers
-          sx={{
-            p: { xs: 1, sm: 3 }, backgroundColor: "background.default", borderColor: theme.palette.divider,
-            overflowY: "auto",
-          }}
-        >
-          <FiltersSection filters={filters} onFilterChange={setFilters} />
+        <DialogContent dividers sx={{ p: { xs: 1, sm: 3 }, backgroundColor: "background.default", borderColor: theme.palette.divider, overflowY: "auto" }}>
+          <FiltersSection filters={filters} onFilterChange={handleFilterChange} />
           <ErrorMessage error={error} onClose={() => setError(null)} />
           <DialogContentSection />
         </DialogContent>
 
-        <DialogActions
-          sx={{
-            p: 2, backgroundColor: "background.paper", justifyContent: "space-between",
-            borderTop: `1px solid ${theme.palette.divider}`, flexDirection: { xs: "column", sm: "row" },
-          }}
-        >
+        <DialogActions sx={{ p: 2, backgroundColor: "background.paper", justifyContent: "space-between", borderTop: `1px solid ${theme.palette.divider}`, flexDirection: { xs: "column", sm: "row" } }}>
+          {/* ----- CORRECTION N°1 ----- */}
           <Typography variant="body2" sx={{ color: "text.secondary", mb: { xs: 1, sm: 0 }, textAlign: { xs: "center", sm: "left" } }}>
-            Données pour le: {new Date(filters.date.replace(/-/g, "/")).toLocaleDateString("fr-FR")}
+            Données pour le: {filters.date ? new Date(filters.date.replace(/-/g, "/")).toLocaleDateString("fr-FR") : "Date non définie"}
           </Typography>
           <Stack direction={{ xs: "column-reverse", sm: "row" }} spacing={2} sx={{ width: { xs: "100%", sm: "auto" } }}>
             <Button onClick={() => setIsConfigDialogOpen(true)} color="info" variant="outlined" startIcon={<ManageAccountsIcon />}>Gérer Personnel</Button>
             <Button onClick={() => setTechnicienModalOpen(true)} color="secondary" variant="outlined" startIcon={<AdminPanelSettingsIcon />}>Mode Admin</Button>
             <Button onClick={onClose} color="inherit" variant="outlined" fullWidth>Fermer</Button>
+            {/* ----- CORRECTION N°2 ----- */}
             <ExportToExcelButton
               data={excelData}
-              filename={`Pointages_${filters.date}_${filters.region || "Global"}_${filters.province || ""}`}
+              filename={`Pointages_${filters.date || formatDateToInput(new Date())}_${filters.region || "Global"}_${filters.province || ""}`}
               loading={loading}
               disabled={!pointages || pointages.length === 0}
             />

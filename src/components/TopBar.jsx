@@ -118,7 +118,7 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
   };
 
   // Rôles pour afficher le composant admin
-  const isAdminRole = role === "superviseur" || role === "admin";
+  const isAdminRole = role === "superviseur" || role === "admin" || role === "chargés de performance";
   const isTechRole = role === "technicien" || role === "user";
 
   return (
