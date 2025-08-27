@@ -555,24 +555,38 @@ const PointagevFinalAdmin = ({ open, onClose }) => {
     </Dialog>
   );
 
-  const excelData = pointages.map(p => ({
-    Site: sites[p.site] || p.site || "-",
-    Région: p.region || "-",
-    Province: p.province || "-",
-    Statut: p.actif || "-",
-    "Heure Début": formatTime(p.heureDebut),
-    Utilisateur: p.user || "-",
-    "Médecin (Titulaire)": p.medecin?.titulaireNom || "-",
-    "Médecin (Présence)": p.medecin ? (!p.medecin.titulairePresent ? "Absent" : "Présent") : "-",
-    "Médecin (Absence Justifiée)": p.medecin ? (p.medecin.absenceJustifiee ? "Oui" : "Non") : "N/A",
-    "Médecin (Commentaire)": p.medecin?.commentaireAbsence || "-",
-    "Médecin (Remplaçant)": p.medecin?.remplacantNom || "-",
-    "Infirmière 1 (Titulaire)": p.infirmiere1?.titulaireNom || "-",
-    "Motif Inactivité": p.motifInactivite || "-",
-    "Date Requête": formatDate(p.dateRequest),
-    "Heure Inactivité": formatTime(p.heureInactivite),
-    "Heure Ouverture Estimée": formatTime(p.heureOuvertureEstimee),
-  }));
+ const excelData = pointages.map(p => ({
+    Site: sites[p.site] || p.site || "-",
+    Région: p.region || "-",
+    Province: p.province || "-",
+    Statut: p.actif || "-",
+    "Heure Début": formatTime(p.heureDebut),
+    Utilisateur: p.user || "-",
+    "Médecin (Titulaire)": p.medecin?.titulaireNom || "-",
+    "Médecin (Présence)": p.medecin ? (!p.medecin.titulairePresent ? "Absent" : "Présent") : "-",
+    "Médecin (Absence Justifiée)": p.medecin ? (p.medecin.absenceJustifiee ? "Oui" : "Non") : "N/A",
+    "Médecin (Commentaire)": p.medecin?.commentaireAbsence || "-",
+    "Médecin (Remplaçant)": p.medecin?.remplacantNom || "-",
+    "Infirmière 1 (Titulaire)": p.infirmiere1?.titulaireNom || "-",
+    "Infirmière 1 (Présence)": p.infirmiere1 ? (!p.infirmiere1.titulairePresent ? "Absent" : "Présent") : "-",
+    "Infirmière 1 (Absence Justifiée)": p.infirmiere1 ? (p.infirmiere1.absenceJustifiee ? "Oui" : "Non") : "N/A",
+    "Infirmière 1 (Commentaire)": p.infirmiere1?.commentaireAbsence || "-",
+    "Infirmière 1 (Remplaçant)": p.infirmiere1?.remplacantNom || "-",
+    "Infirmière 2 (Titulaire)": p.infirmiere2?.titulaireNom || "-",
+    "Infirmière 2 (Présence)": p.infirmiere2 ? (!p.infirmiere2.titulairePresent ? "Absent" : "Présent") : "-",
+    "Infirmière 2 (Absence Justifiée)": p.infirmiere2 ? (p.infirmiere2.absenceJustifiee ? "Oui" : "Non") : "N/A",
+    "Infirmière 2 (Commentaire)": p.infirmiere2?.commentaireAbsence || "-",
+    "Infirmière 2 (Remplaçant)": p.infirmiere2?.remplacantNom || "-",
+    "Technicien (Titulaire)": p.technicien?.titulaireNom || "-",
+    "Technicien (Présence)": p.technicien ? (!p.technicien.titulairePresent ? "Absent" : "Présent") : "-",
+    "Technicien (Absence Justifiée)": p.technicien ? (p.technicien.absenceJustifiee ? "Oui" : "Non") : "N/A",
+    "Technicien (Commentaire)": p.technicien?.commentaireAbsence || "-",
+    "Technicien (Remplaçant)": p.technicien?.remplacantNom || "-",
+    "Motif Inactivité": p.motifInactivite || "-",
+    "Date Requête": formatDate(p.dateRequest),
+    "Heure Inactivité": formatTime(p.heureInactivite),
+    "Heure Ouverture Estimée": formatTime(p.heureOuvertureEstimee),
+  }));
 
   return (
     <ThemeProvider theme={darkTheme}>
