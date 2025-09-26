@@ -164,8 +164,8 @@ const ListeBesoin = () => {
 
       const selectedIds = allRowsSelected
         .map(selection => {
-          if (selection.index >= 0 && selection.index < rows.length) {
-            const rowData = rows[selection.index];
+          if (selection.dataIndex >= 0 && selection.dataIndex < rows.length) {
+            const rowData = rows[selection.dataIndex];
             if (rowData && rowData.id && rowData.source) {
               return { id: rowData.id, source: rowData.source };
             }
@@ -786,6 +786,7 @@ const ListeBesoin = () => {
       options: {
         filter: false,
         sort: false,
+        display: false,
         customBodyRender: (value) => (
           <div className="flex items-center">
             <Tooltip title="Copier ID">
@@ -859,12 +860,11 @@ const ListeBesoin = () => {
         sort: false,
         filterType: "dropdown",
         customBodyRender: (value, tableMeta) => {
-          const source = tableMeta.rowData[1];
+          const rowIndex = tableMeta.rowIndex;
+          const rowData = rows[rowIndex];
           return (
             <Button
-              onClick={() =>
-                handleClickStatus(tableMeta.rowData[0], source)
-              }
+              onClick={() => handleClickStatus(rowData.id, rowData.source)}
             >
               {value}
             </Button>
