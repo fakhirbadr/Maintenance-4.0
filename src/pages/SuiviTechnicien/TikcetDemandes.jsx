@@ -72,7 +72,15 @@ const TicketDemandes = () => {
         }));
 
         // Fusionner les deux tableaux
-        const mergedRows = [...commandesNormalized, ...subticketsNormalized];
+        let mergedRows = [...commandesNormalized, ...subticketsNormalized];
+
+        // --- AFFICHER LES NOUVEAUX TICKETS EN PREMIER ---
+        mergedRows = mergedRows.sort((a, b) => {
+          // Si dateCreation n'est pas valide, remonter en haut
+          const dateA = a.dateCreation ? new Date(a.dateCreation).getTime() : 0;
+          const dateB = b.dateCreation ? new Date(b.dateCreation).getTime() : 0;
+          return dateB - dateA; // Les plus récents (plus grande date) en premier
+        });
 
         setRows(mergedRows);
       } catch (error) {
@@ -126,7 +134,6 @@ const TicketDemandes = () => {
         const updateData = {
           status: "recu",
           technicienReception: name,
-          // Conserver les autres champs existants
           name: selectedRow.name,
           categorie: selectedRow.categorie,
           besoin: selectedRow.besoin,
@@ -145,7 +152,6 @@ const TicketDemandes = () => {
         const updateData = {
           status: "recu",
           technicienReception: name,
-          // Conserver les autres champs existants si nécessaire
           name: selectedRow.name,
           categorie: selectedRow.categorie,
           description: selectedRow.besoin,
@@ -160,7 +166,6 @@ const TicketDemandes = () => {
         await axios.patch(`${apiUrl}/api/v1/sub-tickets/${id}`, updateData);
       }
 
-      // Mise à jour locale du tableau
       setRows((prevRows) =>
         prevRows.map((row) =>
           row.id === id
@@ -179,7 +184,6 @@ const TicketDemandes = () => {
       console.error("Erreur lors de l'accusé de réception :", error);
       console.error("Détails de l'erreur:", error.response?.data);
       
-      // Message d'erreur plus informatif
       let errorMessage = "Erreur inconnue";
       if (error.response?.status === 404) {
         errorMessage = `L'endpoint pour ${selectedRow.type} n'existe pas. Vérifiez la configuration des routes backend.`;

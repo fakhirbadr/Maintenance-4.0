@@ -23,6 +23,7 @@ import {
   ListItemText,
   Divider,
   Paper,
+  TextField,
 } from "@mui/material";
 import Barcode from "react-barcode";
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -32,12 +33,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const DestinationStep = ({ 
-  userActifs, 
-  currentActifId,
-  onDestinationSelected,
-  loading 
-}) => {
+const DestinationStep = ({ userActifs, currentActifId, onDestinationSelected, loading }) => {
   const [selectedDestinationActif, setSelectedDestinationActif] = React.useState("");
   const [selectedDestinationCategory, setSelectedDestinationCategory] = React.useState("");
 
@@ -50,10 +46,10 @@ const DestinationStep = ({
     setSelectedDestinationCategory(event.target.value);
   };
 
-  const getSelectedDestinationActif = () => 
+  const getSelectedDestinationActif = () =>
     userActifs.find(actif => actif._id === selectedDestinationActif);
 
-  const getDestinationCategories = () => 
+  const getDestinationCategories = () =>
     getSelectedDestinationActif()?.categories || [];
 
   React.useEffect(() => {
@@ -63,7 +59,7 @@ const DestinationStep = ({
         categoryId: selectedDestinationCategory
       });
     }
-  }, [selectedDestinationActif, selectedDestinationCategory]);
+  }, [selectedDestinationActif, selectedDestinationCategory, onDestinationSelected]);
 
   return (
     <Grid container spacing={2} sx={{ mt: 2 }}>
@@ -131,8 +127,7 @@ const HistoryStep = ({ equipment, currentActifName, currentCategoryName }) => {
     );
   }
 
-  // Trier l'historique par date décroissante
-  const sortedHistory = [...equipment.history].sort((a, b) => 
+  const sortedHistory = [...equipment.history].sort((a, b) =>
     new Date(b.movedAt) - new Date(a.movedAt)
   );
 
@@ -142,7 +137,6 @@ const HistoryStep = ({ equipment, currentActifName, currentCategoryName }) => {
         <SwapHorizIcon sx={{ mr: 1 }} />
         Historique des transferts
       </Typography>
-      
       <List sx={{ maxHeight: 400, overflow: 'auto', bgcolor: 'background.paper', borderRadius: 1 }}>
         {sortedHistory.map((record, index) => (
           <React.Fragment key={index}>
@@ -168,21 +162,19 @@ const HistoryStep = ({ equipment, currentActifName, currentCategoryName }) => {
                           })}
                         </Typography>
                       </Box>
-                      
                       <Box sx={{ display: 'flex', alignItems: 'center', mb: 1 }}>
                         <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
                         <Typography variant="body2" component="div">
-                          <Box component="span" fontWeight="bold">Source:</Box> 
+                          <Box component="span" fontWeight="bold">Source:</Box>
                           <Box component="span" ml={1}>
                             {record.fromActifName} / {record.fromCategoryName}
                           </Box>
                         </Typography>
                       </Box>
-                      
                       <Box sx={{ display: 'flex', alignItems: 'center' }}>
                         <LocationOnIcon fontSize="small" sx={{ mr: 1, color: 'success.main' }} />
                         <Typography variant="body2" component="div">
-                          <Box component="span" fontWeight="bold">Destination:</Box> 
+                          <Box component="span" fontWeight="bold">Destination:</Box>
                           <Box component="span" ml={1}>
                             {record.toActifName} / {record.toCategoryName}
                           </Box>
@@ -197,7 +189,6 @@ const HistoryStep = ({ equipment, currentActifName, currentCategoryName }) => {
           </React.Fragment>
         ))}
       </List>
-      
       <Paper sx={{ p: 2, mt: 3, bgcolor: 'success.light', color: 'success.contrastText' }}>
         <Typography variant="subtitle1" sx={{ display: 'flex', alignItems: 'center' }}>
           <LocationOnIcon sx={{ mr: 1 }} />
@@ -228,6 +219,10 @@ const ModelRetour = ({ open, onClose }) => {
   const [transferredEquipment, setTransferredEquipment] = React.useState(null);
   const [historyLoading, setHistoryLoading] = React.useState(false);
   const [currentLocation, setCurrentLocation] = React.useState({ actif: "", category: "" });
+
+  // Ajout pour scan
+  const [barcodeInput, setBarcodeInput] = React.useState("");
+  const [scanError, setScanError] = React.useState("");
 
   const steps = ['Sélection équipement', 'Choix destination', 'Historique des transferts'];
 
@@ -279,7 +274,9 @@ const ModelRetour = ({ open, onClose }) => {
       setSelectedEquipment("");
       setTransferredEquipment(null);
       setCurrentLocation({ actif: "", category: "" });
-      
+      setBarcodeInput("");
+      setScanError("");
+
       const userInfoData = localStorage.getItem("userInfo");
       const userActifsData = localStorage.getItem("userActifs");
 
@@ -312,6 +309,41 @@ const ModelRetour = ({ open, onClose }) => {
     }
   }, [open]);
 
+  // Recherche équipement par code-barres (description)
+  const findEquipmentByBarcode = (barcode) => {
+    for (const actif of userActifs) {
+      for (const category of actif.categories || []) {
+        for (const equipment of category.equipments || []) {
+          if (
+            equipment.description === barcode ||
+            equipment._id === barcode
+          ) {
+            return { actifId: actif._id, categoryId: category._id, equipmentId: equipment._id };
+          }
+        }
+      }
+    }
+    return null;
+  };
+
+  // Gérer le scan
+  React.useEffect(() => {
+    if (barcodeInput && barcodeInput.length > 0) {
+      const match = findEquipmentByBarcode(barcodeInput.trim());
+      if (match) {
+        setSelectedActif(match.actifId);
+        setSelectedCategory(match.categoryId);
+        setSelectedEquipment(match.equipmentId);
+        setScanError("");
+      } else {
+        setScanError("Aucun équipement trouvé pour ce code-barres.");
+      }
+    } else {
+      setScanError("");
+    }
+    // eslint-disable-next-line
+  }, [barcodeInput, userActifs]);
+
   const handleNext = () => {
     if (activeStep === 0 && selectedEquipment) {
       setActiveStep(1);
@@ -322,7 +354,6 @@ const ModelRetour = ({ open, onClose }) => {
 
   const handleBack = () => {
     if (activeStep === 2) {
-      // Si on est à l'étape historique, on revient à la sélection d'équipement
       setActiveStep(0);
       setTransferredEquipment(null);
     } else {
@@ -334,15 +365,18 @@ const ModelRetour = ({ open, onClose }) => {
     setSelectedActif(event.target.value);
     setSelectedCategory("");
     setSelectedEquipment("");
+    setBarcodeInput("");
   };
 
   const handleCategoryChange = (event) => {
     setSelectedCategory(event.target.value);
     setSelectedEquipment("");
+    setBarcodeInput("");
   };
 
   const handleEquipmentChange = (event) => {
     setSelectedEquipment(event.target.value);
+    setBarcodeInput("");
   };
 
   const fetchEquipmentDetails = async (equipmentId) => {
@@ -393,16 +427,14 @@ const ModelRetour = ({ open, onClose }) => {
 
       const data = await response.json();
       setSuccessMessage(data.message || "Transfert confirmé avec succès !");
-      
-      // Récupérer les détails complets de l'équipement avec l'historique
+
       const equipmentDetails = await fetchEquipmentDetails(selectedEquipment);
       if (equipmentDetails) {
         setTransferredEquipment(equipmentDetails);
-        
-        // Mettre à jour l'emplacement actuel
+
         const destinationActif = userActifs.find(a => a._id === destination.actifId);
         const destinationCategory = destinationActif?.categories.find(c => c._id === destination.categoryId);
-        
+
         if (destinationActif && destinationCategory) {
           setCurrentLocation({
             actif: destinationActif.name,
@@ -411,7 +443,6 @@ const ModelRetour = ({ open, onClose }) => {
         }
       }
 
-      // Passer à l'étape d'historique (étape 3, index 2)
       setActiveStep(2);
 
     } catch (err) {
@@ -434,14 +465,16 @@ const ModelRetour = ({ open, onClose }) => {
     setActiveStep(0);
     setTransferredEquipment(null);
     setCurrentLocation({ actif: "", category: "" });
+    setBarcodeInput("");
+    setScanError("");
     onClose();
   };
 
   return (
-    <Dialog 
-      open={open} 
-      onClose={handleClose} 
-      maxWidth="md" 
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      maxWidth="md"
       fullWidth
       PaperProps={{ sx: { borderRadius: 3 } }}
     >
@@ -457,7 +490,6 @@ const ModelRetour = ({ open, onClose }) => {
           </Stepper>
         </Box>
       </DialogTitle>
-      
       <DialogContent dividers sx={{ bgcolor: 'background.default' }}>
         {userInfo && activeStep !== 2 && (
           <Paper sx={{ mb: 3, p: 2, borderRadius: 2, boxShadow: 1 }}>
@@ -473,12 +505,35 @@ const ModelRetour = ({ open, onClose }) => {
           </Paper>
         )}
 
+        {activeStep === 0 && (
+          <Box sx={{ mb: 2 }}>
+            <TextField
+              label="Scanner le code-barres"
+              variant="outlined"
+              fullWidth
+              value={barcodeInput}
+              onChange={e => setBarcodeInput(e.target.value)}
+              disabled={loading || initialLoading}
+              sx={{ mb: 1 }}
+              placeholder="Scannez ou saisissez le code-barres ici"
+            />
+            {scanError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                {scanError}
+              </Alert>
+            )}
+            <Typography variant="body2" color="textSecondary">
+              Vous pouvez scanner le code-barres de l'équipement ou sélectionner manuellement.
+            </Typography>
+          </Box>
+        )}
+
         {error && (
           <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
             {error}
           </Alert>
         )}
-        
+
         {successMessage && (
           <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
             {successMessage}
@@ -522,7 +577,6 @@ const ModelRetour = ({ open, onClose }) => {
                     </FormControl>
                   </Paper>
                 </Grid>
-
                 {selectedActif && (
                   <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 1, height: '100%' }}>
@@ -538,10 +592,10 @@ const ModelRetour = ({ open, onClose }) => {
                             <MenuItem key={category._id} value={category._id}>
                               <Box sx={{ display: 'flex', alignItems: 'center' }}>
                                 {category.name}
-                                <Chip 
-                                  label={`${category.equipments?.length || 0} équip.`} 
-                                  size="small" 
-                                  sx={{ ml: 1 }} 
+                                <Chip
+                                  label={`${category.equipments?.length || 0} équip.`}
+                                  size="small"
+                                  sx={{ ml: 1 }}
                                 />
                               </Box>
                             </MenuItem>
@@ -551,7 +605,6 @@ const ModelRetour = ({ open, onClose }) => {
                     </Paper>
                   </Grid>
                 )}
-
                 {selectedCategory && (
                   <Grid item xs={12} md={6}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 1, height: '100%' }}>
@@ -581,7 +634,6 @@ const ModelRetour = ({ open, onClose }) => {
                     </Paper>
                   </Grid>
                 )}
-
                 {selectedEquipment && (
                   <Grid item xs={12}>
                     <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 3 }}>
@@ -635,7 +687,6 @@ const ModelRetour = ({ open, onClose }) => {
                 )}
               </Grid>
             )}
-
             {activeStep === 1 && (
               <>
                 <Paper sx={{ mb: 3, p: 2, borderLeft: '4px solid', borderColor: 'primary.main' }}>
@@ -648,26 +699,23 @@ const ModelRetour = ({ open, onClose }) => {
                     <Grid item xs={4}><Typography><strong>Équipement:</strong> {getSelectedEquipment()?.name}</Typography></Grid>
                   </Grid>
                 </Paper>
-
                 <Paper sx={{ p: 2, borderRadius: 2, boxShadow: 1 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Destination du transfert
                   </Typography>
-                  <DestinationStep 
-                    userActifs={userActifs} 
+                  <DestinationStep
+                    userActifs={userActifs}
                     currentActifId={selectedActif}
                     onDestinationSelected={setDestination}
                     loading={loading}
                   />
                 </Paper>
-
                 <Alert severity="warning" sx={{ mt: 2, borderRadius: 2 }}>
                   <strong>Attention:</strong> Vérifiez bien les informations avant de confirmer le transfert.
                   Cette action est irréversible.
                 </Alert>
               </>
             )}
-
             {activeStep === 2 && (
               <Box>
                 <Paper sx={{ mb: 3, p: 2, bgcolor: 'primary.light', color: 'primary.contrastText' }}>
@@ -679,7 +727,6 @@ const ModelRetour = ({ open, onClose }) => {
                     L'équipement a été déplacé vers sa nouvelle destination.
                   </Typography>
                 </Paper>
-
                 <Paper sx={{ mb: 3, p: 2, borderRadius: 2, boxShadow: 1 }}>
                   <Typography variant="subtitle1" gutterBottom>
                     Détails de l'équipement
@@ -690,7 +737,7 @@ const ModelRetour = ({ open, onClose }) => {
                     </Grid>
                     <Grid item xs={12} md={4}>
                       <Typography>
-                        <strong>État:</strong> 
+                        <strong>État:</strong>
                         <Chip
                           label={getSelectedEquipment()?.isFunctionel ? "Fonctionnel" : "Défaillant"}
                           size="small"
@@ -707,15 +754,14 @@ const ModelRetour = ({ open, onClose }) => {
                     </Grid>
                   </Grid>
                 </Paper>
-
                 {historyLoading ? (
                   <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
                     <CircularProgress />
                     <Typography sx={{ ml: 2 }}>Chargement de l'historique...</Typography>
                   </Box>
                 ) : (
-                  <HistoryStep 
-                    equipment={transferredEquipment || getSelectedEquipment()} 
+                  <HistoryStep
+                    equipment={transferredEquipment || getSelectedEquipment()}
                     currentActifName={currentLocation.actif || getCurrentActif()?.name}
                     currentCategoryName={currentLocation.category || getCurrentCategory()?.name}
                   />
@@ -725,12 +771,10 @@ const ModelRetour = ({ open, onClose }) => {
           </>
         )}
       </DialogContent>
-
       <DialogActions sx={{ bgcolor: 'grey.100', p: 2 }}>
-        {/* Bouton Retour/Annuler pour les étapes 0 et 1 */}
         {activeStep < 2 && (
-          <Button 
-            onClick={activeStep === 0 ? handleClose : handleBack} 
+          <Button
+            onClick={activeStep === 0 ? handleClose : handleBack}
             color="secondary"
             disabled={loading}
             variant="outlined"
@@ -739,8 +783,6 @@ const ModelRetour = ({ open, onClose }) => {
             {activeStep === 0 ? 'Annuler' : 'Retour'}
           </Button>
         )}
-        
-        {/* Bouton "Suivant" pour l'étape 0 */}
         {activeStep === 0 && (
           <Button
             onClick={handleNext}
@@ -752,8 +794,6 @@ const ModelRetour = ({ open, onClose }) => {
             Suivant
           </Button>
         )}
-        
-        {/* Bouton "Confirmer le Transfert" pour l'étape 1 */}
         {activeStep === 1 && (
           <Button
             onClick={handleNext}
@@ -765,8 +805,6 @@ const ModelRetour = ({ open, onClose }) => {
             {loading ? <CircularProgress size={24} color="inherit" /> : 'Confirmer le Transfert'}
           </Button>
         )}
-        
-        {/* Bouton "Terminer" pour l'étape 2 */}
         {activeStep === 2 && (
           <Button
             onClick={handleClose}

@@ -2,15 +2,13 @@ import React, { useEffect, useState } from "react";
 import axios from "axios";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import MUIDataTable from "mui-datatables";
-import UpdateDialog from "../besoin/updateBesoin"; // Import du composant UpdateDialog
 import moment from "moment";
 import { jsPDF } from "jspdf";
 import "jspdf-autotable";
-import { CheckCircle, Edit, Eye, Delete } from "lucide-react"; // Icônes Lucide React
+import { CheckCircle, Edit, Eye } from "lucide-react";
 import SelectAllIcon from "@mui/icons-material/SelectAll";
 import CloseIcon from "@mui/icons-material/Close";
 import PictureAsPdfIcon from "@mui/icons-material/PictureAsPdf";
-import InventoryIcon from "@mui/icons-material/Inventory";
 import Logo from "../../../public/scx.png";
 import {
   IconButton,
@@ -35,15 +33,17 @@ import {
   Checkbox,
   Divider,
   ListItemIcon,
+  Box,
+  Chip,
 } from "@mui/material";
-import * as XLSX from "xlsx"; // Import XLSX to handle the Excel export
+import * as XLSX from "xlsx";
 import { ContentCopy } from "@mui/icons-material";
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
 const ListeBesoin = () => {
   const handleDownloadExcel = () => {
-    // Filtrer les colonnes nécessaires
     const filteredRows = rows.map((row) => ({
       Nom: row.name,
       Région: row.region,
@@ -54,15 +54,10 @@ const ListeBesoin = () => {
       "Créé par": row.technicien,
       Status: row.status,
       "Commentaire Responsable": row.commentaire,
-      "Date de Création": new Date(row.dateCreation).toLocaleDateString(
-        "fr-FR"
-      ),
-      "Heure de Création": new Date(row.dateCreation).toLocaleTimeString(
-        "fr-FR"
-      ),
+      "Date de Création": new Date(row.dateCreation).toLocaleDateString("fr-FR"),
+      "Heure de Création": new Date(row.dateCreation).toLocaleTimeString("fr-FR"),
     }));
 
-    // Générer le fichier Excel
     const worksheet = XLSX.utils.json_to_sheet(filteredRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
@@ -71,47 +66,133 @@ const ListeBesoin = () => {
 
   const [rows, setRows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [closedRows, setClosedRows] = useState(new Set()); // New state to track closed rows
-  const [openDialog, setOpenDialog] = useState(false); // Gestion de l'ouverture du dialogue
-  const [selectedFourniture, setSelectedFourniture] = useState(null); // Fourniture sélectionnée pour modification
-  const [updatedName, setUpdatedName] = useState(""); // Valeur modifiable du nom
-  const [updatedCategorie, setUpdatedCategorie] = useState(""); // Valeur modifiable de la catégorie
-  const [updatedBesoin, setUpdatedBesoin] = useState(""); // Valeur modifiable du besoin
-  const [updatedQuantite, setUpdatedQuantite] = useState(""); // Valeur modifiable de la quantité
-  const [updatedCommentaire, setUpdatedCommentaire] = useState(""); // Valeur modifiable de la commentaire
+  const [openDialog, setOpenDialog] = useState(false);
+  const [selectedFourniture, setSelectedFourniture] = useState(null);
+  const [updatedName, setUpdatedName] = useState("");
+  const [updatedCategorie, setUpdatedCategorie] = useState("");
+  const [updatedBesoin, setUpdatedBesoin] = useState("");
+  const [updatedQuantite, setUpdatedQuantite] = useState("");
+  const [updatedCommentaire, setUpdatedCommentaire] = useState("");
 
-  const [openViewDialog, setOpenViewDialog] = useState(false); // State to control View Dialog visibility
+  const [openViewDialog, setOpenViewDialog] = useState(false);
   const [updatedStatus, setUpdatedStatus] = useState("");
-  const [timeElapsed, setTimeElapsed] = useState(""); // Timer state to show elapsed time
+  const [timeElapsed, setTimeElapsed] = useState("");
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
   const [selectedStatus, setSelectedStatus] = useState("");
   const [statusHistory, setStatusHistory] = useState([]);
-  const [activeStep, setActiveStep] = useState(0);
 
   const [openPdfDialog, setOpenPdfDialog] = useState(false);
   const [selectedRows, setSelectedRows] = useState([]);
   const [deliveryRows, setDeliveryRows] = useState([]);
-  const [selectedRegion, setSelectedRegion] = useState(""); // Utilisé uniquement pour la dialog PDF
-  const [selectedActif, setSelectedActif] = useState(""); // Nouveau : filtre actif
+  const [selectedRegion, setSelectedRegion] = useState("");
+  const [selectedActif, setSelectedActif] = useState("");
 
-  // Fonction pour ouvrir le dialogue de sélection PDF
+  // Nouveaux états pour la sélection multiple et changement de statut en masse
+  const [selectedRowIds, setSelectedRowIds] = useState([]);
+  const [bulkStatusDialogOpen, setBulkStatusDialogOpen] = useState(false);
+  const [bulkNewStatus, setBulkNewStatus] = useState("");
+
+  // Fonction pour ouvrir le dialogue de changement de statut en masse
+  const handleOpenBulkStatusDialog = () => {
+    if (selectedRowIds.length === 0) {
+      alert("Veuillez sélectionner au moins une ligne");
+      return;
+    }
+    setBulkStatusDialogOpen(true);
+  };
+
+  // Fonction pour fermer le dialogue de changement de statut en masse
+  const handleCloseBulkStatusDialog = () => {
+    setBulkStatusDialogOpen(false);
+    setBulkNewStatus("");
+  };
+
+  // Fonction pour mettre à jour le statut des lignes sélectionnées
+  const handleBulkStatusUpdate = async () => {
+    if (!bulkNewStatus) {
+      alert("Veuillez sélectionner un statut");
+      return;
+    }
+
+    try {
+      const updatePromises = selectedRowIds.map(async (rowInfo) => {
+        const row = rows.find(r => r.id === rowInfo.id && r.source === rowInfo.source);
+        if (!row) return;
+
+        if (row.source === "source1") {
+          return axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${row.id}`, {
+            status: bulkNewStatus,
+          });
+        } else if (row.source === "source2") {
+          return axios.patch(`${apiUrl}/api/v1/sub-tickets/${row.id}`, {
+            status: bulkNewStatus,
+          });
+        }
+      });
+
+      await Promise.all(updatePromises);
+      
+      // Mettre à jour l'état local
+      setRows(prevRows => 
+        prevRows.map(row => {
+          const isSelected = selectedRowIds.some(selected => 
+            selected.id === row.id && selected.source === row.source
+          );
+          if (isSelected) {
+            return { ...row, status: bulkNewStatus };
+          }
+          return row;
+        })
+      );
+
+      alert(`Statut mis à jour pour ${selectedRowIds.length} élément(s)`);
+      handleCloseBulkStatusDialog();
+      setSelectedRowIds([]);
+    } catch (error) {
+      console.error("Erreur lors de la mise à jour en masse :", error);
+      alert("Erreur lors de la mise à jour des statuts");
+    }
+  };
+
+  // CORRECTION : Fonction pour gérer la sélection des lignes dans la table
+  const handleRowSelection = (currentRowsSelected, allRowsSelected, rowsSelected) => {
+    try {
+      if (!rows || rows.length === 0) {
+        setSelectedRowIds([]);
+        return;
+      }
+
+      const selectedIds = allRowsSelected
+        .map(selection => {
+          if (selection.dataIndex >= 0 && selection.dataIndex < rows.length) {
+            const rowData = rows[selection.dataIndex];
+            if (rowData && rowData.id && rowData.source) {
+              return { id: rowData.id, source: rowData.source };
+            }
+          }
+          return null;
+        })
+        .filter(item => item !== null);
+
+      setSelectedRowIds(selectedIds);
+    } catch (error) {
+      console.error("Erreur dans handleRowSelection:", error);
+      setSelectedRowIds([]);
+    }
+  };
+
   const handleOpenPdfDialog = () => {
-    // Filtrer seulement les commandes "En cours de livraison"
-    const filteredRows = rows.filter(
-      (row) => row.status === "Expédié"
-    );
+    const filteredRows = rows.filter((row) => row.status === "Expédié");
     setDeliveryRows(filteredRows);
     setSelectedRows([]);
     setOpenPdfDialog(true);
   };
 
-  // Fonction pour fermer le dialogue
   const handleClosePdfDialog = () => {
     setOpenPdfDialog(false);
     setSelectedRows([]);
   };
 
-  // Gérer la sélection/désélection des lignes
   const handleToggleRow = (rowId) => {
     setSelectedRows((prev) => {
       if (prev.includes(rowId)) {
@@ -122,7 +203,6 @@ const ListeBesoin = () => {
     });
   };
 
-  // Sélectionner toutes les lignes
   const handleSelectAll = () => {
     if (selectedRows.length === deliveryRows.length) {
       setSelectedRows([]);
@@ -130,7 +210,6 @@ const ListeBesoin = () => {
       setSelectedRows(deliveryRows.map((row) => row.id));
     }
   };
-  // Liste des régions et des actifs disponibles pour les dropdown dans la dialog
 
   const pdfActifs = Array.from(
     new Set(
@@ -139,25 +218,21 @@ const ListeBesoin = () => {
         .map((row) => row.name)
     )
   ).filter(Boolean);
-  // Liste des régions disponibles pour le dropdown dans la dialog
+
   const pdfRegions = Array.from(
     new Set(deliveryRows.map((r) => r.region))
   ).filter(Boolean);
-  // Applique le filtre uniquement sur la liste de la dialog PDF
-  // Applique le(s) filtre(s) uniquement sur la liste de la dialog PDF
-  // Applique les filtres (région + nom d'actif) uniquement dans la dialog PDF
+
   const filteredDeliveryRows = deliveryRows.filter((row) => {
     const regionMatch = selectedRegion ? row.region === selectedRegion : true;
     const actifMatch = selectedActif ? row.name === selectedActif : true;
     return regionMatch && actifMatch;
   });
-  // Générer le PDF
-  // Générer le PDF avec une page par actif et header répété
+
   const generatePdf = () => {
     const doc = new jsPDF();
 
     try {
-      // Convertir l'image en base64 si nécessaire
       const img = new Image();
       img.onload = function () {
         const canvas = document.createElement("canvas");
@@ -166,7 +241,6 @@ const ListeBesoin = () => {
         canvas.height = img.height;
         ctx.drawImage(img, 0, 0);
         const imgData = canvas.toDataURL("image/png");
-
         generatePdfWithActifPages(doc, imgData);
       };
       img.src = Logo;
@@ -180,12 +254,10 @@ const ListeBesoin = () => {
     const pageWidth = doc.internal.pageSize.getWidth();
     const pageHeight = doc.internal.pageSize.getHeight();
 
-    // Récupérer les éléments sélectionnés
     const selectedItems = deliveryRows.filter((row) =>
       selectedRows.includes(row.id)
     );
 
-    // Grouper les articles par actif/site
     const groupedByActif = selectedItems.reduce((acc, item) => {
       const actifName = item.name || "Actif non défini";
       if (!acc[actifName]) {
@@ -196,13 +268,10 @@ const ListeBesoin = () => {
     }, {});
 
     const actifNames = Object.keys(groupedByActif);
-    const totalPages = actifNames.length;
 
-    // Fonction pour créer l'en-tête sur chaque page
     const createHeader = (pageNumber, actifName) => {
       let currentY = 20;
 
-      // === Logo centré ===
       if (logoData) {
         const logoWidth = 40;
         const logoHeight = 20;
@@ -211,7 +280,6 @@ const ListeBesoin = () => {
         currentY += 35;
       }
 
-      // === Titre du document ===
       doc.setTextColor(0, 0, 0);
       doc.setFillColor(245, 245, 245);
       doc.rect(14, currentY, pageWidth - 28, 12, "F");
@@ -226,14 +294,12 @@ const ListeBesoin = () => {
 
       currentY += 20;
 
-      // === Informations de la page ===
       doc.setTextColor(0, 0, 0);
       doc.setFontSize(10);
       doc.setFont("helvetica", "bold");
       doc.setFillColor(240, 248, 255);
       doc.rect(14, currentY, pageWidth - 28, 15, "F");
 
-      // Nom de l'actif centré
       doc.setTextColor(41, 115, 178);
       const actifTitle = `SITE/ACTIF: ${actifName.toUpperCase()}`;
       const actifTitleWidth = doc.getTextWidth(actifTitle);
@@ -242,7 +308,6 @@ const ListeBesoin = () => {
 
       currentY += 25;
 
-      // === Ligne de séparation ===
       doc.setDrawColor(41, 115, 178);
       doc.setLineWidth(0.5);
       doc.line(14, currentY, pageWidth - 14, currentY);
@@ -250,20 +315,14 @@ const ListeBesoin = () => {
       return currentY + 10;
     };
 
-    // === Génération d'une page par actif ===
     actifNames.forEach((actifName, index) => {
-      // Ajouter une nouvelle page (sauf pour la première)
       if (index > 0) {
         doc.addPage();
       }
 
-      // Créer l'en-tête
       let currentY = createHeader(index + 1, actifName);
-
-      // Récupérer les articles pour cet actif
       const actifItems = groupedByActif[actifName];
 
-      // === Informations de l'actif ===
       if (actifItems.length > 0) {
         const firstItem = actifItems[0];
 
@@ -280,7 +339,6 @@ const ListeBesoin = () => {
         currentY += 15;
       }
 
-      // === Tableau des articles ===
       const headers = [
         [
           "N°",
@@ -298,7 +356,7 @@ const ListeBesoin = () => {
         item.categorie || "N/A",
         item.besoin || "N/A",
         item.quantite?.toString() || "0",
-        item.unite || "Pce", // Nouvelle colonne unité avec valeur par défaut
+        item.unite || "Pce",
         item.technicien || "N/A",
         new Date(item.dateCreation).toLocaleDateString("fr-FR"),
       ]);
@@ -309,7 +367,7 @@ const ListeBesoin = () => {
         startY: currentY,
         theme: "grid",
         styles: {
-          fontSize: 7, // Réduction de la taille de police
+          fontSize: 7,
           cellPadding: 3,
           lineColor: [200, 200, 200],
           lineWidth: 0.1,
@@ -319,29 +377,26 @@ const ListeBesoin = () => {
           textColor: 255,
           fontStyle: "bold",
           halign: "center",
-          fontSize: 8, // Taille de police pour les en-têtes
+          fontSize: 8,
         },
         alternateRowStyles: {
           fillColor: [248, 249, 250],
         },
         columnStyles: {
-          0: { halign: "center", cellWidth: 12 }, // N°
-          1: { cellWidth: 25 }, // Catégorie
-          2: { cellWidth: 45 }, // Besoin
-          3: { halign: "center", cellWidth: 18 }, // Quantité
-          4: { halign: "center", cellWidth: 15 }, // Unité
-          5: { cellWidth: 35 }, // Technicien
-          6: { halign: "center", cellWidth: 25 }, // Date
+          0: { halign: "center", cellWidth: 12 },
+          1: { cellWidth: 25 },
+          2: { cellWidth: 45 },
+          3: { halign: "center", cellWidth: 18 },
+          4: { halign: "center", cellWidth: 15 },
+          5: { cellWidth: 35 },
+          6: { halign: "center", cellWidth: 25 },
         },
         margin: { left: 14, right: 14 },
       });
 
       const tableEndY = doc.lastAutoTable.finalY + 10;
-
-      // === Section des signatures ===
       const signatureStartY = Math.max(tableEndY + 10, pageHeight - 70);
 
-      // Vérifier s'il faut une nouvelle page pour les signatures
       if (signatureStartY > pageHeight - 65) {
         doc.addPage();
         currentY = 30;
@@ -349,12 +404,10 @@ const ListeBesoin = () => {
         currentY = signatureStartY;
       }
 
-      // Cadre pour les signatures
       doc.setDrawColor(41, 115, 178);
       doc.setLineWidth(0.5);
       doc.rect(14, currentY, pageWidth - 28, 45);
 
-      // Titre signatures
       doc.setFillColor(41, 115, 178);
       doc.rect(14, currentY, pageWidth - 28, 10, "F");
       doc.setFontSize(9);
@@ -366,27 +419,22 @@ const ListeBesoin = () => {
       doc.setFontSize(8);
       doc.setFont("helvetica", "normal");
 
-      // Expéditeur (gauche)
       doc.text("EXPÉDITEUR", 20, currentY + 16);
       doc.text("Nom:", 20, currentY + 22);
       doc.line(30, currentY + 22, 85, currentY + 22);
       doc.text("Signature:", 20, currentY + 32);
       doc.rect(20, currentY + 35, 65, 8);
 
-      // Ligne verticale
       doc.line(pageWidth / 2, currentY + 12, pageWidth / 2, currentY + 45);
 
-      // Réceptionnaire (droite)
       const rightX = pageWidth / 2 + 10;
       doc.text("RÉCEPTIONNAIRE", rightX, currentY + 16);
       doc.text("Nom:", rightX, currentY + 22);
-      // doc.line(rightX + 15, rightX + 22, rightX + 65, currentY + 22);
       doc.text("Date réception:", rightX, currentY + 27);
       doc.line(rightX + 25, currentY + 27, rightX + 65, currentY + 27);
       doc.text("Signature:", rightX, currentY + 32);
       doc.rect(rightX, currentY + 35, 65, 8);
 
-      // === Pied de page ===
       const footerY = pageHeight - 10;
       doc.setFontSize(6);
       doc.setTextColor(150, 150, 150);
@@ -394,13 +442,11 @@ const ListeBesoin = () => {
         align: "center",
       });
 
-      // Ligne décorative
       doc.setDrawColor(41, 115, 178);
       doc.setLineWidth(0.5);
       doc.line(14, footerY - 3, pageWidth - 14, footerY - 3);
     });
 
-    // === Sauvegarder le PDF ===
     const today = new Date();
     const dateStr = `${today.getFullYear()}${(today.getMonth() + 1)
       .toString()
@@ -408,314 +454,8 @@ const ListeBesoin = () => {
     const fileName = `bons_livraison_par_actif_SCX_${dateStr}.pdf`;
     doc.save(fileName);
 
-    // Fermer le dialogue
     handleClosePdfDialog();
   };
-  // const generatePdfWithActifPages = (doc, logoData) => {
-  //   const pageWidth = doc.internal.pageSize.getWidth();
-  //   const pageHeight = doc.internal.pageSize.getHeight();
-
-  //   // Récupérer les éléments sélectionnés
-  //   const selectedItems = deliveryRows.filter((row) =>
-  //     selectedRows.includes(row.id)
-  //   );
-
-  //   // Grouper les articles par actif/site
-  //   const groupedByActif = selectedItems.reduce((acc, item) => {
-  //     const actifName = item.name || "Actif non défini";
-  //     if (!acc[actifName]) {
-  //       acc[actifName] = [];
-  //     }
-  //     acc[actifName].push(item);
-  //     return acc;
-  //   }, {});
-
-  //   const actifNames = Object.keys(groupedByActif);
-  //   const totalPages = actifNames.length;
-
-  //   // Fonction pour créer l'en-tête sur chaque page
-  //   const createHeader = (pageNumber, actifName) => {
-  //     let currentY = 20;
-
-  //     // === Logo ===
-  //     if (logoData) {
-  //       doc.addImage(logoData, "PNG", 14, currentY, 30, 15);
-  //       currentY += 20;
-  //     }
-
-  //     // === Bandeau entreprise ===
-  //     doc.setFillColor(41, 115, 178);
-  //     doc.rect(0, currentY, pageWidth, 25, "F");
-
-  //     doc.setTextColor(255, 255, 255);
-  //     doc.setFontSize(18);
-  //     doc.setFont("helvetica", "bold");
-
-  //     const companyName = "SCX TECHNOLOGY";
-  //     const companyTextWidth = doc.getTextWidth(companyName);
-  //     const companyX = (pageWidth - companyTextWidth) / 2;
-  //     doc.text(companyName, companyX, currentY + 10);
-
-  //     doc.setFontSize(10);
-  //     doc.setFont("helvetica", "normal");
-  //     doc.text("Support : +212 767-370586", 14, currentY + 17);
-  //     doc.text("Email : support@scx-tech.com", 14, currentY + 22);
-
-  //     currentY += 35;
-
-  //     // === Titre du document ===
-  //     doc.setTextColor(0, 0, 0);
-  //     doc.setFillColor(245, 245, 245);
-  //     doc.rect(14, currentY, pageWidth - 28, 15, "F");
-
-  //     doc.setFontSize(14);
-  //     doc.setFont("helvetica", "bold");
-  //     doc.setTextColor(41, 115, 178);
-  //     const title = "BON DE LIVRAISON";
-  //     const titleWidth = doc.getTextWidth(title);
-  //     const titleX = (pageWidth - titleWidth) / 2;
-  //     doc.text(title, titleX, currentY + 10);
-
-  //     currentY += 25;
-
-  //     // === Informations de la page ===
-  //     doc.setTextColor(0, 0, 0);
-  //     doc.setFontSize(12);
-  //     doc.setFont("helvetica", "bold");
-  //     doc.setFillColor(240, 248, 255);
-  //     doc.rect(14, currentY, pageWidth - 28, 20, "F");
-
-  //     // Nom de l'actif centré
-  //     doc.setTextColor(41, 115, 178);
-  //     const actifTitle = `SITE/ACTIF: ${actifName.toUpperCase()}`;
-  //     const actifTitleWidth = doc.getTextWidth(actifTitle);
-  //     const actifTitleX = (pageWidth - actifTitleWidth) / 2;
-  //     doc.text(actifTitle, actifTitleX, currentY + 8);
-
-  //     // Informations sur les côtés
-  //     doc.setFontSize(10);
-  //     doc.setFont("helvetica", "normal");
-  //     doc.setTextColor(0, 0, 0);
-
-  //     const today = new Date();
-  //     const formattedDate = today.toLocaleDateString("fr-FR", {
-  //       day: "2-digit",
-  //       month: "long",
-  //       year: "numeric",
-  //     });
-  //     const formattedTime = today.toLocaleTimeString("fr-FR", {
-  //       hour: "2-digit",
-  //       minute: "2-digit",
-  //     });
-
-  //     doc.text(`Date: ${formattedDate}`, 14, currentY + 15);
-  //     doc.text(`Heure: ${formattedTime}`, 14, currentY + 19);
-  //     doc.text(
-  //       `Page ${pageNumber}/${totalPages}`,
-  //       pageWidth - 40,
-  //       currentY + 15
-  //     );
-
-  //     currentY += 30;
-
-  //     // === Ligne de séparation ===
-  //     doc.setDrawColor(41, 115, 178);
-  //     doc.setLineWidth(0.8);
-  //     doc.line(14, currentY, pageWidth - 14, currentY);
-
-  //     return currentY + 10;
-  //   };
-
-  //   // === Génération d'une page par actif ===
-  //   actifNames.forEach((actifName, index) => {
-  //     // Ajouter une nouvelle page (sauf pour la première)
-  //     if (index > 0) {
-  //       doc.addPage();
-  //     }
-
-  //     // Créer l'en-tête
-  //     let currentY = createHeader(index + 1, actifName);
-
-  //     // Récupérer les articles pour cet actif
-  //     const actifItems = groupedByActif[actifName];
-
-  //     // === Informations de l'actif ===
-  //     if (actifItems.length > 0) {
-  //       const firstItem = actifItems[0];
-
-  //       doc.setFontSize(10);
-  //       doc.setFont("helvetica", "bold");
-  //       doc.text("INFORMATIONS DU SITE:", 14, currentY);
-
-  //       currentY += 8;
-  //       doc.setFont("helvetica", "normal");
-  //       doc.text(`Région: ${firstItem.region || "N/A"}`, 14, currentY);
-  //       doc.text(`Province: ${firstItem.province || "N/A"}`, 120, currentY);
-  //       doc.text(`Nombre d'articles: ${actifItems.length}`, 14, currentY + 6);
-
-  //       currentY += 20;
-  //     }
-
-  //     // === Tableau des articles ===
-  //     const headers = [
-  //       [
-  //         "N°",
-  //         "Catégorie",
-  //         "Besoin/Article",
-  //         "Quantité",
-  //         "Technicien",
-  //         "Date création",
-  //         "Statut",
-  //       ],
-  //     ];
-
-  //     const data = actifItems.map((item, itemIndex) => [
-  //       (itemIndex + 1).toString(),
-  //       item.categorie || "N/A",
-  //       item.besoin || "N/A",
-  //       item.quantite?.toString() || "0",
-  //       item.technicien || "N/A",
-  //       new Date(item.dateCreation).toLocaleDateString("fr-FR"),
-  //       item.status || "N/A",
-  //     ]);
-
-  //     doc.autoTable({
-  //       head: headers,
-  //       body: data,
-  //       startY: currentY,
-  //       theme: "grid",
-  //       styles: {
-  //         fontSize: 9,
-  //         cellPadding: 4,
-  //         lineColor: [200, 200, 200],
-  //         lineWidth: 0.1,
-  //       },
-  //       headStyles: {
-  //         fillColor: [41, 115, 178],
-  //         textColor: 255,
-  //         fontStyle: "bold",
-  //         halign: "center",
-  //       },
-  //       alternateRowStyles: {
-  //         fillColor: [248, 249, 250],
-  //       },
-  //       columnStyles: {
-  //         0: { halign: "center", cellWidth: 15 }, // N°
-  //         1: { cellWidth: 25 }, // Catégorie
-  //         2: { cellWidth: 40 }, // Besoin
-  //         3: { halign: "center", cellWidth: 20 }, // Quantité
-  //         4: { cellWidth: 30 }, // Technicien
-  //         5: { halign: "center", cellWidth: 25 }, // Date
-  //         6: { halign: "center", cellWidth: 25 }, // Statut
-  //       },
-  //       margin: { left: 14, right: 14 },
-  //     });
-
-  //     const tableEndY = doc.lastAutoTable.finalY + 15;
-
-  //     // === Section commentaires (si applicable) ===
-  //     const itemsWithComments = actifItems.filter(
-  //       (item) => item.commentaire && item.commentaire.trim()
-  //     );
-  //     if (itemsWithComments.length > 0) {
-  //       currentY = tableEndY;
-
-  //       doc.setFontSize(11);
-  //       doc.setFont("helvetica", "bold");
-  //       doc.text("COMMENTAIRES:", 14, currentY);
-
-  //       currentY += 8;
-  //       doc.setFontSize(9);
-  //       doc.setFont("helvetica", "normal");
-
-  //       itemsWithComments.forEach((item, commentIndex) => {
-  //         const commentText = `• ${item.besoin}: ${item.commentaire}`;
-  //         const splitComment = doc.splitTextToSize(commentText, pageWidth - 40);
-  //         doc.text(splitComment, 20, currentY);
-  //         currentY += splitComment.length * 4 + 3;
-  //       });
-
-  //       currentY += 10;
-  //     } else {
-  //       currentY = tableEndY;
-  //     }
-
-  //     // === Section des signatures ===
-  //     const signatureStartY = Math.max(currentY, pageHeight - 85);
-
-  //     // Vérifier s'il faut une nouvelle page pour les signatures
-  //     if (signatureStartY > pageHeight - 80) {
-  //       doc.addPage();
-  //       currentY = 30;
-  //     } else {
-  //       currentY = signatureStartY;
-  //     }
-
-  //     // Cadre pour les signatures
-  //     doc.setDrawColor(41, 115, 178);
-  //     doc.setLineWidth(0.5);
-  //     doc.rect(14, currentY, pageWidth - 28, 55);
-
-  //     // Titre signatures
-  //     doc.setFillColor(41, 115, 178);
-  //     doc.rect(14, currentY, pageWidth - 28, 12, "F");
-  //     doc.setFontSize(11);
-  //     doc.setFont("helvetica", "bold");
-  //     doc.setTextColor(255, 255, 255);
-  //     doc.text("SIGNATURES ET VALIDATION", pageWidth / 2 - 25, currentY + 8);
-
-  //     doc.setTextColor(0, 0, 0);
-  //     doc.setFontSize(9);
-  //     doc.setFont("helvetica", "normal");
-
-  //     // Expéditeur (gauche)
-  //     doc.text("EXPÉDITEUR", 20, currentY + 20);
-  //     doc.text("Nom:", 20, currentY + 27);
-  //     doc.line(30, currentY + 27, 85, currentY + 27);
-  //     doc.text("Signature:", 20, currentY + 40);
-  //     doc.rect(20, currentY + 43, 65, 10);
-
-  //     // Ligne verticale
-  //     doc.line(pageWidth / 2, currentY + 15, pageWidth / 2, currentY + 55);
-
-  //     // Réceptionnaire (droite)
-  //     const rightX = pageWidth / 2 + 10;
-  //     doc.text("RÉCEPTIONNAIRE", rightX, currentY + 20);
-  //     doc.text("Nom:", rightX, currentY + 27);
-  //     doc.line(rightX + 15, currentY + 27, rightX + 65, currentY + 27);
-  //     doc.text("Date réception:", rightX, currentY + 33);
-  //     doc.line(rightX + 25, currentY + 33, rightX + 65, currentY + 33);
-  //     doc.text("Signature:", rightX, currentY + 40);
-  //     doc.rect(rightX, currentY + 43, 65, 10);
-
-  //     // === Pied de page ===
-  //     const footerY = pageHeight - 15;
-  //     doc.setFontSize(7);
-  //     doc.setTextColor(150, 150, 150);
-  //     doc.text(
-  //       `Document généré automatiquement - SCX Technology - ${actifName}`,
-  //       pageWidth / 2,
-  //       footerY,
-  //       { align: "center" }
-  //     );
-
-  //     // Ligne décorative
-  //     doc.setDrawColor(41, 115, 178);
-  //     doc.setLineWidth(1);
-  //     doc.line(14, footerY - 3, pageWidth - 14, footerY - 3);
-  //   });
-
-  //   // === Sauvegarder le PDF ===
-  //   const today = new Date();
-  //   const dateStr = `${today.getFullYear()}${(today.getMonth() + 1)
-  //     .toString()
-  //     .padStart(2, "0")}${today.getDate().toString().padStart(2, "0")}`;
-  //   const fileName = `bons_livraison_par_actif_SCX_${dateStr}.pdf`;
-  //   doc.save(fileName);
-
-  //   // Fermer le dialogue
-  //   handleClosePdfDialog();
-  // };
 
   const calculateTimeDifference = (startTimestamp, endTimestamp) => {
     const startDate = new Date(startTimestamp);
@@ -727,11 +467,8 @@ const ListeBesoin = () => {
     );
     return `${diffInHours} h ${diffInMinutes} min`;
   };
-  // Fonction pour ouvrir le dialog
-  const handleClickStatus = async (id, source) => {
-    console.log("ID cliqué:", id);
-    console.log("Source:", source);
 
+  const handleClickStatus = async (id, source) => {
     try {
       let url;
       if (source === "source1") {
@@ -740,10 +477,7 @@ const ListeBesoin = () => {
         url = `${apiUrl}/api/v1/subtickets/${id}`;
       }
 
-      console.log("URL utilisée :", url);
-
       const response = await axios.get(url);
-      console.log("Données de la réponse:", response.data);
 
       if (response.data.statusHistory) {
         setStatusHistory(response.data.statusHistory);
@@ -761,14 +495,12 @@ const ListeBesoin = () => {
     }
   };
 
-  // Fonction pour fermer le dialog
   const handleCloseStatusDialog = () => {
     setStatusDialogOpen(false);
   };
 
   const fetchFournitures = async () => {
     try {
-      // Effectuer les deux requêtes en parallèle
       const [source1Response, source2Response] = await Promise.all([
         axios.get(
           `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&status=!créé`
@@ -776,7 +508,6 @@ const ListeBesoin = () => {
         axios.get(`${apiUrl}/api/v1/subtickets?isClosed=false&status=!créé`),
       ]);
 
-      // Mapper les données de la première source
       const source1Data = source1Response.data.fournitures.map((item) => ({
         id: item.id,
         name: item.name,
@@ -787,18 +518,14 @@ const ListeBesoin = () => {
         besoin: item.besoin,
         quantite: item.quantite,
         commentaire: item.commentaire,
-        dateCreation: new Date(item.dateCreation), // Convertir en objet Date
+        dateCreation: new Date(item.dateCreation),
         status: item.status,
         prix: item.prix,
         tarifLivraison: item.tarifLivraison,
         fournisseur: item.fournisseur,
-
         source: "source1",
       }));
 
-      console.log("Données source 1 après mapping :", source1Data);
-
-      // Mapper les données de la deuxième source
       const source2Data = source2Response.data.subTickets.map((item) => ({
         id: item._id,
         name: item.site,
@@ -809,25 +536,18 @@ const ListeBesoin = () => {
         quantite: item.quantite,
         besoin: item.equipement_deficitaire,
         commentaire: item.description,
-        dateCreation: new Date(item.createdAt), // Convertir en objet Date
+        dateCreation: new Date(item.createdAt),
         status: item.status,
         prix: item.prix,
         tarifLivraison: item.tarifLivraison,
         fournisseur: item.fournisseur,
-
         source: "source2",
         parentId: item.parentId,
       }));
 
-      console.log("Données source 2 après mapping :", source2Data);
-
-      // Fusionner les deux sources de données
       const combinedData = [...source1Data, ...source2Data];
-
-      // Trier par date de création (ordre décroissant)
       combinedData.sort((a, b) => b.dateCreation - a.dateCreation);
 
-      // Mettre à jour les lignes
       setRows(combinedData);
       setLoading(false);
     } catch (error) {
@@ -836,14 +556,15 @@ const ListeBesoin = () => {
     }
   };
 
-  // Handle view dialog opening and start timer
   const handleView = (rowIndex) => {
-    const rowData = rows[rowIndex];
-    setSelectedFourniture(rowData); // Set selected row
-    setOpenViewDialog(true); // Open the View dialog
-    startTimer(rowData.dateCreation); // Start the countdown timer
+    if (rowIndex >= 0 && rowIndex < rows.length) {
+      const rowData = rows[rowIndex];
+      setSelectedFourniture(rowData);
+      setOpenViewDialog(true);
+      startTimer(rowData.dateCreation);
+    }
   };
-  // Start the timer to show elapsed time
+
   const startTimer = (creationDate) => {
     const interval = setInterval(() => {
       const currentTime = new Date();
@@ -852,43 +573,45 @@ const ListeBesoin = () => {
       const minutes = Math.floor((timeDiff % (1000 * 60 * 60)) / (1000 * 60));
       const seconds = Math.floor((timeDiff % (1000 * 60)) / 1000);
 
-      setTimeElapsed(`${hours}h ${minutes}m ${seconds}s`); // Update elapsed time
-
-      // Optionally stop the timer after a certain period
+      setTimeElapsed(`${hours}h ${minutes}m ${seconds}s`);
     }, 1000);
 
-    return () => clearInterval(interval); // Cleanup timer on component unmount
+    return () => clearInterval(interval);
   };
+
   const handleCloseViewDialog = () => {
-    setOpenViewDialog(false); // Close the View dialog
+    setOpenViewDialog(false);
   };
 
   const handleEdit = (rowIndex) => {
-    const rowData = rows[rowIndex];
-    setSelectedFourniture(rowData); // Mettre à jour la ligne sélectionnée
-    setUpdatedName(rowData.name); // Mettre à jour le formulaire avec les données existantes
-    setUpdatedCategorie(rowData.categorie);
-    setUpdatedBesoin(rowData.besoin);
-    setUpdatedQuantite(rowData.quantite);
-    setUpdatedStatus(rowData.status);
-    setUpdatedCommentaire(rowData.commentaire);
-
-    setOpenDialog(true); // Ouvrir le dialogue pour modification
+    if (rowIndex >= 0 && rowIndex < rows.length) {
+      const rowData = rows[rowIndex];
+      setSelectedFourniture(rowData);
+      setUpdatedName(rowData.name);
+      setUpdatedCategorie(rowData.categorie);
+      setUpdatedBesoin(rowData.besoin);
+      setUpdatedQuantite(rowData.quantite);
+      setUpdatedStatus(rowData.status);
+      setUpdatedCommentaire(rowData.commentaire);
+      setOpenDialog(true);
+    }
   };
+
   const handleCloseDialog = () => {
     setOpenDialog(false);
   };
+
   const handleChange = (event) => {
     setUpdatedStatus(event.target.value);
   };
+
   const handleUpdateFourniture = async () => {
     try {
       if (selectedFourniture.source === "source2") {
-        // Mise à jour pour source2 (utilisation de l'endpoint des sous-tickets)
-        const { id: subTicketId } = selectedFourniture; // Récupérer l'ID du sous-ticket
+        const { id: subTicketId } = selectedFourniture;
 
         await axios.patch(
-          `${apiUrl}/api/v1/sub-tickets/${subTicketId}`, // URL de mise à jour du sous-ticket
+          `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
           {
             name: updatedName,
             categorie: updatedCategorie,
@@ -899,7 +622,6 @@ const ListeBesoin = () => {
           }
         );
 
-        // Mettre à jour la ligne localement dans l'état après la modification
         setRows((prevRows) =>
           prevRows.map((row) =>
             row.id === subTicketId
@@ -918,7 +640,6 @@ const ListeBesoin = () => {
 
         alert("Sous-ticket mis à jour avec succès");
       } else if (selectedFourniture.source === "source1") {
-        // Mise à jour pour source1 (URL de fournitureRoutes)
         await axios.patch(
           `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture.id}`,
           {
@@ -931,10 +652,9 @@ const ListeBesoin = () => {
           }
         );
 
-        // Mettre à jour la ligne localement dans l'état après la modification
         setRows((prevRows) =>
           prevRows.map((row) =>
-            row._id === selectedFourniture.id
+            row.id === selectedFourniture.id
               ? {
                   ...row,
                   name: updatedName,
@@ -951,7 +671,7 @@ const ListeBesoin = () => {
         alert("Fourniture mise à jour avec succès");
       }
 
-      setOpenDialog(false); // Fermer le dialogue après la mise à jour
+      setOpenDialog(false);
     } catch (error) {
       console.error("Erreur lors de la mise à jour de la fourniture :", error);
       alert("Erreur lors de la mise à jour de la fourniture");
@@ -959,197 +679,100 @@ const ListeBesoin = () => {
   };
 
   const handleClose = async (rowIndex) => {
-    const rowData = rows[rowIndex]; // Récupérer les données de la ligne sélectionnée
-    console.log("Clôturer :", rowData);
+    if (rowIndex >= 0 && rowIndex < rows.length) {
+      const rowData = rows[rowIndex];
 
-    try {
-      const currentDate = new Date(); // Date et heure actuelles
-      currentDate.setHours(currentDate.getHours()); // Ajustez si nécessaire
-
-      // Vérifier l'origine de la donnée pour décider de l'API à appeler
-      if (rowData.source === "source1") {
-        // Clôturer le ticket parent pour "source1"
-        const response = await axios.patch(
-          `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
-          {
-            isClosed: true,
-            dateCloture: currentDate.toISOString(),
-          }
-        );
-
-        if (response.status === 200) {
-          setRows((prevRows) =>
-            prevRows.map((row) =>
-              row.id === rowData.id
-                ? {
-                    ...row,
-                    isClosed: true,
-                    dateCloture: currentDate.toISOString(),
-                  }
-                : row
-            )
-          );
-          alert("Fourniture clôturée avec succès");
-        }
-      } else if (rowData.source === "source2") {
-        // Clôturer directement le ticket parent
-        const firstPatchResponse = await axios.patch(
-          `${apiUrl}/api/v1/ticketMaintenance/${rowData.parentId}`,
-          {
-            isClosed: true,
-            dateCloture: currentDate.toISOString(),
-            cloturerPar:
-              JSON.parse(localStorage.getItem("userInfo"))?.nomComplet ||
-              "Nom inconnu", // Récupère le nomComplet depuis localStorage, ou un nom par défaut
-          }
-        );
-
-        if (firstPatchResponse.status === 200) {
-          // Imprimer le ticket parent dans le console.log
-          console.log("Ticket parent clôturé:", firstPatchResponse.data);
-
-          const url = `${apiUrl}/api/actifs/${firstPatchResponse.data.selectedActifId}/categories/${firstPatchResponse.data.selectedCategoryId}/equipments/${firstPatchResponse.data.selectedEquipmentId}`;
-          const body = {
-            isFunctionel: true, // Exemple de mise à jour du statut
-          };
-
-          try {
-            // Envoyer la requête PATCH pour mettre à jour l'équipement
-            const patchResponse = await axios.put(url, body, {
-              headers: {
-                "Content-Type": "application/json", // Définir le type de contenu comme JSON
-              },
-            });
-
-            if (patchResponse.status === 200) {
-              console.log("Mise à jour réussie de l'équipement");
-            } else {
-              console.error("Erreur lors de la mise à jour de l'équipement");
-            }
-          } catch (error) {
-            console.error(
-              "Erreur lors de la requête de mise à jour:",
-              error.message
-            );
-          }
-
-          // Clôturer directement le sous-ticket sans vérifier
-          const subTicketId = rowData.id; // Supposons que vous avez l'ID du sous-ticket directement dans rowData
-          if (subTicketId) {
-            try {
-              const subTicketResponse = await axios.patch(
-                `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
-                {
-                  isClosed: true,
-                  dateCloture: currentDate.toISOString(),
-                }
-              );
-
-              if (subTicketResponse.status === 200) {
-                console.log(`Sous-ticket ${subTicketId} clôturé avec succès`);
-              } else {
-                console.error(
-                  `Erreur lors de la mise à jour du sous-ticket ${subTicketId}`
-                );
-              }
-            } catch (error) {
-              console.error(
-                `Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`
-              );
-            }
-          }
-
-          // Après avoir fermé le sous-ticket, mettre à jour le ticket parent
-          setRows((prevRows) =>
-            prevRows.map((row) =>
-              row.id === rowData.id
-                ? {
-                    ...row,
-                    isClosed: true,
-                    dateCloture: currentDate.toISOString(),
-                  }
-                : row
-            )
-          );
-          alert("Sous-ticket et ticket parent clôturés avec succès");
-        } else {
-          console.error("Erreur lors de la clôture du ticket parent");
-          alert("Erreur lors de la clôture du ticket parent.");
-        }
-      }
-    } catch (error) {
-      console.error("Erreur lors de la clôture de l'élément :", error.message);
-      alert(
-        "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer."
-      );
-    }
-  };
-
-  const handleDelete = async (rowIndex) => {
-    const rowData = rows[rowIndex];
-    console.log("Données de la ligne avant suppression :", rowData);
-
-    // Vérifiez les données avant la suppression
-    if (!rowData || !rowData.id || !rowData.source) {
-      // Utilisez 'id' au lieu de '_id'
-      alert("Données invalides pour la suppression.");
-      console.error(
-        "Erreur: Données invalides pour la suppression. rowData:",
-        rowData
-      );
-      return;
-    }
-
-    if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
       try {
+        const currentDate = new Date();
+        currentDate.setHours(currentDate.getHours());
+
         if (rowData.source === "source1") {
-          // Suppression pour source1
-          console.log(`Suppression de fourniture avec ID: ${rowData.id}`);
-          const response = await axios.delete(
-            `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}` // Utilisez 'id' au lieu de '_id'
+          const response = await axios.patch(
+            `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
+            {
+              isClosed: true,
+              dateCloture: currentDate.toISOString(),
+            }
           );
-          console.log("Réponse après suppression de source1:", response);
-          alert("Fourniture supprimée avec succès.");
-        } else if (rowData.source === "source2") {
-          // Suppression pour source2
-          const { parentId, id: subTicketId } = rowData; // Extraction des IDs nécessaires
-          if (!parentId || !subTicketId) {
-            alert("Parent ID ou Sub-ticket ID manquant.");
-            console.error(
-              "Erreur: Parent ID ou Sub-ticket ID manquant. rowData:",
-              rowData
+
+          if (response.status === 200) {
+            setRows((prevRows) =>
+              prevRows.map((row) =>
+                row.id === rowData.id
+                  ? {
+                      ...row,
+                      isClosed: true,
+                      dateCloture: currentDate.toISOString(),
+                    }
+                  : row
+              )
             );
-            return;
+            alert("Fourniture clôturée avec succès");
           }
+        } else if (rowData.source === "source2") {
+          const firstPatchResponse = await axios.patch(
+            `${apiUrl}/api/v1/ticketMaintenance/${rowData.parentId}`,
+            {
+              isClosed: true,
+              dateCloture: currentDate.toISOString(),
+              cloturerPar:
+                JSON.parse(localStorage.getItem("userInfo"))?.nomComplet ||
+                "Nom inconnu",
+            }
+          );
 
-          console.log(
-            `Suppression du sous-ticket avec Parent ID: ${parentId} et Sub-ticket ID: ${subTicketId}`
-          );
-          const response = await axios.delete(
-            `${apiUrl}/api/v1/ticketMaintenance/tickets/${parentId}/subTickets/${subTicketId}`
-          );
-          console.log("Réponse après suppression de source2:", response);
-          alert("Sous-ticket supprimé avec succès.");
+          if (firstPatchResponse.status === 200) {
+            const url = `${apiUrl}/api/actifs/${firstPatchResponse.data.selectedActifId}/categories/${firstPatchResponse.data.selectedCategoryId}/equipments/${firstPatchResponse.data.selectedEquipmentId}`;
+            const body = {
+              isFunctionel: true,
+            };
+
+            try {
+              await axios.put(url, body, {
+                headers: {
+                  "Content-Type": "application/json",
+                },
+              });
+            } catch (error) {
+              console.error("Erreur lors de la requête de mise à jour:", error.message);
+            }
+
+            const subTicketId = rowData.id;
+            if (subTicketId) {
+              try {
+                await axios.patch(
+                  `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
+                  {
+                    isClosed: true,
+                    dateCloture: currentDate.toISOString(),
+                  }
+                );
+              } catch (error) {
+                console.error(`Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`);
+              }
+            }
+
+            setRows((prevRows) =>
+              prevRows.map((row) =>
+                row.id === rowData.id
+                  ? {
+                      ...row,
+                      isClosed: true,
+                      dateCloture: currentDate.toISOString(),
+                    }
+                  : row
+              )
+            );
+            alert("Sous-ticket et ticket parent clôturés avec succès");
+          } else {
+            alert("Erreur lors de la clôture du ticket parent.");
+          }
         }
-
-        // Mise à jour de l'état local après suppression
-        setRows((prevRows) =>
-          prevRows.filter((_, index) => index !== rowIndex)
-        );
       } catch (error) {
-        console.error("Erreur lors de la suppression de l'élément :", error);
-        alert(
-          "Erreur lors de la suppression de l'élément. Veuillez réessayer."
-        );
+        console.error("Erreur lors de la clôture de l'élément :", error.message);
+        alert("Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer.");
       }
     }
-  };
-
-  const styles = {
-    largeIcon: {
-      width: 60,
-      height: 60,
-    },
   };
 
   useEffect(() => {
@@ -1163,6 +786,7 @@ const ListeBesoin = () => {
       options: {
         filter: false,
         sort: false,
+        display: false,
         customBodyRender: (value) => (
           <div className="flex items-center">
             <Tooltip title="Copier ID">
@@ -1173,7 +797,7 @@ const ListeBesoin = () => {
                   color: "#2973B2",
                 }}
                 onClick={() => {
-                  navigator.clipboard.writeText(value); // Copier l'ID dans le presse-papiers
+                  navigator.clipboard.writeText(value);
                 }}
               />
             </Tooltip>
@@ -1182,14 +806,13 @@ const ListeBesoin = () => {
       },
     },
     {
-      name: "source", // Nom de la colonne pour la source des données
-      label: "Source", // Titre de la colonne
+      name: "source",
+      label: "Source",
       options: {
         filter: true,
-        sort: false, // Si tu ne veux pas trier par la source
+        sort: false,
         display: "excluded",
         customBodyRender: (value) => {
-          // Afficher la source de la donnée
           return value === "source1" ? "Source 1" : "Source 2";
         },
       },
@@ -1237,12 +860,11 @@ const ListeBesoin = () => {
         sort: false,
         filterType: "dropdown",
         customBodyRender: (value, tableMeta) => {
-          const source = tableMeta.rowData.source; // Assurez-vous que 'source' est défini dans vos données
+          const rowIndex = tableMeta.rowIndex;
+          const rowData = rows[rowIndex];
           return (
             <Button
-              onClick={() =>
-                handleClickStatus(tableMeta.rowData[0], tableMeta.rowData[1])
-              }
+              onClick={() => handleClickStatus(rowData.id, rowData.source)}
             >
               {value}
             </Button>
@@ -1275,7 +897,7 @@ const ListeBesoin = () => {
       },
     },
     {
-      name: "fournisseur",
+      name: "fournnotisseur",
       label: "Fournisseur",
       options: {
         filter: true,
@@ -1317,7 +939,7 @@ const ListeBesoin = () => {
         filter: false,
         sort: false,
         customBodyRender: (value, tableMeta) => {
-          const rowIndex = tableMeta.rowIndex; // Obtient l'index de la ligne
+          const rowIndex = tableMeta.rowIndex;
           return (
             <div style={{ display: "flex", gap: "1px" }}>
               <IconButton
@@ -1334,16 +956,9 @@ const ListeBesoin = () => {
               >
                 <Edit style={{ width: "18px", height: "18px" }} />
               </IconButton>
-              {/* <IconButton
-                title="supprimer "
-                onClick={() => handleDelete(rowIndex)}
-                color="secondary"
-              >
-                <Delete style={{ width: "18px", height: "18px" }} />
-              </IconButton> */}
               <IconButton
                 title="cloturer"
-                onClick={async () => await handleClose(rowIndex)} // Wrap handleClose with async/await
+                onClick={async () => await handleClose(rowIndex)}
                 color="success"
               >
                 <CheckCircle style={{ width: "18px", height: "18px" }} />
@@ -1378,18 +993,17 @@ const ListeBesoin = () => {
 
   const options = {
     filterType: "checkbox",
-    selectableRows: "none",
-
+    selectableRows: 'multiple',
+    onRowSelectionChange: handleRowSelection,
     rowsPerPage: 10,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: false,
     setRowProps: (_, dataIndex) => {
-      // Check if the ticket is closed
       const rowData = rows[dataIndex];
       return {
         style: {
-          backgroundColor: rowData.isClosed ? "#4CAF50" : "inherit", // Green if closed
+          backgroundColor: rowData && rowData.isClosed ? "#4CAF50" : "inherit",
         },
       };
     },
@@ -1397,7 +1011,17 @@ const ListeBesoin = () => {
 
   return (
     <>
-      <div className="flex justify-end gap-4">
+      <div className="flex justify-end gap-4 mb-4">
+        {selectedRowIds.length > 0 && (
+          <Button
+            onClick={handleOpenBulkStatusDialog}
+            variant="contained"
+            color="secondary"
+            startIcon={<Edit />}
+          >
+            Changer statut ({selectedRowIds.length} sélectionné(s))
+          </Button>
+        )}
         <Button
           onClick={handleOpenPdfDialog}
           variant="contained"
@@ -1409,6 +1033,20 @@ const ListeBesoin = () => {
           Télécharger Excel
         </Button>
       </div>
+
+      {selectedRowIds.length > 0 && (
+        <Box className="mb-4 p-2 bg-gray-800 dark:bg-blue-900 rounded">
+          <Typography variant="body1" className="flex items-center gap-2">
+            <Chip 
+              label={selectedRowIds.length} 
+              color="primary" 
+              size="small" 
+            />
+            élément(s) sélectionné(s)
+          </Typography>
+        </Box>
+      )}
+
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>
           <MUIDataTable
@@ -1418,6 +1056,59 @@ const ListeBesoin = () => {
             options={options}
           />
         </ThemeProvider>
+
+        <Dialog 
+          open={bulkStatusDialogOpen} 
+          onClose={handleCloseBulkStatusDialog}
+          maxWidth="sm"
+          fullWidth
+        >
+          <DialogTitle>
+            Changer le statut pour {selectedRowIds.length} élément(s)
+          </DialogTitle>
+          <DialogContent>
+            <FormControl fullWidth margin="normal">
+              <InputLabel>Nouveau statut</InputLabel>
+              <Select
+                value={bulkNewStatus}
+                onChange={(e) => setBulkNewStatus(e.target.value)}
+                label="Nouveau statut"
+              >
+                {[
+                  "créé",
+                  "Ouvert",
+                  "En cours",
+                  "Achat par le support",
+                  "En attendant le déblocage de la caisse",
+                  "Reçu par le support",
+                  "Expédié",
+                  "Demandé aux achats",
+                  "Demandé à Biopetra",
+                  "Demandé à la pharmacie",
+                  "En cours de livraison",
+                  "Achat sur place",
+                  "Livré",
+                ].map((status, index) => (
+                  <MenuItem key={index} value={status}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <Typography variant="body2" color="textSecondary" className="mt-2">
+              Cette action mettra à jour le statut des {selectedRowIds.length} élément(s) sélectionné(s).
+            </Typography>
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={handleCloseBulkStatusDialog} color="primary">
+              Annuler
+            </Button>
+            <Button onClick={handleBulkStatusUpdate} color="primary" variant="contained">
+              Mettre à jour
+            </Button>
+          </DialogActions>
+        </Dialog>
+
         <Dialog open={openDialog} onClose={handleCloseDialog}>
           <DialogTitle>Modifier la fourniture</DialogTitle>
           <DialogContent>
@@ -1480,18 +1171,15 @@ const ListeBesoin = () => {
               variant="standard"
               value={
                 selectedFourniture
-                  ? new Date(selectedFourniture.dateCreation).toLocaleString(
-                      "fr-FR",
-                      {
-                        weekday: "long",
-                        year: "numeric",
-                        month: "long",
-                        day: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit",
-                        second: "2-digit",
-                      }
-                    )
+                  ? new Date(selectedFourniture.dateCreation).toLocaleString("fr-FR", {
+                      weekday: "long",
+                      year: "numeric",
+                      month: "long",
+                      day: "numeric",
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      second: "2-digit",
+                    })
                   : ""
               }
               disabled
@@ -1509,7 +1197,7 @@ const ListeBesoin = () => {
                   "Ouvert",
                   "En cours",
                   "Achat par le support",
-                   "En attendant le déblocage de la caisse",
+                  "En attendant le déblocage de la caisse",
                   "Reçu par le support",
                   "Expédié",
                   "Demandé aux achats",
@@ -1520,8 +1208,7 @@ const ListeBesoin = () => {
                   "Livré",
                 ].map((status, index) => (
                   <MenuItem key={index} value={status}>
-                    {status.charAt(0).toUpperCase() + status.slice(1)}{" "}
-                    {/* Capitalize first letter */}
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
                   </MenuItem>
                 ))}
               </Select>
@@ -1536,7 +1223,7 @@ const ListeBesoin = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* View Dialog */}
+
         <Dialog open={openViewDialog} onClose={handleCloseViewDialog}>
           <DialogTitle>Voir la fourniture</DialogTitle>
           <DialogContent>
@@ -1577,7 +1264,7 @@ const ListeBesoin = () => {
                   variant="standard"
                   value={selectedFourniture?.technicien || ""}
                   disabled
-                />{" "}
+                />
                 <TextField
                   margin="dense"
                   label="Status"
@@ -1619,7 +1306,7 @@ const ListeBesoin = () => {
             </Button>
           </DialogActions>
         </Dialog>
-        {/* Dialog MUI */}
+
         <Dialog
           open={statusDialogOpen}
           fullWidth
@@ -1678,7 +1365,6 @@ const ListeBesoin = () => {
           </DialogActions>
         </Dialog>
 
-        {/* Dialog de génération PDF avec filtre région et filtre nom */}
         <Dialog
           open={openPdfDialog}
           onClose={handleClosePdfDialog}
@@ -1704,7 +1390,7 @@ const ListeBesoin = () => {
                 label="Filtrer par région"
                 onChange={(e) => {
                   setSelectedRegion(e.target.value);
-                  setSelectedActif(""); // reset actif si la région change
+                  setSelectedActif("");
                 }}
               >
                 <MenuItem value="">Toutes les régions</MenuItem>
@@ -1730,7 +1416,6 @@ const ListeBesoin = () => {
                 ))}
               </Select>
             </FormControl>
-            {/* ... reste inchangé : sélection, liste, PDF ... */}
             <Divider className="mb-2" />
             {filteredDeliveryRows.length > 0 ? (
               <>
@@ -1778,8 +1463,7 @@ const ListeBesoin = () => {
               </>
             ) : (
               <Typography>
-                Aucune commande avec le statut "En cours de livraison" n'est
-                disponible pour les filtres choisis.
+                Aucune commande avec le statut "Expédié" n'est disponible pour les filtres choisis.
               </Typography>
             )}
           </DialogContent>

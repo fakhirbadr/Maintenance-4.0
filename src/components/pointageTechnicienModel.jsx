@@ -26,20 +26,13 @@ import axios from "axios";
 const API_BASE_URL = import.meta.env.VITE_API_URL;
 
 // --- NOUVELLE FONCTION : Pour formater la date locale correctement ---
-/**
- * Crée une chaîne de caractères date-heure au format YYYY-MM-DDTHH:mm
- * à partir de la date locale actuelle de l'utilisateur.
- * @returns {string} La date et l'heure formatées pour un input datetime-local.
- */
 function getLocalDateTimeForInput() {
   const date = new Date();
   const year = date.getFullYear();
-  // getMonth() est 0-indexé (0 pour Janvier), donc on ajoute 1.
   const month = (date.getMonth() + 1).toString().padStart(2, "0");
   const day = date.getDate().toString().padStart(2, "0");
   const hours = date.getHours().toString().padStart(2, "0");
   const minutes = date.getMinutes().toString().padStart(2, "0");
-
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
@@ -54,20 +47,18 @@ function PersonnelForm({ label, value, onChange }) {
           sx={{ color: "text.disabled" }}
         >
           {label} (Aucun titulaire assigné)
-        </Typography>{" "}
+        </Typography>
       </Paper>
     );
   }
-
   return (
     <Paper variant="outlined" sx={{ p: 2, mb: 2 }}>
-      {" "}
       <Typography variant="subtitle1" gutterBottom>
         {label}:{" "}
         <Typography component="span" sx={{ color: "primary.light" }}>
           {value.titulaireNom}
-        </Typography>{" "}
-      </Typography>{" "}
+        </Typography>
+      </Typography>
       <FormControlLabel
         control={
           <Checkbox
@@ -78,7 +69,7 @@ function PersonnelForm({ label, value, onChange }) {
           />
         }
         label="Titulaire présent"
-      />{" "}
+      />
       {!value.titulairePresent && (
         <Stack spacing={1} sx={{ mt: 1, ml: 2 }}>
           <FormControlLabel
@@ -97,7 +88,6 @@ function PersonnelForm({ label, value, onChange }) {
             }
             label="Remplaçant présent"
           />
-
           <TextField
             label="Nom remplaçant"
             fullWidth
@@ -109,7 +99,7 @@ function PersonnelForm({ label, value, onChange }) {
             disabled={!value.remplacantPresent}
           />
         </Stack>
-      )}{" "}
+      )}
     </Paper>
   );
 }
@@ -261,113 +251,126 @@ export default function PointageTechnicienModel({ open, onClose }) {
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <DialogTitle>Mode Admin : Pointage Manuel</DialogTitle>
-      <DialogContent>
-        <Box component="form" onSubmit={handleSubmit} sx={{ pt: 1 }}>
-          {error && (
-            <Alert severity="error" sx={{ mb: 2 }}>
-              {error}
-            </Alert>
-          )}
+    <>
+      {/* Intégration du CSS pour l'icône blanche */}
+      <style>
+        {`
+          input[type="datetime-local"]::-webkit-calendar-picker-indicator {
+            filter: invert(1);
+          }
+          input[type="datetime-local"] {
+            background: #222;
+            color: #fff;
+          }
+        `}
+      </style>
+      <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
+        <DialogTitle>Mode Admin : Pointage Manuel</DialogTitle>
+        <DialogContent>
+          <Box component="form" onSubmit={handleSubmit} sx={{ pt: 1 }}>
+            {error && (
+              <Alert severity="error" sx={{ mb: 2 }}>
+                {error}
+              </Alert>
+            )}
 
-          {success && (
-            <Alert severity="success" sx={{ mb: 2 }}>
-              {success}
-            </Alert>
-          )}
+            {success && (
+              <Alert severity="success" sx={{ mb: 2 }}>
+                {success}
+              </Alert>
+            )}
 
-          <Stack spacing={2}>
-            <FormControl fullWidth required>
-              <InputLabel>Site</InputLabel>
-              <Select
-                name="site"
-                value={form.site}
-                label="Site"
-                onChange={handleSiteChange}
-              >
-                {sites.map((s) => (
-                  <MenuItem key={s._id} value={s._id}>
-                    {s.name}
-                  </MenuItem>
-                ))}
-              </Select>
-            </FormControl>
+            <Stack spacing={2}>
+              <FormControl fullWidth required>
+                <InputLabel>Site</InputLabel>
+                <Select
+                  name="site"
+                  value={form.site}
+                  label="Site"
+                  onChange={handleSiteChange}
+                >
+                  {sites.map((s) => (
+                    <MenuItem key={s._id} value={s._id}>
+                      {s.name}
+                    </MenuItem>
+                  ))}
+                </Select>
+              </FormControl>
 
-            <TextField
-              select
-              label="État de l'unité"
-              name="actif"
-              value={form.actif}
-              onChange={handleChange}
-              fullWidth
-            >
-              <MenuItem value="actif">Actif</MenuItem>
-              <MenuItem value="inactif">Inactif</MenuItem>
-            </TextField>
-
-            {form.actif === "actif" ? (
-              <>
-                <TextField
-                  label="Heure de début"
-                  name="heureDebut"
-                  type="datetime-local"
-                  // --- MODIFICATION APPLIQUÉE ICI ---
-                  defaultValue={getLocalDateTimeForInput()}
-                  onChange={handleChange}
-                  fullWidth
-                  InputLabelProps={{ shrink: true }}
-                />
-
-                <PersonnelForm
-                  label="Médecin"
-                  value={form.medecin}
-                  onChange={(v) => handlePersonnelChange("medecin", v)}
-                />
-
-                <PersonnelForm
-                  label="Infirmière 1"
-                  value={form.infirmiere1}
-                  onChange={(v) => handlePersonnelChange("infirmiere1", v)}
-                />
-
-                <PersonnelForm
-                  label="Infirmière 2"
-                  value={form.infirmiere2}
-                  onChange={(v) => handlePersonnelChange("infirmiere2", v)}
-                />
-
-                <PersonnelForm
-                  label="Technicien"
-                  value={form.technicien}
-                  onChange={(v) => handlePersonnelChange("technicien", v)}
-                />
-              </>
-            ) : (
               <TextField
-                label="Motif d'inactivité"
-                name="motifInactivite"
-                value={form.motifInactivite}
+                select
+                label="État de l'unité"
+                name="actif"
+                value={form.actif}
                 onChange={handleChange}
                 fullWidth
-                required
-              />
-            )}
-          </Stack>
-        </Box>{" "}
-      </DialogContent>{" "}
-      <DialogActions>
-        <Button onClick={onClose} color="inherit">
-          Fermer
-        </Button>
-        <Button
-          onClick={handleSubmit}
-          variant="contained"
-          disabled={loading || !form.site}
-        >
-          {loading ? <CircularProgress size={24} /> : "Enregistrer"}{" "}
-        </Button>{" "}
-      </DialogActions>{" "}
-    </Dialog>
+              >
+                <MenuItem value="actif">Actif</MenuItem>
+                <MenuItem value="inactif">Inactif</MenuItem>
+              </TextField>
+
+              {form.actif === "actif" ? (
+                <>
+                  <TextField
+                    label="Heure de début"
+                    name="heureDebut"
+                    type="datetime-local"
+                    defaultValue={getLocalDateTimeForInput()}
+                    onChange={handleChange}
+                    fullWidth
+                    InputLabelProps={{ shrink: true }}
+                  />
+
+                  <PersonnelForm
+                    label="Médecin"
+                    value={form.medecin}
+                    onChange={(v) => handlePersonnelChange("medecin", v)}
+                  />
+
+                  <PersonnelForm
+                    label="Infirmière 1"
+                    value={form.infirmiere1}
+                    onChange={(v) => handlePersonnelChange("infirmiere1", v)}
+                  />
+
+                  <PersonnelForm
+                    label="Infirmière 2"
+                    value={form.infirmiere2}
+                    onChange={(v) => handlePersonnelChange("infirmiere2", v)}
+                  />
+
+                  <PersonnelForm
+                    label="Technicien"
+                    value={form.technicien}
+                    onChange={(v) => handlePersonnelChange("technicien", v)}
+                  />
+                </>
+              ) : (
+                <TextField
+                  label="Motif d'inactivité"
+                  name="motifInactivite"
+                  value={form.motifInactivite}
+                  onChange={handleChange}
+                  fullWidth
+                  required
+                />
+              )}
+            </Stack>
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} color="inherit">
+            Fermer
+          </Button>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            disabled={loading || !form.site}
+          >
+            {loading ? <CircularProgress size={24} /> : "Enregistrer"}
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

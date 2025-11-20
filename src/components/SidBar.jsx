@@ -25,6 +25,7 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
 import DesktopWindowsRoundedIcon from "@mui/icons-material/DesktopWindowsRounded";
+import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined';
 import { HistoryIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import {
@@ -291,6 +292,16 @@ const Array1 = [
     ),
     path: "/Alerte",
     roleRequired: ["superviseur", "achat", "chargés de performance"],
+  },
+  {
+    text: "configuration",  
+    icon: (
+      <IconWrapper>
+        <AutoFixHighOutlinedIcon />
+      </IconWrapper>
+    ),
+    path: "/ConfigurationAsset",
+    roleRequired: ["superviseur","user"],
   },
 ];
 
