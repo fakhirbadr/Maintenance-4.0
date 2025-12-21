@@ -25,8 +25,9 @@ import ExpandLess from "@mui/icons-material/ExpandLess";
 import ExpandMore from "@mui/icons-material/ExpandMore";
 import BookmarkAddedIcon from "@mui/icons-material/BookmarkAdded";
 import DesktopWindowsRoundedIcon from "@mui/icons-material/DesktopWindowsRounded";
-import AutoFixHighOutlinedIcon from '@mui/icons-material/AutoFixHighOutlined';
+import AutoFixHighOutlinedIcon from "@mui/icons-material/AutoFixHighOutlined";
 import { HistoryIcon } from "lucide-react";
+import LocalPharmacyIcon from "../icons/LocalPharmacyIcon.jsx";
 import { motion } from "framer-motion";
 import {
   Avatar,
@@ -182,6 +183,16 @@ const Array1 = [
         roleRequired: ["admin", "superviseur", "chargés de performance"],
       },
       {
+        text: "Gestion pharmaceutique",
+        icon: (
+          <IconWrapper>
+            <LocalPharmacyIcon />
+          </IconWrapper>
+        ),
+        path: "/GestionPharmaceutique",
+        roleRequired: ["admin", "superviseur", "chargés de performance"],
+      },
+      {
         text: "Portail de tickets SI",
         icon: (
           <IconWrapper>
@@ -210,7 +221,14 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueIntervention",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
+        roleRequired: [
+          "admin",
+          "docteurs",
+          "user",
+          "chargé de stock",
+          "chargés de performance",
+          "superviseur",
+        ],
       },
       {
         text: "Historique commande",
@@ -220,7 +238,14 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueBesoin",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur"],
+        roleRequired: [
+          "admin",
+          "docteurs",
+          "user",
+          "chargé de stock",
+          "chargés de performance ",
+          "superviseur",
+        ],
       },
       {
         text: "Historique véhicule",
@@ -230,7 +255,15 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/Historiquevehicule",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance ", "superviseur" , "technicien"],
+        roleRequired: [
+          "admin",
+          "docteurs",
+          "user",
+          "chargé de stock",
+          "chargés de performance ",
+          "superviseur",
+          "technicien",
+        ],
       },
       {
         text: "Historique SI",
@@ -240,7 +273,14 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueSI",
-        roleRequired: ["admin", "docteurs", "user", "chargé de stock", "chargés de performance", "superviseur"],
+        roleRequired: [
+          "admin",
+          "docteurs",
+          "user",
+          "chargé de stock",
+          "chargés de performance",
+          "superviseur",
+        ],
       },
       {
         text: "Historique des rejets",
@@ -250,7 +290,28 @@ const Array1 = [
           </IconWrapper>
         ),
         path: "/HistoriqueDesRejets",
-        roleRequired: ["admin", "docteurs", "chargé de stock", "chargés de performance", "superviseur"],
+        roleRequired: [
+          "admin",
+          "docteurs",
+          "chargé de stock",
+          "chargés de performance",
+          "superviseur",
+        ],
+      },
+      {
+        text: "Historique pharmaceutique",
+        icon: (
+          <IconWrapper>
+            <LocalPharmacyIcon />
+          </IconWrapper>
+        ),
+        path: "/HistoriquePharmaceutique",
+        roleRequired: [
+          "admin",
+          "chargé de stock",
+          "chargés de performance",
+          "superviseur",
+        ],
       },
     ],
   },
@@ -272,7 +333,13 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/SuiviDemande",
-    roleRequired: ["admin", "docteurs", "user", "chargé de stock", "technicien"],
+    roleRequired: [
+      "admin",
+      "docteurs",
+      "user",
+      "chargé de stock",
+      "technicien",
+    ],
   },
   {
     text: "Utilisateur",
@@ -282,6 +349,16 @@ const Array1 = [
       </IconWrapper>
     ),
     path: "/utilisateur",
+  },
+  {
+    text: "Réclamations réseau",
+    icon: (
+      <IconWrapper>
+        <ErrorIcon />
+      </IconWrapper>
+    ),
+    path: "/reclamations-reseau",
+    roleRequired: ["admin", "superviseur"],
   },
   {
     text: "Alertes",
@@ -294,14 +371,14 @@ const Array1 = [
     roleRequired: ["superviseur", "achat", "chargés de performance"],
   },
   {
-    text: "configuration",  
+    text: "configuration",
     icon: (
       <IconWrapper>
         <AutoFixHighOutlinedIcon />
       </IconWrapper>
     ),
     path: "/ConfigurationAsset",
-    roleRequired: ["superviseur","user"],
+    roleRequired: ["superviseur", "user"],
   },
 ];
 
@@ -369,7 +446,8 @@ export default function SidBar({ open, handleDrawerClose }) {
             duration: theme.transitions.duration.enteringScreen,
           }),
           overflowX: "hidden",
-          backgroundColor: theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
+          backgroundColor:
+            theme.palette.mode === "dark" ? "#1e1e2d" : "#ffffff",
           boxShadow: "0 0 10px rgba(0, 0, 0, 0.1)",
           [theme.breakpoints.up("sm")]: {
             width: open ? drawerWidth : `calc(${theme.spacing(8)} + 1px)`,

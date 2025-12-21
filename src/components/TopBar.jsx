@@ -1,3 +1,4 @@
+import NetworkStatus from "./NetworkStatus";
 import React, { useState } from "react";
 import {
   alpha,
@@ -26,6 +27,8 @@ import UniteEtatModal from "./UniteEtatModal";
 import UniteEtatAdminModal from "./UniteEtatAdminModal";
 import PointageTechnicienModal from "./pointageTechnicienModel";
 import PointagevFinalAdmin from "./PointagevFinalAdmin";
+import NotificationBell from "./NotificationBell";
+import AIChatBot from "./AIChatBot";
 
 const drawerWidth = 240;
 
@@ -93,6 +96,7 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
   const navigate = useNavigate();
   const [openModal, setOpenModal] = useState(false);
   const [openTechnicienModal, setOpenTechnicienModal] = useState(false);
+  const [openChatBot, setOpenChatBot] = useState(false);
 
   let role = "user";
   try {
@@ -118,7 +122,10 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
   };
 
   // Rôles pour afficher le composant admin
-  const isAdminRole = role === "superviseur" || role === "admin" || role === "chargés de performance";
+  const isAdminRole =
+    role === "superviseur" ||
+    role === "admin" ||
+    role === "chargés de performance";
   const isTechRole = role === "technicien" || role === "user";
 
   return (
@@ -210,13 +217,15 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             <IconButton color="inherit" component={Link} to="/homepage">
               <HomeRoundedIcon />
             </IconButton>
-            <IconButton
+            {/* Icône réseau pour test et réclamation */}
+            <NetworkStatus />
+            {/* <IconButton
               sx={{ color: "inherit" }}
               component={Link}
               to="/NetworkPatient"
             >
               <SpeedRoundedIcon sx={{ fontSize: 25 }} />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               sx={{ color: "inherit" }}
               component={Link}
@@ -224,6 +233,13 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             >
               <GradingOutlinedIcon />
             </IconButton>
+
+            {/* Notification Bell */}
+            <NotificationBell />
+
+            {/* AI ChatBot - superviseurs seulement */}
+            {/* {role === "superviseur" && <AIChatBot />} */}
+
             <IconButton color={"inherit"}>
               <SettingsOutlinedIcon />
             </IconButton>

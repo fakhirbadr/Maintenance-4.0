@@ -7,12 +7,14 @@ import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
 import ModelMaintenance from "./ModelMaintenance.jsx";
 import ModelFourniture from "./ModelFourniture.jsx";
+import ModelPharmaceutique from "./ModelPharmaceutique.jsx";
 import myImage from "./4.jpg";
 import myImage2 from "./3.jpg";
 import myImage5 from "./5.jpg";
 import myImage6 from "./6.png";
 import myImage7 from "./9.png";
 import myImage8 from "./10.jpg";
+import myImage9 from "./11.png";
 import ModelVehicule from "./ModelVehicule";
 import ModelRetour from "./ModelRetour";
 import { Grid, useTheme, Box, Container, Fade, Grow } from "@mui/material";
@@ -28,6 +30,7 @@ const Ticket = () => {
   const [openRetour, setOpenRetour] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [openProblemeSI, setOpenProblemeSI] = useState(false);
+  const [openPharmaceutique, setOpenPharmaceutique] = useState(false);
   const [userRole, setUserRole] = useState("");
 
   // Récupérer le rôle utilisateur depuis le localStorage
@@ -108,6 +111,13 @@ const Ticket = () => {
         "Demande d'achat de fournitures, pièces détachées ou équipements spécifiques.",
       onClick: () => setOpenFourniture(true),
     },
+     {
+      title: "Commande Pharmaceutique",
+      image: myImage9,
+      description:
+        "Demande d'équipements pharmaceutiques : Glucomètre, Lunette oxygène, Ordonnanceur, Gel d'échographie, Drap d'examen, Toise.",
+      onClick: () => setOpenPharmaceutique(true),
+    },
     {
       title: "Service Véhicule",
       image: myImage5,
@@ -129,6 +139,7 @@ const Ticket = () => {
         "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
       onClick: () => setOpenProblemeSI(true),
     },
+   
     //  {
     //   title: "HR Services",
     //   image: myImage8,
@@ -152,10 +163,10 @@ const Ticket = () => {
         item: { xs: 12, md: 6, lg: 4 }
       };
     } else {
-      // Pour les autres rôles (5 cartes)
+      // Pour les autres rôles (6 cartes)
       return {
         container: { justifyContent: "center" },
-        item: { xs: 12, md: 6, lg: 2.4 }
+        item: { xs: 12, md: 6, lg: 2 }
       };
     }
   };
@@ -309,6 +320,7 @@ const Ticket = () => {
           />
           <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
           <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
+          <ModelPharmaceutique open={openPharmaceutique} onClose={() => setOpenPharmaceutique(false)} />
         </>
       )}
       

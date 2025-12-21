@@ -20,183 +20,33 @@ import axios from "axios";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 
-const categories = [
-  "Structure Bâtiment",
-  "Dispositif Médicaux",
-  "Matériel Informatique",
-  "Fourniture",
-  "équipement généreaux",
-  "Connexion",
+// Liste des besoins pharmaceutiques
+const besoinsPharmaceutiques = [
+  "Glucomètre",
+  "Lunette oxygène",
+  "Ordonnanceur",
+  "Gel d'échographie",
+  "Drap d'examen",
+  "Toise",
 ];
 
-const categoryNeeds = {
-  "Structure Bâtiment": [
-    "ARMOIRE PHARMACEUTIQUE",
-    "BACHE PUBLICITAIRE",
-    "BANC CHAISE",
-    "CACHE GROUPE ELECTROGENE",
-    "CHAISE D'ACCUEIL",
-    "CITERNE D'EAU EN PLASTIQUE",
-    "EXTINCTEUR",
-    "FLUXIBLE MELANGEUR",
-    "GAZON ARTIFICIEL",
-    "MECANISME CHASSE D'EAU (TOILETTE)",
-    "MÉLANGEUR",
-    "MINI-REFRIGERATEUR",
-    "PERGOLA",
-    "PORTE D'UNITÉ",
-    "PORTRAIT DU ROI",
-    "POUBELLE 10L",
-    "POUBELLE 5L",
-    "POUBELLE 90L",
-    "PROJECTEUR EXTERIEUR",
-    "PROJECTEUR INTERIEUR",
-    "RAYONNAGE",
-    "SOL À L'INTÉRIEUR",
-    "TABLE",
-    "TABOURET",
-    "TOIT UNITÉ",
-    "VASES PLANTES ARTIFICIELLES",
-    "SERRURE INTELLIGENTE",
-    "GERFLEX",
-    "RAMPES D'ACCES",
-  ],
-  "Dispositif Médicaux": [
-    "BALANCE",
-    "BOITIER MEDIOT",
-    "BRASSARD TENSIOMETRE",
-    "CONCENTRATEUR OXYGENE",
-    "DÉBITMÈTRES D'OXYGÈNE",
-    "DERMATOSCOPE",
-    "DIVAN D'EXAMEN",
-    "DOCLICK",
-    "ECG 12 Deriviations",
-    "ECG 5 Deriviations",
-    "GLUCOMETRE",
-    "IRISCOPE",
-    "LUNETTE OXYGÈNE",
-    "MARTEAU REFLEXE",
-    "NÉBULISEUR",
-    "OTOSCOPE CONNECTÉ",
-    "OTOSCOPE MANUEL",
-    "OXYMÈTRE CONNECTÉ",
-    "OXYMÈTRE MANUEL",
-    "PÈSE BÉBÉ",
-    "POTENCE",
-    "RUBAN METRE TAILLE",
-    "SONDE D'ÉCHOGRAPHIE",
-    "STÉTHOSCOPE CONNECTÉ",
-    "STÉTHOSCOPE MANUEL",
-    "TENSIOMETRE CONNECTÉ",
-    "TENSIOMETRE DIGITALE",
-    "THERMOMÈTRE",
-    "TOISE",
-  ],
-  "équipement généreaux": [
-    "BATTERIE GROUPE ELECTROGENE",
-    "CABLE LIAISON GROUPE ELECTROGENE",
-    "CAISSE OUTILLAGE TECHNICIEN",
-    "CAMERA SURVEILLANCE",
-    "CANAPÉ",
-    "CHAUFFE-EAU ÉLECTRIQUE",
-    "CAGE GROUPE ELECTROGENE",
-    "CLIMATISEUR",
-    "ÉCRAN",
-    "ESCABEAU",
-    "GROUPE ELECTROGENE",
-    "INVERSEUR",
-    "ONDULEUR",
-    "PRISE RJ45",
-    "PRISE MONOPHASE",
-    "RALLONGE 10M",
-    "RALLONGE 4M",
-    "RÉFRIGÉRATEUR",
-    "TÉLÉRUPTEUR",
-    "TV REMOTE CONTRÔLE",
-  ],
-  Fourniture: [
-    "BLOC NOTE",
-    "BLOUSE MEDECIN",
-    "CACHET MEDECIN",
-    "CACHET UNITE",
-    "CARTON D'EMBALLAGE",
-    "CELLOPHANE",
-    "DRAP D'EXAMEN",
-    "FLUORESCENT",
-    "GEL D'ÉCHOGRAPHIE",
-    "ORDONANCIER",
-    "PAPIER A4",
-    "PAPIER À BULLES",
-    "PILES 2A",
-    "PILES 3A",
-    "PILES OTOSCOPE LR14-C",
-    "GILET",
-    "POCHETTE PLASTIQUE",
-    "PRODUIT NETTOYAGE",
-    "PYJAMA INFIRMIÈRE",
-    "STYLO",
-    "TONER D'IMPRIMANTE",
-    "CARTON",
-  ],
-  "Matériel Informatique": [
-    "ADAPTATEUR DISPLAY/HDMI",
-    "ADAPTATEUR DVI",
-    "CÂBLE JACK MÂLE-MÂLE",
-    "CÂBLE EXTENSION USB 3.0",
-    "CÂBLE HDMI 10M",
-    "CABLE IMPRIMANTE USB",
-    "CÂBLE RJ45",
-    "CÂBLE SÉRIE A",
-    "CÂBLE TACTILE 10M",
-    "CABLE TENSIOMETRE",
-    "CAMERA MOBILE",
-    "CAMERA WEB",
-    "CHARGEUR PC",
-    "CHARGEUR SONDE ÉCHOGRAPHIE",
-    "CHARGEUR STÉTHOSCOPE",
-    "CHARGEUR TENSIOMETRE 6V",
-    "CHARGEUR TYPE B",
-    "CHARGEUR TYPE C",
-    "CLAVIER LOGITECH",
-    "CLÉ WIFI 5G",
-    "DISQUE DUR",
-    "ÉCRAN",
-    "HUB USB",
-    "IMPRIMANTE",
-    "MIC JABRA",
-    "MINI PC",
-    "NVR",
-    "PC PORTABLE",
-    "ROUTEUR WIFI",
-    "SWITCH",
-    "TRANSFORMATEUR NVR 12V",
-    "TRANSFORMATEUR NVR 48V",
-  ],
-  Connexion: ["SATELITE", "IAM", "ORANGE", "INWI", "CÂBLE UTP (ETHERNET)"],
-};
-
-function getInitialFormData(userInfo = {}) {
-  return {
-    name: "",
-    categorie: "",
-    besoin: "",
-    quantite: "",
-    technicien: userInfo.nomComplet || "",
-    customCategorie: "",
-    customBesoin: "",
-    status: "créé",
-    province: "",
-    region: "",
-    commentaire: "",
-  };
-}
-
-const ModelFourniture = ({ open, onClose }) => {
+const ModelPharmaceutique = ({ open, onClose }) => {
   const [names, setNames] = useState([]);
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [besoins, setBesoins] = useState([]);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const getInitialFormData = (userInfoData = {}) => ({
+    name: "",
+    region: "",
+    province: "",
+    besoin: "",
+    quantite: 1,
+    technicien: userInfoData.nomComplet || "",
+    commentaire: "",
+    status: "créé",
+  });
+
   const [formData, setFormData] = useState(getInitialFormData());
   const [userInfo, setUserInfo] = useState({});
   const [existingTickets, setExistingTickets] = useState([]);
@@ -243,20 +93,28 @@ const ModelFourniture = ({ open, onClose }) => {
     }
   }, []);
 
-  // Récupère les tickets pour ce besoin, isDeleted=false, isClosed=false
+  // Récupère les tickets pharmaceutiques existants pour ce besoin
   const fetchExistingTickets = async (besoinValue) => {
     if (!besoinValue) {
       setExistingTickets([]);
       return;
     }
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const response = await axios.get(
-        `${apiUrl}/api/v1/fournitureRoutes?besoin=${encodeURIComponent(
-          besoinValue
-        )}&isDeleted=false&isClosed=false`
+        `${apiUrl}/api/v1/ticketPharmaceutique`,
+        { headers }
       );
-      setExistingTickets(response.data.fournitures || []);
+      
+      // Filtrer les tickets pour ce besoin, non supprimés, non clôturés
+      const filtered = response.data.filter(
+        (t) => t.besoin === besoinValue && !t.isDeleted && !t.isClosed
+      );
+      setExistingTickets(filtered);
     } catch (error) {
+      console.error("Erreur lors de la récupération des tickets:", error);
       setExistingTickets([]);
     }
   };
@@ -288,39 +146,15 @@ const ModelFourniture = ({ open, onClose }) => {
       [name]: value,
     }));
 
-    if (name === "categorie") {
-      setBesoins(categoryNeeds[value] || []);
-    }
     if (name === "besoin") {
       fetchExistingTickets(value);
     }
-    // Si on change le site et besoin déjà choisi, refetch pour ce site (déjà fait dans handleSelectChange)
   };
 
   const handleSubmit = async () => {
-    const {
-      name,
-      categorie,
-      besoin,
-      quantite,
-      technicien,
-      customCategorie,
-      customBesoin,
-      commentaire,
-      status,
-    } = formData;
+    const { name, besoin, quantite, technicien, commentaire } = formData;
 
-    const selectedCategorie =
-      categorie === "Autre" ? customCategorie : categorie;
-    const selectedBesoin = besoin === "Autre" ? customBesoin : besoin;
-
-    if (
-      !name ||
-      !selectedCategorie ||
-      !selectedBesoin ||
-      !quantite ||
-      !technicien
-    ) {
+    if (!name || !besoin || !quantite || !technicien) {
       setError("Tous les champs sont obligatoires.");
       return;
     }
@@ -334,26 +168,29 @@ const ModelFourniture = ({ open, onClose }) => {
     setIsSubmitting(true);
 
     try {
-      // Récupérer le token d'authentification
       const token = localStorage.getItem("authToken");
       const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      
-      await axios.post(`${apiUrl}/api/v1/fournitureRoutes`, {
-        name,
-        region: formData.region,
-        province: formData.province,
-        categorie: selectedCategorie,
-        besoin: selectedBesoin,
-        quantite,
-        technicien,
-        commentaire,
-        isClosed: false,
-        status: formData.status,
-        dateCreation: new Date(),
-        dateCloture: null,
-      }, { headers });
 
-      setSuccess("Ticket créé avec succès !");
+      await axios.post(
+        `${apiUrl}/api/v1/ticketPharmaceutique`,
+        {
+          name,
+          region: formData.region,
+          province: formData.province,
+          categorie: "Pharmaceutique",
+          besoin,
+          quantite,
+          technicien,
+          commentaire,
+          isClosed: false,
+          status: formData.status,
+          dateCreation: new Date(),
+          dateCloture: null,
+        },
+        { headers }
+      );
+
+      setSuccess("Ticket pharmaceutique créé avec succès !");
       setFormData(getInitialFormData(userInfo));
 
       setTimeout(() => {
@@ -367,16 +204,15 @@ const ModelFourniture = ({ open, onClose }) => {
     setIsSubmitting(false);
   };
 
-  // Filtre pour billets du même site + besoin
-  const sameSiteTickets = formData.besoin && formData.name
-    ? existingTickets.filter(
-        t => t.name === formData.name
-      )
-    : [];
+  // Filtrer les tickets du même site
+  const sameSiteTickets =
+    formData.besoin && formData.name
+      ? existingTickets.filter((t) => t.name === formData.name)
+      : [];
 
   return (
     <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-      <DialogTitle>Créer un Ticket Fourniture</DialogTitle>
+      <DialogTitle>Créer un Besoin Pharmaceutique</DialogTitle>
       <DialogContent>
         <Box display="flex" flexDirection="row" alignItems="flex-start">
           {/* Formulaire à gauche */}
@@ -384,7 +220,7 @@ const ModelFourniture = ({ open, onClose }) => {
             <Grid container spacing={1}>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth margin="normal">
-                  <InputLabel id="select-label">Nom de l'Actif</InputLabel>
+                  <InputLabel id="select-label">Nom de l'Unité</InputLabel>
                   <Select
                     labelId="select-label"
                     value={formData.name}
@@ -402,7 +238,7 @@ const ModelFourniture = ({ open, onClose }) => {
                 <TextField
                   fullWidth
                   margin="normal"
-                  label="Technicien"
+                  label="Demandeur"
                   name="technicien"
                   value={formData.technicien}
                   onChange={handleChange}
@@ -413,7 +249,7 @@ const ModelFourniture = ({ open, onClose }) => {
                 <TextField
                   fullWidth
                   margin="normal"
-                  label="Region"
+                  label="Région"
                   name="region"
                   value={formData.region}
                   onChange={handleChange}
@@ -433,31 +269,14 @@ const ModelFourniture = ({ open, onClose }) => {
               </Grid>
               <Grid item xs={12} sm={6}>
                 <FormControl fullWidth margin="normal">
-                  <InputLabel id="categorie-label">Catégorie</InputLabel>
-                  <Select
-                    labelId="categorie-label"
-                    value={formData.categorie}
-                    name="categorie"
-                    onChange={handleChange}
-                  >
-                    {categories.map((cat) => (
-                      <MenuItem key={cat} value={cat}>
-                        {cat}
-                      </MenuItem>
-                    ))}
-                  </Select>
-                </FormControl>
-              </Grid>
-              <Grid item xs={12} sm={6}>
-                <FormControl fullWidth margin="normal">
-                  <InputLabel id="besoin-label">Besoin</InputLabel>
+                  <InputLabel id="besoin-label">Besoin Pharmaceutique</InputLabel>
                   <Select
                     labelId="besoin-label"
                     value={formData.besoin}
                     name="besoin"
                     onChange={handleChange}
                   >
-                    {besoins.map((besoin) => (
+                    {besoinsPharmaceutiques.map((besoin) => (
                       <MenuItem key={besoin} value={besoin}>
                         {besoin}
                       </MenuItem>
@@ -476,7 +295,7 @@ const ModelFourniture = ({ open, onClose }) => {
                   onChange={handleChange}
                 />
               </Grid>
-              <Grid item xs={12} sm={6}>
+              <Grid item xs={12} sm={12}>
                 <TextField
                   fullWidth
                   margin="normal"
@@ -490,18 +309,25 @@ const ModelFourniture = ({ open, onClose }) => {
               </Grid>
             </Grid>
           </Box>
-          {/* Message info à droite, seulement si besoin + tickets sur ce site */}
+          {/* Message info à droite si tickets existants pour ce site */}
           {formData.besoin && sameSiteTickets.length > 0 && (
             <>
-              <Divider orientation="vertical" flexItem sx={{ mx: 2, bgcolor: "#eee" }} />
+              <Divider
+                orientation="vertical"
+                flexItem
+                sx={{ mx: 2, bgcolor: "#eee" }}
+              />
               <Box width={320}>
                 <Paper elevation={3} sx={{ p: 2, bgcolor: "#f5faff" }}>
-                  <Alert severity="info" sx={{ bgcolor: "#e3f2fd", color: "#035388" }}>
-                    <b>Commandes déjà créées pour ce site et cet équipement :</b>
+                  <Alert
+                    severity="info"
+                    sx={{ bgcolor: "#e3f2fd", color: "#035388" }}
+                  >
+                    <b>Demandes déjà créées pour ce site et cet équipement :</b>
                     <ul style={{ paddingLeft: 18, margin: 0, marginTop: 8 }}>
                       {sameSiteTickets.map((ticket) => (
-                        <li key={ticket.id}>
-                          {ticket.name} - {ticket.categorie} - Qté: {ticket.quantite} - Statut: {ticket.status}
+                        <li key={ticket._id}>
+                          {ticket.name} - {ticket.besoin} - Qté: {ticket.quantite} - Statut: {ticket.status}
                         </li>
                       ))}
                     </ul>
@@ -511,7 +337,7 @@ const ModelFourniture = ({ open, onClose }) => {
             </>
           )}
         </Box>
-        {/* Les alertes de validation/erreur sont flottantes en dessous */}
+        {/* Alertes de validation/erreur */}
         <Box mt={2}>
           {error && (
             <Alert severity="error" sx={{ mb: 1 }}>
@@ -537,4 +363,4 @@ const ModelFourniture = ({ open, onClose }) => {
   );
 };
 
-export default ModelFourniture;
+export default ModelPharmaceutique;

@@ -4,6 +4,7 @@ import TicketGraph from "./TicketGraph";
 import StatusTicket from "./StatusTicket";
 import TauxDePannes from "./TauxDePannes";
 import InterventionsPlanifiées from "./InterventionsPlanifiées";
+import StatistiquesRejets from "./StatistiquesRejets";
 import "./Card.css";
 import CustomCard from "./Card";
 import html2canvas from "html2canvas";
@@ -133,6 +134,13 @@ const Dashboard = () => {
             <InterventionsPlanifiées />
           </div>
         </div>
+
+        {/* Section Statistiques des Rejets */}
+        <div className="text-lg font-semibold mt-4">Analyse des Rejets</div>
+        <div className="w-full">
+          <StatistiquesRejets />
+        </div>
+
         <div className="flex justify-center items-center">
           {" "}
           {/* Bouton pour générer le PDF */}

@@ -83,6 +83,28 @@ const Validation = () => {
       }));
       const combinedData = [...source1Data, ...source2Data];
       combinedData.sort((a, b) => b.dateCreation - a.dateCreation);
+      
+      // Détecter les doublons - marquer seulement la plus récente
+      const duplicateGroups = {};
+      
+      combinedData.forEach((item, index) => {
+        const key = `${item.name}|${item.region}|${item.province}|${item.categorie}|${item.besoin}`;
+        
+        if (!duplicateGroups[key]) {
+          duplicateGroups[key] = [];
+        }
+        duplicateGroups[key].push(index);
+      });
+      
+      // Marquer seulement la plus récente de chaque groupe de doublons (qui a plus d'un élément)
+      combinedData.forEach((item, index) => {
+        const key = `${item.name}|${item.region}|${item.province}|${item.categorie}|${item.besoin}`;
+        const group = duplicateGroups[key];
+        
+        // Si le groupe a plus d'un élément ET c'est le premier (le plus récent car trié par date desc)
+        item.isDuplicate = group.length > 1 && group[0] === index;
+      });
+      
       setRows(combinedData);
       setLoading(false);
     } catch (error) {
@@ -142,6 +164,9 @@ const Validation = () => {
   };
   const handleUpdateFourniture = async () => {
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       if (selectedFourniture.source === "source2") {
         const { id: subTicketId } = selectedFourniture;
         await axios.patch(
@@ -153,7 +178,8 @@ const Validation = () => {
             quantite: updatedQuantite,
             status: updatedStatus,
             commentaire: updatedCommentaire,
-          }
+          },
+          { headers }
         );
         setRows((prevRows) =>
           prevRows.map((row) =>
@@ -181,7 +207,8 @@ const Validation = () => {
             quantite: updatedQuantite,
             status: updatedStatus,
             commentaire: updatedCommentaire,
-          }
+          },
+          { headers }
         );
         setRows((prevRows) =>
           prevRows.map((row) =>
@@ -220,6 +247,14 @@ const Validation = () => {
     }
     if (rowData.source === "source1") {
       setSelectedRowIndex(rowIndex);
+      
+      // Pré-remplir le motif si c'est un doublon
+      if (rowData.isDuplicate) {
+        setRejectReason("Demande en doublon - Déjà existante dans le système");
+      } else {
+        setRejectReason("");
+      }
+      
       setOpenRejectDialog(true);
     } else if (rowData.source === "source2") {
       if (window.confirm("Voulez-vous vraiment supprimer cet élément ?")) {
@@ -256,6 +291,9 @@ const Validation = () => {
     }
     const rowData = rows[selectedRowIndex];
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       const deletedBy = JSON.parse(
         localStorage.getItem("userInfo")
       )?.nomComplet;
@@ -269,7 +307,8 @@ const Validation = () => {
           isDeleted: true,
           deletedBy: deletedBy,
           raisonRejet: rejectReason,
-        }
+        },
+        { headers }
       );
       alert("Fourniture supprimée avec succès.");
       setRows((prevRows) =>
@@ -295,17 +334,20 @@ const Validation = () => {
 
   const handleConfirmOpenStatus = async () => {
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      
       for (const rowIndex of pendingRowsToOpen) {
         const rowData = rows[rowIndex];
         if (rowData.status && rowData.status.toLowerCase() === "créé") {
           if (rowData.source === "source1") {
             await axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`, {
               status: "OUVERT",
-            });
+            }, { headers });
           } else if (rowData.source === "source2") {
             await axios.patch(`${apiUrl}/api/v1/sub-tickets/${rowData.id}`, {
               status: "OUVERT",
-            });
+            }, { headers });
           }
         }
       }
@@ -369,6 +411,25 @@ const Validation = () => {
       name: "status",
       label: "Status",
       options: { filter: true, sort: false, filterType: "dropdown" },
+    },
+    {
+      name: "isDuplicate",
+      label: "Doublon",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "checkbox",
+        customBodyRender: (value) => {
+          return value ? (
+            <span style={{ 
+              color: "#f44336", 
+              fontWeight: "bold"
+            }}>
+              OUI
+            </span>
+          ) : null;
+        },
+      },
     },
     {
       name: "commentaire",
@@ -459,11 +520,17 @@ const Validation = () => {
     },
     setRowProps: (_, dataIndex) => {
       const rowData = rows[dataIndex];
-      return {
-        style: {
-          backgroundColor: rowData.isClosed ? "#4CAF50" : "inherit",
-        },
-      };
+      
+      // Garder seulement le style pour les demandes clôturées
+      if (rowData.isClosed) {
+        return {
+          style: {
+            backgroundColor: "#4CAF50",
+          },
+        };
+      }
+      
+      return {};
     },
   };
 

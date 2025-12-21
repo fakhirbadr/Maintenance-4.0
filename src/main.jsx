@@ -1,3 +1,12 @@
+import ReclamationsReseauGestion from "./pages/reclamations/ReclamationsReseauGestion";
+
+// ...existing code...
+
+// Ajout de la route dans le tableau children de la route principale (voir plus bas dans le fichier)
+// {
+//   path: "reclamations-reseau",
+//   element: <ProtectedRoute element={<ReclamationsReseauGestion />} />,
+// },
 import React, { Children } from "react";
 import ReactDOM from "react-dom/client";
 import {
@@ -54,6 +63,8 @@ import ListeDemandes from "./pages/HR/ListeDemandes";
 import Reclamation from "./pages/HR/Reclamation";
 import NetworkPatientData from "./pages/NetworkPatientData/NetworkPatientData";
 import NetworkPatient from "./pages/NetworkPatientData/NetworkPatient";
+import GestionPharmaceutique from "./pages/pharmaceutique/GestionPharmaceutique";
+import HistoriquePharmaceutique from "./pages/pharmaceutique/HistoriquePharmaceutique";
 
 const router = createBrowserRouter([
   {
@@ -164,6 +175,14 @@ const router = createBrowserRouter([
       {
         path: "ConfigurationAsset",
         element: <ProtectedRoute element={<ConfigurationAsset />} />,
+      },
+      {
+        path: "GestionPharmaceutique",
+        element: <ProtectedRoute element={<GestionPharmaceutique />} />,
+      },
+      {
+        path: "HistoriquePharmaceutique",
+        element: <ProtectedRoute element={<HistoriquePharmaceutique />} />,
       },
     ],
   },
