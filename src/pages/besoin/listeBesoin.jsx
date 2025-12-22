@@ -54,8 +54,12 @@ const ListeBesoin = () => {
       "Créé par": row.technicien,
       Status: row.status,
       "Commentaire Responsable": row.commentaire,
-      "Date de Création": new Date(row.dateCreation).toLocaleDateString("fr-FR"),
-      "Heure de Création": new Date(row.dateCreation).toLocaleTimeString("fr-FR"),
+      "Date de Création": new Date(row.dateCreation).toLocaleDateString(
+        "fr-FR"
+      ),
+      "Heure de Création": new Date(row.dateCreation).toLocaleTimeString(
+        "fr-FR"
+      ),
     }));
 
     const worksheet = XLSX.utils.json_to_sheet(filteredRows);
@@ -115,28 +119,38 @@ const ListeBesoin = () => {
     }
 
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       const updatePromises = selectedRowIds.map(async (rowInfo) => {
-        const row = rows.find(r => r.id === rowInfo.id && r.source === rowInfo.source);
+        const row = rows.find(
+          (r) => r.id === rowInfo.id && r.source === rowInfo.source
+        );
         if (!row) return;
 
         if (row.source === "source1") {
-          return axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${row.id}`, {
-            status: bulkNewStatus,
-          });
+          return axios.patch(
+            `${apiUrl}/api/v1/fournitureRoutes/${row.id}`,
+            { status: bulkNewStatus },
+            { headers }
+          );
         } else if (row.source === "source2") {
-          return axios.patch(`${apiUrl}/api/v1/sub-tickets/${row.id}`, {
-            status: bulkNewStatus,
-          });
+          return axios.patch(
+            `${apiUrl}/api/v1/sub-tickets/${row.id}`,
+            { status: bulkNewStatus },
+            { headers }
+          );
         }
       });
 
       await Promise.all(updatePromises);
-      
+
       // Mettre à jour l'état local
-      setRows(prevRows => 
-        prevRows.map(row => {
-          const isSelected = selectedRowIds.some(selected => 
-            selected.id === row.id && selected.source === row.source
+      setRows((prevRows) =>
+        prevRows.map((row) => {
+          const isSelected = selectedRowIds.some(
+            (selected) =>
+              selected.id === row.id && selected.source === row.source
           );
           if (isSelected) {
             return { ...row, status: bulkNewStatus };
@@ -155,7 +169,11 @@ const ListeBesoin = () => {
   };
 
   // CORRECTION : Fonction pour gérer la sélection des lignes dans la table
-  const handleRowSelection = (currentRowsSelected, allRowsSelected, rowsSelected) => {
+  const handleRowSelection = (
+    currentRowsSelected,
+    allRowsSelected,
+    rowsSelected
+  ) => {
     try {
       if (!rows || rows.length === 0) {
         setSelectedRowIds([]);
@@ -163,7 +181,7 @@ const ListeBesoin = () => {
       }
 
       const selectedIds = allRowsSelected
-        .map(selection => {
+        .map((selection) => {
           if (selection.dataIndex >= 0 && selection.dataIndex < rows.length) {
             const rowData = rows[selection.dataIndex];
             if (rowData && rowData.id && rowData.source) {
@@ -172,7 +190,7 @@ const ListeBesoin = () => {
           }
           return null;
         })
-        .filter(item => item !== null);
+        .filter((item) => item !== null);
 
       setSelectedRowIds(selectedIds);
     } catch (error) {
@@ -475,6 +493,8 @@ const ListeBesoin = () => {
         url = `${apiUrl}/api/v1/fournitureRoutes/${id}`;
       } else if (source === "source2") {
         url = `${apiUrl}/api/v1/subtickets/${id}`;
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       }
 
       const response = await axios.get(url);
@@ -487,11 +507,13 @@ const ListeBesoin = () => {
 
       setSelectedStatus(response.data.statusHistory);
       setStatusDialogOpen(true);
+              { headers }
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de l'historique des statuts :",
         error
       );
+              { headers }
     }
   };
 
@@ -746,7 +768,10 @@ const ListeBesoin = () => {
                 },
               });
             } catch (error) {
-              console.error("Erreur lors de la requête de mise à jour:", error.message);
+              console.error(
+                "Erreur lors de la requête de mise à jour:",
+                error.message
+              );
             }
 
             const subTicketId = rowData.id;
@@ -760,7 +785,9 @@ const ListeBesoin = () => {
                   }
                 );
               } catch (error) {
-                console.error(`Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`);
+                console.error(
+                  `Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`
+                );
               }
             }
 
@@ -781,8 +808,13 @@ const ListeBesoin = () => {
           }
         }
       } catch (error) {
-        console.error("Erreur lors de la clôture de l'élément :", error.message);
-        alert("Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer.");
+        console.error(
+          "Erreur lors de la clôture de l'élément :",
+          error.message
+        );
+        alert(
+          "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer."
+        );
       }
     }
   };
@@ -1005,7 +1037,7 @@ const ListeBesoin = () => {
 
   const options = {
     filterType: "checkbox",
-    selectableRows: 'multiple',
+    selectableRows: "multiple",
     onRowSelectionChange: handleRowSelection,
     rowsPerPage: 10,
     rowsPerPageOptions: [10, 50, 70, 100],
@@ -1049,11 +1081,7 @@ const ListeBesoin = () => {
       {selectedRowIds.length > 0 && (
         <Box className="mb-4 p-2 bg-gray-800 dark:bg-blue-900 rounded">
           <Typography variant="body1" className="flex items-center gap-2">
-            <Chip 
-              label={selectedRowIds.length} 
-              color="primary" 
-              size="small" 
-            />
+            <Chip label={selectedRowIds.length} color="primary" size="small" />
             élément(s) sélectionné(s)
           </Typography>
         </Box>
@@ -1069,8 +1097,8 @@ const ListeBesoin = () => {
           />
         </ThemeProvider>
 
-        <Dialog 
-          open={bulkStatusDialogOpen} 
+        <Dialog
+          open={bulkStatusDialogOpen}
           onClose={handleCloseBulkStatusDialog}
           maxWidth="sm"
           fullWidth
@@ -1108,14 +1136,19 @@ const ListeBesoin = () => {
               </Select>
             </FormControl>
             <Typography variant="body2" color="textSecondary" className="mt-2">
-              Cette action mettra à jour le statut des {selectedRowIds.length} élément(s) sélectionné(s).
+              Cette action mettra à jour le statut des {selectedRowIds.length}{" "}
+              élément(s) sélectionné(s).
             </Typography>
           </DialogContent>
           <DialogActions>
             <Button onClick={handleCloseBulkStatusDialog} color="primary">
               Annuler
             </Button>
-            <Button onClick={handleBulkStatusUpdate} color="primary" variant="contained">
+            <Button
+              onClick={handleBulkStatusUpdate}
+              color="primary"
+              variant="contained"
+            >
               Mettre à jour
             </Button>
           </DialogActions>
@@ -1183,15 +1216,18 @@ const ListeBesoin = () => {
               variant="standard"
               value={
                 selectedFourniture
-                  ? new Date(selectedFourniture.dateCreation).toLocaleString("fr-FR", {
-                      weekday: "long",
-                      year: "numeric",
-                      month: "long",
-                      day: "numeric",
-                      hour: "2-digit",
-                      minute: "2-digit",
-                      second: "2-digit",
-                    })
+                  ? new Date(selectedFourniture.dateCreation).toLocaleString(
+                      "fr-FR",
+                      {
+                        weekday: "long",
+                        year: "numeric",
+                        month: "long",
+                        day: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit",
+                        second: "2-digit",
+                      }
+                    )
                   : ""
               }
               disabled
@@ -1475,7 +1511,8 @@ const ListeBesoin = () => {
               </>
             ) : (
               <Typography>
-                Aucune commande avec le statut "Expédié" n'est disponible pour les filtres choisis.
+                Aucune commande avec le statut "Expédié" n'est disponible pour
+                les filtres choisis.
               </Typography>
             )}
           </DialogContent>
