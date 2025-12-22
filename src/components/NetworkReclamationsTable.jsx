@@ -1,7 +1,16 @@
 import React, { useEffect, useState } from "react";
-import { Box, Typography, Alert, Chip, IconButton, Menu, MenuItem, Tooltip } from "@mui/material";
-import EditIcon from '@mui/icons-material/Edit';
-import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
+import {
+  Box,
+  Typography,
+  Alert,
+  Chip,
+  IconButton,
+  Menu,
+  MenuItem,
+  Tooltip,
+} from "@mui/material";
+import EditIcon from "@mui/icons-material/Edit";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import MUIDataTable from "mui-datatables";
 import { createTheme, ThemeProvider } from "@mui/material/styles";
 import axios from "axios";
@@ -158,15 +167,21 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
                 <input
                   type="text"
                   value={editComment}
-                  onChange={e => setEditComment(e.target.value)}
+                  onChange={(e) => setEditComment(e.target.value)}
                   style={{ width: 120, marginRight: 8 }}
                   disabled={editLoading}
                   placeholder="Commentaire admin"
                 />
-                <button onClick={() => handleSaveComment(row)} disabled={editLoading} style={{marginRight:4}}>
+                <button
+                  onClick={() => handleSaveComment(row)}
+                  disabled={editLoading}
+                  style={{ marginRight: 4 }}
+                >
                   Sauvegarder
                 </button>
-                <button onClick={() => setEditId(null)} disabled={editLoading}>Annuler</button>
+                <button onClick={() => setEditId(null)} disabled={editLoading}>
+                  Annuler
+                </button>
               </>
             );
           }
@@ -190,7 +205,10 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
                 </IconButton>
               </Tooltip>
               <Tooltip title="Changer le statut">
-                <IconButton size="small" onClick={e => handleOpenStatutMenu(e, row)}>
+                <IconButton
+                  size="small"
+                  onClick={(e) => handleOpenStatutMenu(e, row)}
+                >
                   <SwapHorizIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
@@ -199,7 +217,7 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
                 open={editStatutId === row._id && Boolean(statutAnchorEl)}
                 onClose={handleCloseStatutMenu}
               >
-                {['en attente', 'en cours', 'résolue'].map((statut) => (
+                {["en attente", "en cours", "résolue"].map((statut) => (
                   <MenuItem
                     key={statut}
                     selected={row.statut === statut}
@@ -225,19 +243,21 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
           if (editId === row._id) {
             return (
               <>
-                <button onClick={() => handleSave(row)} disabled={editLoading} style={{marginRight:4}}>
+                <button
+                  onClick={() => handleSave(row)}
+                  disabled={editLoading}
+                  style={{ marginRight: 4 }}
+                >
                   Sauvegarder
                 </button>
-                <button onClick={() => setEditId(null)} disabled={editLoading}>Annuler</button>
+                <button onClick={() => setEditId(null)} disabled={editLoading}>
+                  Annuler
+                </button>
               </>
             );
           }
           if (row.statut !== "résolue") {
-            return (
-              <button onClick={() => handleEdit(row)}>
-                Éditer
-              </button>
-            );
+            return <button onClick={() => handleEdit(row)}>Éditer</button>;
           }
           return null;
         },

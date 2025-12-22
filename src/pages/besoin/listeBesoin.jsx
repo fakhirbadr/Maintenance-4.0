@@ -610,6 +610,8 @@ const ListeBesoin = () => {
       if (selectedFourniture.source === "source2") {
         const { id: subTicketId } = selectedFourniture;
 
+        const token = localStorage.getItem("authToken");
+        const headers = token ? { Authorization: `Bearer ${token}` } : {};
         await axios.patch(
           `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
           {
@@ -619,7 +621,8 @@ const ListeBesoin = () => {
             quantite: updatedQuantite,
             status: updatedStatus,
             commentaire: updatedCommentaire,
-          }
+          },
+          { headers }
         );
 
         setRows((prevRows) =>
@@ -640,6 +643,8 @@ const ListeBesoin = () => {
 
         alert("Sous-ticket mis à jour avec succès");
       } else if (selectedFourniture.source === "source1") {
+        const token2 = localStorage.getItem("authToken");
+        const headers2 = token2 ? { Authorization: `Bearer ${token2}` } : {};
         await axios.patch(
           `${apiUrl}/api/v1/fournitureRoutes/${selectedFourniture.id}`,
           {
@@ -649,7 +654,8 @@ const ListeBesoin = () => {
             quantite: updatedQuantite,
             status: updatedStatus,
             commentaire: updatedCommentaire,
-          }
+          },
+          { headers: headers2 }
         );
 
         setRows((prevRows) =>
@@ -687,12 +693,15 @@ const ListeBesoin = () => {
         currentDate.setHours(currentDate.getHours());
 
         if (rowData.source === "source1") {
+          const token3 = localStorage.getItem("authToken");
+          const headers3 = token3 ? { Authorization: `Bearer ${token3}` } : {};
           const response = await axios.patch(
             `${apiUrl}/api/v1/fournitureRoutes/${rowData.id}`,
             {
               isClosed: true,
               dateCloture: currentDate.toISOString(),
-            }
+            },
+            { headers: headers3 }
           );
 
           if (response.status === 200) {
@@ -710,6 +719,8 @@ const ListeBesoin = () => {
             alert("Fourniture clôturée avec succès");
           }
         } else if (rowData.source === "source2") {
+          const token4 = localStorage.getItem("authToken");
+          const headers4 = token4 ? { Authorization: `Bearer ${token4}` } : {};
           const firstPatchResponse = await axios.patch(
             `${apiUrl}/api/v1/ticketMaintenance/${rowData.parentId}`,
             {
@@ -718,7 +729,8 @@ const ListeBesoin = () => {
               cloturerPar:
                 JSON.parse(localStorage.getItem("userInfo"))?.nomComplet ||
                 "Nom inconnu",
-            }
+            },
+            { headers: headers4 }
           );
 
           if (firstPatchResponse.status === 200) {
