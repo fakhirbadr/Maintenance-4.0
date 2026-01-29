@@ -55,10 +55,10 @@ const ListeBesoin = () => {
       Status: row.status,
       "Commentaire Responsable": row.commentaire,
       "Date de Création": new Date(row.dateCreation).toLocaleDateString(
-        "fr-FR"
+        "fr-FR",
       ),
       "Heure de Création": new Date(row.dateCreation).toLocaleTimeString(
-        "fr-FR"
+        "fr-FR",
       ),
     }));
 
@@ -124,7 +124,7 @@ const ListeBesoin = () => {
 
       const updatePromises = selectedRowIds.map(async (rowInfo) => {
         const row = rows.find(
-          (r) => r.id === rowInfo.id && r.source === rowInfo.source
+          (r) => r.id === rowInfo.id && r.source === rowInfo.source,
         );
         if (!row) return;
 
@@ -132,13 +132,13 @@ const ListeBesoin = () => {
           return axios.patch(
             `${apiUrl}/api/v1/fournitureRoutes/${row.id}`,
             { status: bulkNewStatus },
-            { headers }
+            { headers },
           );
         } else if (row.source === "source2") {
           return axios.patch(
             `${apiUrl}/api/v1/sub-tickets/${row.id}`,
             { status: bulkNewStatus },
-            { headers }
+            { headers },
           );
         }
       });
@@ -150,13 +150,13 @@ const ListeBesoin = () => {
         prevRows.map((row) => {
           const isSelected = selectedRowIds.some(
             (selected) =>
-              selected.id === row.id && selected.source === row.source
+              selected.id === row.id && selected.source === row.source,
           );
           if (isSelected) {
             return { ...row, status: bulkNewStatus };
           }
           return row;
-        })
+        }),
       );
 
       alert(`Statut mis à jour pour ${selectedRowIds.length} élément(s)`);
@@ -172,7 +172,7 @@ const ListeBesoin = () => {
   const handleRowSelection = (
     currentRowsSelected,
     allRowsSelected,
-    rowsSelected
+    rowsSelected,
   ) => {
     try {
       if (!rows || rows.length === 0) {
@@ -233,12 +233,12 @@ const ListeBesoin = () => {
     new Set(
       deliveryRows
         .filter((row) => !selectedRegion || row.region === selectedRegion)
-        .map((row) => row.name)
-    )
+        .map((row) => row.name),
+    ),
   ).filter(Boolean);
 
   const pdfRegions = Array.from(
-    new Set(deliveryRows.map((r) => r.region))
+    new Set(deliveryRows.map((r) => r.region)),
   ).filter(Boolean);
 
   const filteredDeliveryRows = deliveryRows.filter((row) => {
@@ -273,7 +273,7 @@ const ListeBesoin = () => {
     const pageHeight = doc.internal.pageSize.getHeight();
 
     const selectedItems = deliveryRows.filter((row) =>
-      selectedRows.includes(row.id)
+      selectedRows.includes(row.id),
     );
 
     const groupedByActif = selectedItems.reduce((acc, item) => {
@@ -481,23 +481,24 @@ const ListeBesoin = () => {
     const diffInMs = endDate - startDate;
     const diffInHours = Math.floor(diffInMs / (1000 * 60 * 60));
     const diffInMinutes = Math.floor(
-      (diffInMs % (1000 * 60 * 60)) / (1000 * 60)
+      (diffInMs % (1000 * 60 * 60)) / (1000 * 60),
     );
     return `${diffInHours} h ${diffInMinutes} min`;
   };
 
   const handleClickStatus = async (id, source) => {
     try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+
       let url;
       if (source === "source1") {
         url = `${apiUrl}/api/v1/fournitureRoutes/${id}`;
       } else if (source === "source2") {
         url = `${apiUrl}/api/v1/subtickets/${id}`;
-      const token = localStorage.getItem("authToken");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
       }
 
-      const response = await axios.get(url);
+      const response = await axios.get(url, { headers });
 
       if (response.data.statusHistory) {
         setStatusHistory(response.data.statusHistory);
@@ -507,13 +508,11 @@ const ListeBesoin = () => {
 
       setSelectedStatus(response.data.statusHistory);
       setStatusDialogOpen(true);
-              { headers }
     } catch (error) {
       console.error(
         "Erreur lors de la récupération de l'historique des statuts :",
-        error
+        error,
       );
-              { headers }
     }
   };
 
@@ -525,7 +524,7 @@ const ListeBesoin = () => {
     try {
       const [source1Response, source2Response] = await Promise.all([
         axios.get(
-          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&status=!créé`
+          `${apiUrl}/api/v1/fournitureRoutes?isClosed=false&status=!créé`,
         ),
         axios.get(`${apiUrl}/api/v1/subtickets?isClosed=false&status=!créé`),
       ]);
@@ -644,7 +643,7 @@ const ListeBesoin = () => {
             status: updatedStatus,
             commentaire: updatedCommentaire,
           },
-          { headers }
+          { headers },
         );
 
         setRows((prevRows) =>
@@ -659,8 +658,8 @@ const ListeBesoin = () => {
                   status: updatedStatus,
                   commentaire: updatedCommentaire,
                 }
-              : row
-          )
+              : row,
+          ),
         );
 
         alert("Sous-ticket mis à jour avec succès");
@@ -677,7 +676,7 @@ const ListeBesoin = () => {
             status: updatedStatus,
             commentaire: updatedCommentaire,
           },
-          { headers: headers2 }
+          { headers: headers2 },
         );
 
         setRows((prevRows) =>
@@ -692,8 +691,8 @@ const ListeBesoin = () => {
                   status: updatedStatus,
                   commentaire: updatedCommentaire,
                 }
-              : row
-          )
+              : row,
+          ),
         );
 
         alert("Fourniture mise à jour avec succès");
@@ -723,7 +722,7 @@ const ListeBesoin = () => {
               isClosed: true,
               dateCloture: currentDate.toISOString(),
             },
-            { headers: headers3 }
+            { headers: headers3 },
           );
 
           if (response.status === 200) {
@@ -735,8 +734,8 @@ const ListeBesoin = () => {
                       isClosed: true,
                       dateCloture: currentDate.toISOString(),
                     }
-                  : row
-              )
+                  : row,
+              ),
             );
             alert("Fourniture clôturée avec succès");
           }
@@ -752,7 +751,7 @@ const ListeBesoin = () => {
                 JSON.parse(localStorage.getItem("userInfo"))?.nomComplet ||
                 "Nom inconnu",
             },
-            { headers: headers4 }
+            { headers: headers4 },
           );
 
           if (firstPatchResponse.status === 200) {
@@ -762,31 +761,38 @@ const ListeBesoin = () => {
             };
 
             try {
+              const token5 = localStorage.getItem("authToken");
               await axios.put(url, body, {
                 headers: {
                   "Content-Type": "application/json",
+                  ...(token5 && { Authorization: `Bearer ${token5}` }),
                 },
               });
             } catch (error) {
               console.error(
                 "Erreur lors de la requête de mise à jour:",
-                error.message
+                error.message,
               );
             }
 
             const subTicketId = rowData.id;
             if (subTicketId) {
               try {
+                const token6 = localStorage.getItem("authToken");
+                const headers6 = token6
+                  ? { Authorization: `Bearer ${token6}` }
+                  : {};
                 await axios.patch(
                   `${apiUrl}/api/v1/sub-tickets/${subTicketId}`,
                   {
                     isClosed: true,
                     dateCloture: currentDate.toISOString(),
-                  }
+                  },
+                  { headers: headers6 },
                 );
               } catch (error) {
                 console.error(
-                  `Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`
+                  `Erreur lors de la requête pour le sous-ticket ${subTicketId}: ${error.message}`,
                 );
               }
             }
@@ -799,8 +805,8 @@ const ListeBesoin = () => {
                       isClosed: true,
                       dateCloture: currentDate.toISOString(),
                     }
-                  : row
-              )
+                  : row,
+              ),
             );
             alert("Sous-ticket et ticket parent clôturés avec succès");
           } else {
@@ -810,10 +816,10 @@ const ListeBesoin = () => {
       } catch (error) {
         console.error(
           "Erreur lors de la clôture de l'élément :",
-          error.message
+          error.message,
         );
         alert(
-          "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer."
+          "Erreur lors de la clôture de l'élément. Veuillez vérifier votre connexion ou réessayer.",
         );
       }
     }
@@ -1226,7 +1232,7 @@ const ListeBesoin = () => {
                         hour: "2-digit",
                         minute: "2-digit",
                         second: "2-digit",
-                      }
+                      },
                     )
                   : ""
               }
@@ -1338,7 +1344,7 @@ const ListeBesoin = () => {
                   fullWidth
                   variant="standard"
                   value={new Date(
-                    selectedFourniture.dateCreation
+                    selectedFourniture.dateCreation,
                   ).toLocaleString("fr-FR")}
                   disabled
                 />
@@ -1374,7 +1380,7 @@ const ListeBesoin = () => {
                             Temps écoulé :{" "}
                             {calculateTimeDifference(
                               statusHistory[index - 1].timestamp,
-                              entry.timestamp
+                              entry.timestamp,
                             )}
                           </Typography>
                         )}
