@@ -8,6 +8,7 @@ import {
   Menu,
   MenuItem,
   Tooltip,
+  Button,
 } from "@mui/material";
 import EditIcon from "@mui/icons-material/Edit";
 import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
@@ -41,36 +42,14 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
     setLoading(false);
   };
 
-  const [editId, setEditId] = useState(null);
-  const [editComment, setEditComment] = useState("");
   const [editLoading, setEditLoading] = useState(false);
   const [editStatutId, setEditStatutId] = useState(null);
   const [statutAnchorEl, setStatutAnchorEl] = useState(null);
   const [selectedStatut, setSelectedStatut] = useState("");
-
-  const handleEdit = (row) => {
-    setEditId(row._id);
-    setEditComment(row.commentaireAdmin || "");
-  };
-
-  const handleSaveComment = async (row) => {
-    setEditLoading(true);
-    try {
-      const token = localStorage.getItem("authToken");
-      const headers = token ? { Authorization: `Bearer ${token}` } : {};
-      await axios.put(
-        `${apiUrl}/api/v1/reclamationsReseau/${row._id}`,
-        { commentaireAdmin: editComment },
-        { headers }
-      );
-      setEditId(null);
-      setEditComment("");
-      fetchReclamations();
-    } catch (err) {
-      alert("Erreur lors de la mise à jour du commentaire.");
-    }
-    setEditLoading(false);
-  };
+  const [editResponsableId, setEditResponsableId] = useState(null);
+  const [editCommentResponsable, setEditCommentResponsable] = useState("");
+  const [updateStatutId, setUpdateStatutId] = useState(null);
+  const [updateStatutAnchorEl, setUpdateStatutAnchorEl] = useState(null);
 
   // Gestion du changement de statut
   const handleOpenStatutMenu = (event, row) => {
@@ -90,7 +69,7 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
       await axios.put(
         `${apiUrl}/api/v1/reclamationsReseau/${row._id}`,
         { statut: newStatut },
-        { headers }
+        { headers },
       );
       fetchReclamations();
     } catch (err) {
@@ -101,10 +80,150 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
     setEditLoading(false);
   };
 
+  const handleEditResponsable = (row) => {
+    setEditResponsableId(row._id);
+    setEditCommentResponsable(row.commentaireResponsable || "");
+  };
+
+  const handleSaveCommentResponsable = async (row) => {
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.put(
+        `${apiUrl}/api/v1/reclamationsReseau/${row._id}`,
+        { commentaireResponsable: editCommentResponsable },
+        { headers },
+      );
+      setEditResponsableId(null);
+      setEditCommentResponsable("");
+      fetchReclamations();
+    } catch (err) {
+      alert("Erreur lors de la mise à jour du commentaire responsable.");
+    }
+    setEditLoading(false);
+  };
+
+  const handleCloturer = async (row) => {
+    if (!window.confirm("Voulez-vous vraiment clôturer ce ticket ?")) return;
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.put(
+        `${apiUrl}/api/v1/reclamationsReseau/${row._id}`,
+        { etatTicket: "clôturé", statut: "résolue" },
+        { headers },
+      );
+      fetchReclamations();
+    } catch (err) {
+      alert("Erreur lors de la clôture du ticket.");
+    }
+    setEditLoading(false);
+  };
+
+  // Gestion du menu Update pour changer le statut
+  const handleOpenUpdateMenu = (event, row) => {
+    setUpdateStatutId(row._id);
+    setUpdateStatutAnchorEl(event.currentTarget);
+  };
+
+  const handleCloseUpdateMenu = () => {
+    setUpdateStatutId(null);
+    setUpdateStatutAnchorEl(null);
+  };
+
+  const handleUpdateStatut = async (row, newStatut) => {
+    setEditLoading(true);
+    try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      await axios.put(
+        `${apiUrl}/api/v1/reclamationsReseau/${row._id}`,
+        { statut: newStatut },
+        { headers },
+      );
+      fetchReclamations();
+    } catch (err) {
+      alert("Erreur lors de la mise à jour du statut.");
+    }
+    setUpdateStatutId(null);
+    setUpdateStatutAnchorEl(null);
+    setEditLoading(false);
+  };
+
+  // Export des réclamations clôturées en Excel
+  const handleExportExcel = async () => {
+    try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const res = await axios.get(
+        `${apiUrl}/api/v1/reclamationsReseau/closed`,
+        {
+          headers,
+        },
+      );
+
+      const closedReclamations = res.data || [];
+
+      if (closedReclamations.length === 0) {
+        alert("Aucune réclamation clôturée à exporter.");
+        return;
+      }
+
+      // Préparer les données pour Excel
+      const excelData = closedReclamations.map((item) => ({
+        Utilisateur: item.nomComplet,
+        "Site (UMMC)": item.site,
+        Région: item.region,
+        Province: item.province,
+        "Download (Mbps)": item.debitDownload,
+        "Upload (Mbps)": item.debitUpload,
+        Commentaire: item.commentaire,
+        Statut: item.statut,
+        "Commentaire Responsable": item.commentaireResponsable || "",
+        "Date Création": item.dateCreation
+          ? new Date(item.dateCreation).toLocaleString("fr-FR")
+          : "",
+        "Date Clôture": item.dateCloture
+          ? new Date(item.dateCloture).toLocaleString("fr-FR")
+          : "",
+      }));
+
+      // Créer le fichier Excel avec XLSX
+      import("xlsx").then((XLSX) => {
+        const ws = XLSX.utils.json_to_sheet(excelData);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, "Réclamations Clôturées");
+
+        // Télécharger le fichier
+        const fileName = `reclamations_cloturees_${new Date().toISOString().split("T")[0]}.xlsx`;
+        XLSX.writeFile(wb, fileName);
+      });
+    } catch (err) {
+      alert("Erreur lors de l'export des réclamations clôturées.");
+    }
+  };
+
   const columns = [
     {
       name: "nomComplet",
       label: "Utilisateur",
+      options: { filter: true, sort: true },
+    },
+    {
+      name: "site",
+      label: "Site (UMMC)",
+      options: { filter: true, sort: true },
+    },
+    {
+      name: "region",
+      label: "Région",
+      options: { filter: true, sort: true },
+    },
+    {
+      name: "province",
+      label: "Province",
       options: { filter: true, sort: true },
     },
     {
@@ -145,8 +264,8 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
               value === "résolue"
                 ? "success"
                 : value === "en cours"
-                ? "info"
-                : "warning"
+                  ? "info"
+                  : "warning"
             }
             size="small"
           />
@@ -154,38 +273,41 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
       },
     },
     {
-      name: "commentaireAdmin",
-      label: "Commentaire admin",
+      name: "commentaireResponsable",
+      label: "Commentaire Responsable",
       options: {
         filter: false,
         sort: false,
         customBodyRenderLite: (dataIndex) => {
           const row = rows[dataIndex];
-          if (gestion && editId === row._id) {
+          if (gestion && editResponsableId === row._id) {
             return (
               <>
                 <input
                   type="text"
-                  value={editComment}
-                  onChange={(e) => setEditComment(e.target.value)}
+                  value={editCommentResponsable}
+                  onChange={(e) => setEditCommentResponsable(e.target.value)}
                   style={{ width: 120, marginRight: 8 }}
                   disabled={editLoading}
-                  placeholder="Commentaire admin"
+                  placeholder="Commentaire responsable"
                 />
                 <button
-                  onClick={() => handleSaveComment(row)}
+                  onClick={() => handleSaveCommentResponsable(row)}
                   disabled={editLoading}
                   style={{ marginRight: 4 }}
                 >
                   Sauvegarder
                 </button>
-                <button onClick={() => setEditId(null)} disabled={editLoading}>
+                <button
+                  onClick={() => setEditResponsableId(null)}
+                  disabled={editLoading}
+                >
                   Annuler
                 </button>
               </>
             );
           }
-          return row.commentaireAdmin || "";
+          return row.commentaireResponsable || "";
         },
       },
     },
@@ -197,21 +319,60 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
         sort: false,
         customBodyRenderLite: (dataIndex) => {
           const row = rows[dataIndex];
+          const isClotured = row.etatTicket === "clôturé";
           return (
-            <>
-              <Tooltip title="Modifier le commentaire admin">
-                <IconButton size="small" onClick={() => handleEdit(row)}>
-                  <EditIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
-              <Tooltip title="Changer le statut">
-                <IconButton
-                  size="small"
-                  onClick={(e) => handleOpenStatutMenu(e, row)}
-                >
-                  <SwapHorizIcon fontSize="small" />
-                </IconButton>
-              </Tooltip>
+            <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+              <Button
+                size="small"
+                variant="contained"
+                sx={{
+                  bgcolor: "#1976d2",
+                  "&:hover": { bgcolor: "#1565c0" },
+                  minWidth: "80px",
+                }}
+                onClick={(e) => handleOpenUpdateMenu(e, row)}
+                disabled={isClotured || editLoading}
+              >
+                Update
+              </Button>
+              <Menu
+                anchorEl={updateStatutAnchorEl}
+                open={
+                  updateStatutId === row._id && Boolean(updateStatutAnchorEl)
+                }
+                onClose={handleCloseUpdateMenu}
+              >
+                {["en attente", "en cours", "résolue"].map((statut) => (
+                  <MenuItem
+                    key={statut}
+                    selected={row.statut === statut}
+                    onClick={() => handleUpdateStatut(row, statut)}
+                  >
+                    {statut}
+                  </MenuItem>
+                ))}
+              </Menu>
+              <Button
+                size="small"
+                variant="contained"
+                sx={{
+                  bgcolor: "#2e7d32",
+                  "&:hover": { bgcolor: "#1b5e20" },
+                  minWidth: "90px",
+                }}
+                onClick={() => handleCloturer(row)}
+                disabled={isClotured || editLoading}
+              >
+                Clôturer
+              </Button>
+              <IconButton
+                size="small"
+                onClick={() => handleEditResponsable(row)}
+                disabled={isClotured}
+                sx={{ ml: 0.5 }}
+              >
+                <EditIcon fontSize="small" />
+              </IconButton>
               <Menu
                 anchorEl={statutAnchorEl}
                 open={editStatutId === row._id && Boolean(statutAnchorEl)}
@@ -227,39 +388,8 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
                   </MenuItem>
                 ))}
               </Menu>
-            </>
+            </Box>
           );
-        },
-      },
-    },
-    gestion && {
-      name: "action",
-      label: "Action",
-      options: {
-        filter: false,
-        sort: false,
-        customBodyRenderLite: (dataIndex) => {
-          const row = rows[dataIndex];
-          if (editId === row._id) {
-            return (
-              <>
-                <button
-                  onClick={() => handleSave(row)}
-                  disabled={editLoading}
-                  style={{ marginRight: 4 }}
-                >
-                  Sauvegarder
-                </button>
-                <button onClick={() => setEditId(null)} disabled={editLoading}>
-                  Annuler
-                </button>
-              </>
-            );
-          }
-          if (row.statut !== "résolue") {
-            return <button onClick={() => handleEdit(row)}>Éditer</button>;
-          }
-          return null;
         },
       },
     },
@@ -289,9 +419,26 @@ const NetworkReclamationsTable = ({ gestion = false }) => {
 
   return (
     <Box p={2}>
-      <Typography variant="h6" gutterBottom>
-        Réclamations réseau
-      </Typography>
+      <Box
+        sx={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          mb: 2,
+        }}
+      >
+        <Typography variant="h6">Réclamations réseau</Typography>
+        {gestion && (
+          <Button
+            variant="contained"
+            color="success"
+            onClick={handleExportExcel}
+            sx={{ textTransform: "none" }}
+          >
+            Exporter les opérations clôturées (Excel)
+          </Button>
+        )}
+      </Box>
       {error && <Alert severity="error">{error}</Alert>}
       <ThemeProvider theme={getMuiTheme()}>
         <MUIDataTable
