@@ -32,6 +32,7 @@ const categories = [
 const categoryNeeds = {
   "Structure Bâtiment": [
     "ARMOIRE PHARMACEUTIQUE",
+    "HABILLAGE",
     "BACHE PUBLICITAIRE",
     "BANC CHAISE",
     "CACHE GROUPE ELECTROGENE",
