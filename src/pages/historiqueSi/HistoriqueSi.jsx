@@ -20,6 +20,8 @@ import dayjs from "dayjs";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 import EditIcon from "@mui/icons-material/Edit";
 import CancelIcon from "@mui/icons-material/Cancel";
+// @ts-ignore
+const apiUrl = import.meta.env.VITE_API_URL;
 
 // Pour les listes déroulantes du formulaire
 const statusList = [
@@ -283,7 +285,7 @@ const GestionTicketSi = () => {
     setLoading(true);
     setError(null);
     axios
-      .get("http://localhost:3000/api/v1/ticketSi?isClosed=true")
+      .get(`${apiUrl}/api/v1/ticketSi?isClosed=true`)
       .then((res) => {
         setRows(res.data);
         setLoading(false);

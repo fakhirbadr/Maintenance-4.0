@@ -1,3 +1,4 @@
+import NetworkStatus from "./NetworkStatus";
 import React, { useState } from "react";
 import {
   alpha,
@@ -24,6 +25,10 @@ import myImage from "../../public/scx.png";
 import { motion } from "framer-motion";
 import UniteEtatModal from "./UniteEtatModal";
 import UniteEtatAdminModal from "./UniteEtatAdminModal";
+import PointageTechnicienModal from "./pointageTechnicienModel";
+import PointagevFinalAdmin from "./PointagevFinalAdmin";
+import NotificationBell from "./NotificationBell";
+import AIChatBot from "./AIChatBot";
 
 const drawerWidth = 240;
 
@@ -90,6 +95,8 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
   const theme = useTheme();
   const navigate = useNavigate();
   const [openModal, setOpenModal] = useState(false);
+  const [openTechnicienModal, setOpenTechnicienModal] = useState(false);
+  const [openChatBot, setOpenChatBot] = useState(false);
 
   let role = "user";
   try {
@@ -105,6 +112,21 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
     localStorage.removeItem("authToken");
     navigate("/login");
   };
+
+  // Pour le modal "Pointagevfinal"
+  const handleOpenPointagevfinal = () => {
+    setOpenTechnicienModal(true);
+  };
+  const handleClosePointagevfinal = () => {
+    setOpenTechnicienModal(false);
+  };
+
+  // Rôles pour afficher le composant admin
+  const isAdminRole =
+    role === "superviseur" ||
+    role === "admin" ||
+    role === "chargés de performance";
+  const isTechRole = role === "technicien" || role === "user";
 
   return (
     <>
@@ -150,10 +172,31 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
           <Box flexGrow={1} />
 
           <Stack direction={"row"} spacing={1}>
-            <Button
+            {/* <Button
               color="primary"
               variant="outlined"
               onClick={() => setOpenModal(true)}
+              sx={{
+                borderRadius: 2,
+                borderColor:
+                  theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
+                color: theme.palette.mode === "dark" ? "#90caf9" : "#1976d2",
+                fontWeight: 600,
+                textTransform: "none",
+                px: 2,
+                boxShadow: "none",
+                "&:hover": {
+                  borderColor: theme.palette.primary.main,
+                  background: alpha(theme.palette.primary.light, 0.08),
+                },
+              }}
+            >
+              Pointage
+            </Button> */}
+            <Button
+              color="primary"
+              variant="outlined"
+              onClick={handleOpenPointagevfinal}
               sx={{
                 borderRadius: 2,
                 borderColor:
@@ -174,13 +217,15 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             <IconButton color="inherit" component={Link} to="/homepage">
               <HomeRoundedIcon />
             </IconButton>
-            <IconButton
+            {/* Icône réseau pour test et réclamation */}
+            <NetworkStatus />
+            {/* <IconButton
               sx={{ color: "inherit" }}
               component={Link}
               to="/NetworkPatient"
             >
               <SpeedRoundedIcon sx={{ fontSize: 25 }} />
-            </IconButton>
+            </IconButton> */}
             <IconButton
               sx={{ color: "inherit" }}
               component={Link}
@@ -188,6 +233,13 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
             >
               <GradingOutlinedIcon />
             </IconButton>
+
+            {/* Notification Bell */}
+            <NotificationBell />
+
+            {/* AI ChatBot - superviseurs seulement */}
+            {/* {role === "superviseur" && <AIChatBot />} */}
+
             <IconButton color={"inherit"}>
               <SettingsOutlinedIcon />
             </IconButton>
@@ -200,12 +252,28 @@ export default function TopBar({ open, handleDrawerOpen, setMode }) {
           </Stack>
         </Toolbar>
       </AppBar>
+
+      {/* Modal classique */}
       {role === "user" ? (
         <UniteEtatModal open={openModal} onClose={() => setOpenModal(false)} />
       ) : (
         <UniteEtatAdminModal
           open={openModal}
           onClose={() => setOpenModal(false)}
+        />
+      )}
+
+      {/* Modal Pointagevfinal/Technicien ou Admin */}
+      {isTechRole && (
+        <PointageTechnicienModal
+          open={openTechnicienModal}
+          onClose={handleClosePointagevfinal}
+        />
+      )}
+      {isAdminRole && (
+        <PointagevFinalAdmin
+          open={openTechnicienModal}
+          onClose={handleClosePointagevfinal}
         />
       )}
     </>

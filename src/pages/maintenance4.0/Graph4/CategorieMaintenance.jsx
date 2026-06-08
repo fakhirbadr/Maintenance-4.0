@@ -18,7 +18,7 @@ const apiUrl = import.meta.env.VITE_API_URL;
 // Register Chart.js components
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
+const CategorieMaintenance = ({ region, province, startDate, endDate, site }) => {
   const [data, setData] = useState([]); // Données pour le PieChart
   const [loading, setLoading] = useState(true); // Indicateur de chargement
   const [error, setError] = useState(null); // Gestion des erreurs
@@ -34,6 +34,9 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
       }
       if (province) {
         url += `&province=${province}`;
+      }
+      if (site) {
+        url += `&site=${site}`;
       }
       if (startDate) {
         url += `&startDate=${startDate}`; // Ajout du filtre startDate
@@ -85,7 +88,7 @@ const CategorieMaintenance = ({ region, province, startDate, endDate }) => {
   // Récupérer les données au montage du composant
   useEffect(() => {
     fetchData();
-  }, [region, province, startDate, endDate]);
+  }, [region, province, startDate, endDate,site]);
 
   // Thème Material-UI
   const theme = createTheme({

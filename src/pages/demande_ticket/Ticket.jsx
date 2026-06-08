@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Location from "../../components/Location";
 import Card from "@mui/material/Card";
 import CardContent from "@mui/material/CardContent";
@@ -7,11 +7,14 @@ import Typography from "@mui/material/Typography";
 import CardActionArea from "@mui/material/CardActionArea";
 import ModelMaintenance from "./ModelMaintenance.jsx";
 import ModelFourniture from "./ModelFourniture.jsx";
+import ModelPharmaceutique from "./ModelPharmaceutique.jsx";
 import myImage from "./4.jpg";
 import myImage2 from "./3.jpg";
 import myImage5 from "./5.jpg";
 import myImage6 from "./6.png";
 import myImage7 from "./9.png";
+import myImage8 from "./10.jpg";
+import myImage9 from "./11.png";
 import ModelVehicule from "./ModelVehicule";
 import ModelRetour from "./ModelRetour";
 import { Grid, useTheme, Box, Container, Fade, Grow } from "@mui/material";
@@ -27,6 +30,21 @@ const Ticket = () => {
   const [openRetour, setOpenRetour] = useState(false);
   const [hoveredCard, setHoveredCard] = useState(null);
   const [openProblemeSI, setOpenProblemeSI] = useState(false);
+  const [openPharmaceutique, setOpenPharmaceutique] = useState(false);
+  const [userRole, setUserRole] = useState("");
+
+  // Récupérer le rôle utilisateur depuis le localStorage
+  useEffect(() => {
+    try {
+      const userInfo = localStorage.getItem("userInfo");
+      if (userInfo) {
+        const obj = JSON.parse(userInfo);
+        setUserRole(obj.role || "");
+      }
+    } catch (e) {
+      setUserRole("");
+    }
+  }, []);
 
   // Styles améliorés avec animation
   const cardStyles = {
@@ -77,7 +95,8 @@ const Ticket = () => {
     setHoveredCard(null);
   };
 
-  const cardData = [
+  // Données des cartes complètes
+  const allCardData = [
     {
       title: "Intervention Technique",
       image: myImage2,
@@ -92,6 +111,13 @@ const Ticket = () => {
         "Demande d'achat de fournitures, pièces détachées ou équipements spécifiques.",
       onClick: () => setOpenFourniture(true),
     },
+     {
+      title: "Commande Pharmaceutique",
+      image: myImage9,
+      description:
+        "Demande d'équipements pharmaceutiques : Glucomètre, Lunette oxygène, Ordonnanceur, Gel d'échographie, Drap d'examen, Toise.",
+      onClick: () => setOpenPharmaceutique(true),
+    },
     {
       title: "Service Véhicule",
       image: myImage5,
@@ -99,21 +125,53 @@ const Ticket = () => {
         "Réservation de véhicule ou demande d'intervention mécanique d'urgence.",
       onClick: () => setOpenVehicule(true),
     },
-    // {
-    //   title: "Retour d'Équipement",
-    //   image: myImage6,
+    {
+      title: "Transfer Management",
+      image: myImage6,
+      description:
+        "Ce module permet de gérer le déplacement des équipements entre les différentes unités, sites ou zones d’intervention.",
+      onClick: () => setOpenRetour(true),
+    },
+    {
+      title: "Problème Système d'Information",
+      image: myImage7,
+      description:
+        "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
+      onClick: () => setOpenProblemeSI(true),
+    },
+   
+    //  {
+    //   title: "HR Services",
+    //   image: myImage8,
     //   description:
-    //     "Signalement d'un équipement défectueux ou demande de retour de matériel en fin d'utilisation.",
-    //   onClick: () => setOpenRetour(true),
-    // },
-    // {
-    //   title: "Problème Système d'Information",
-    //   image: myImage7,
-    //   description:
-    //     "Signalement d'un dysfonctionnement ou d'un incident lié au système d'information.",
+    //     "Ce module regroupe toutes vos demandes RH afin de faciliter leur gestion et leur traitement.",
     //   onClick: () => setOpenProblemeSI(true),
     // },
   ];
+
+  // Filtrer les cartes selon le rôle
+  const cardData = userRole === "technicien" 
+    ? allCardData.filter(card => card.title === "Service Véhicule")
+    : allCardData;
+
+  // Configuration de la grille selon le nombre de cartes
+  const getGridConfig = () => {
+    if (userRole === "technicien") {
+      // Pour les techniciens (1 seule carte)
+      return {
+        container: { justifyContent: "center" },
+        item: { xs: 12, md: 6, lg: 4 }
+      };
+    } else {
+      // Pour les autres rôles (6 cartes)
+      return {
+        container: { justifyContent: "center" },
+        item: { xs: 12, md: 6, lg: 2 }
+      };
+    }
+  };
+
+  const gridConfig = getGridConfig();
 
   return (
     <>
@@ -130,8 +188,6 @@ const Ticket = () => {
         }}
       >
         <Container maxWidth="xl">
-          {" "}
-          {/* Changé de lg à xl pour plus de largeur */}
           <Typography
             variant="h4"
             component="h1"
@@ -151,18 +207,14 @@ const Ticket = () => {
               },
             }}
           >
-            Services Disponibles
+            {userRole === "technicien" ? "Service Véhicule" : "Services Disponibles"}
           </Typography>
           <Box sx={{ flexGrow: 1 }}>
-            <Grid container spacing={3} justifyContent="center">
-              {" "}
-              {/* Espacement réduit à 3 */}
+            <Grid container spacing={3} {...gridConfig.container}>
               {cardData.map((card, index) => (
                 <Grid
                   item
-                  xs={12}
-                  md={6}
-                  lg={2.4} // 12/5 = 2.4 pour 5 cartes sur une ligne
+                  {...gridConfig.item}
                   key={index}
                   sx={{
                     display: "flex",
@@ -177,8 +229,8 @@ const Ticket = () => {
                     <Card
                       sx={{
                         ...cardStyles,
-                        width: "90%", // Largeur à 90% du conteneur
-                        maxWidth: 300, // Largeur maximale augmentée
+                        width: userRole === "technicien" ? "100%" : "90%",
+                        maxWidth: userRole === "technicien" ? 400 : 300,
                       }}
                       onMouseEnter={() => handleCardHover(index)}
                       onMouseLeave={handleCardLeave}
@@ -255,21 +307,28 @@ const Ticket = () => {
         </Container>
       </Box>
 
-      {/* Modals */}
-      <ModelMaintenance
-        open={openMaintenance}
-        onClose={() => setOpenMaintenance(false)}
-      />
-      <ModelFourniture
-        open={openFourniture}
-        onClose={() => setOpenFourniture(false)}
-      />
+      {/* Modals - Affichage conditionnel selon le rôle */}
+      {userRole !== "technicien" && (
+        <>
+          <ModelMaintenance
+            open={openMaintenance}
+            onClose={() => setOpenMaintenance(false)}
+          />
+          <ModelFourniture
+            open={openFourniture}
+            onClose={() => setOpenFourniture(false)}
+          />
+          <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} />
+          <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
+          <ModelPharmaceutique open={openPharmaceutique} onClose={() => setOpenPharmaceutique(false)} />
+        </>
+      )}
+      
+      {/* Modal Véhicule - Toujours disponible */}
       <ModelVehicule
         open={openVehicule}
         onClose={() => setOpenVehicule(false)}
       />
-      {/* <ModelRetour open={openRetour} onClose={() => setOpenRetour(false)} /> */}
-      <ModalSi open={openProblemeSI} onClose={() => setOpenProblemeSI(false)} />
     </>
   );
 };

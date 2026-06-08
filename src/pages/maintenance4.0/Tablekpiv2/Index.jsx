@@ -48,7 +48,7 @@ const getMappedValue = (data, metric, column) => {
   );
 };
 
-const Index = ({ region, province, startDate, endDate, onTotalClosed }) => {
+const Index = ({ region, province, startDate, endDate,actif, onTotalClosed }) => {
   const theme = useTheme();
   const isDarkMode = theme.palette.mode === "dark";
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
@@ -67,8 +67,10 @@ const Index = ({ region, province, startDate, endDate, onTotalClosed }) => {
     if (province) params.append("province", province);
     if (startDate) params.append("startDate", startDate);
     if (endDate) params.append("endDate", endDate);
+        if (actif) params.append("name", actif); // <-- AJOUTE ce filtre
+
     return params.toString();
-  }, [region, province, startDate, endDate]);
+  }, [region, province, startDate, endDate, actif]);
 
   useEffect(() => {
     const fetchData = async () => {

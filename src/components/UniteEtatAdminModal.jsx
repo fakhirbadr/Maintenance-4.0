@@ -21,6 +21,9 @@ import {
 } from "@mui/material";
 import { useTheme } from "@mui/material/styles";
 import EditPointageModal from "./EditPointageModal";
+import UniteEtatModal from "./UniteEtatModal";
+import * as XLSX from 'xlsx';
+
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
 const columns = [
@@ -51,7 +54,6 @@ function formatDate(val) {
   return new Date(val).toLocaleString("fr-FR");
 }
 
-// Regroupe les pointages par jour (clé = date locale FR, basé sur dateRequest)
 function groupByDay(pointages) {
   return pointages.reduce((acc, ptg) => {
     const dateStr = ptg.dateRequest
@@ -63,7 +65,6 @@ function groupByDay(pointages) {
   }, {});
 }
 
-// Regroupe les pointages par région pour un jour donné
 function groupByRegion(pointages) {
   return pointages.reduce((acc, ptg) => {
     const region = ptg.region || "Région inconnue";
@@ -73,20 +74,16 @@ function groupByRegion(pointages) {
   }, {});
 }
 
-// Retourne les unités actives sans pointage pour un jour donné, groupées par région
 function getUnitesSansPointage(unites, pointagesDuJour) {
-  // Set des noms d'unité ayant pointé ce jour
   const pointageUniteNames = new Set(pointagesDuJour.map((p) => p.site));
-  // Regroupe les unités par région
   const grouped = {};
   for (const unite of unites) {
     if (!grouped[unite.region]) grouped[unite.region] = [];
-    // On ajoute seulement si l'unité n'a PAS fait de pointage ce jour
     if (!pointageUniteNames.has(unite.name)) {
       grouped[unite.region].push(unite);
     }
   }
-  return grouped; // {region: [unites sans pointage]}
+  return grouped;
 }
 
 const UniteEtatAdminModal = ({ open, onClose }) => {
@@ -100,17 +97,33 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
   const [sendMailMsg, setSendMailMsg] = useState("");
   const [selectedDay, setSelectedDay] = useState("");
   const [unites, setUnites] = useState([]);
+  const [userRole, setUserRole] = useState("");
+  const [userEmail, setUserEmail] = useState("");
+  const [adminModalOpen, setAdminModalOpen] = useState(false);
+
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down("md"));
 
-  // Récupère les pointages (à chaque ouverture)
+  useEffect(() => {
+    try {
+      const userInfo = localStorage.getItem("userInfo");
+      if (userInfo) {
+        const obj = JSON.parse(userInfo);
+        setUserRole(obj.role || "");
+        setUserEmail(obj.email || "");
+      }
+    } catch (e) {
+      setUserRole("");
+      setUserEmail("");
+    }
+  }, []);
+
   const fetchData = () => {
     setLoading(true);
     fetch(`${apiUrl}/api/v1/pointage`)
       .then(async (res) => {
         if (!res.ok) throw new Error("Erreur lors du chargement");
         let data = await res.json();
-        // Filtrer sur les 30 derniers jours (par rapport à createdAt)
         const now = new Date();
         const thirtyDaysAgo = new Date();
         thirtyDaysAgo.setDate(now.getDate() - 30);
@@ -125,7 +138,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
       .finally(() => setLoading(false));
   };
 
-  // Récupère les unités actives (une seule fois à l'ouverture)
   const fetchUnites = () => {
     fetch(`${apiUrl}/api/actifs/nameRegionProvince`)
       .then((res) => res.json())
@@ -141,7 +153,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  // Regroupe les pointages par jour
   const grouped = groupByDay(pointages);
   const days = Object.keys(grouped);
 
@@ -156,7 +167,19 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setEditModalOpen(true);
   };
 
-  // Correction ici : on cible bien /pointage/:customId
+  const handleAdminEditClick = () => {
+    setAdminModalOpen(true);
+  };
+
+  const handleAdminModalClose = () => {
+    setAdminModalOpen(false);
+  };
+
+  const handleEditModalClose = () => {
+    setEditModalOpen(false);
+    setSelectedPointage(null);
+  };
+
   const handleEditSave = async (form) => {
     try {
       if (!form.customId) throw new Error("ID manquant pour la mise à jour");
@@ -174,7 +197,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     }
   };
 
-  // Envoi le recapitulatif du jour sélectionné par mail
   const sendRecapEmail = async () => {
     setSendingMail(true);
     setSendMailMsg("");
@@ -184,7 +206,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         setSendingMail(false);
         return;
       }
-      // Transforme le format '20/05/2025' en '2025-05-20'
       const [d, m, y] = selectedDay.split("/");
       const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
       const res = await fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
@@ -204,7 +225,6 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     setSendingMail(false);
   };
 
-  // Envoi des deux rapports simultanément
   const sendBothReports = async () => {
     setSendingBoth(true);
     setSendMailMsg("");
@@ -214,12 +234,8 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
         setSendingBoth(false);
         return;
       }
-      
-      // Formatage de la date
       const [d, m, y] = selectedDay.split("/");
       const dayStr = `${y}-${m.padStart(2, "0")}-${d.padStart(2, "0")}`;
-      
-      // Envoi des deux rapports en parallèle
       const responses = await Promise.allSettled([
         fetch(`${apiUrl}/api/v1/pointage/send-daily-report`, {
           method: "POST",
@@ -230,50 +246,44 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ date: dayStr }),
-        })
+        }),
       ]);
-
-      // Traitement des réponses
       const results = [];
-      
       for (let i = 0; i < responses.length; i++) {
         const name = i === 0 ? "Quotidien" : "Inactifs";
         const response = responses[i];
-        
-        if (response.status === 'rejected') {
+        if (response.status === "rejected") {
           results.push(`${name}: Erreur réseau - ${response.reason.message}`);
           continue;
         }
-        
         const res = response.value;
         try {
           const text = await res.text();
-          
-          // Détecter les réponses HTML
-          if (text.trim().startsWith("<!DOCTYPE html>") || 
-              text.includes("<html>") || 
-              text.includes("<head>")) {
+          if (
+            text.trim().startsWith("<!DOCTYPE html>") ||
+            text.includes("<html>") ||
+            text.includes("<head>")
+          ) {
             results.push(`${name}: Erreur serveur (500)`);
             continue;
           }
-          
           try {
             const data = JSON.parse(text);
             if (res.ok) {
               results.push(`${name}: Succès`);
             } else {
-              // Extraire le message d'erreur du JSON
               const errorMsg = data.message || data.error || res.statusText;
               results.push(`${name}: ${errorMsg}`);
             }
           } catch (e) {
-            results.push(`${name}: Réponse invalide - ${text.substring(0, 50)}`);
+            results.push(
+              `${name}: Réponse invalide - ${text.substring(0, 50)}`
+            );
           }
         } catch (e) {
           results.push(`${name}: Erreur de lecture - ${e.message}`);
         }
       }
-
       setSendMailMsg(results.join(" | "));
     } catch (e) {
       setSendMailMsg("Erreur inattendue: " + e.message);
@@ -282,7 +292,132 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     }
   };
 
-  // --- Groupement par région pour le jour sélectionné
+  const exportAbsencesToExcel = () => {
+    if (!selectedDay) {
+      alert("Veuillez sélectionner une date");
+      return;
+    }
+  
+    const presenceData = [];
+    
+    // Traiter les pointages existants (exclure les unités ULC)
+    pointagesDuJour.forEach(pointage => {
+      if (pointage.site && !pointage.site.startsWith("ULC")) {
+        presenceData.push({
+          Date: selectedDay,
+          Région: pointage.region || "Non spécifiée",
+          Province: pointage.province || "Non spécifiée",
+          "Unité": pointage.site,
+          "Médecin": pointage.medcinPresent === true ? "Présent" : pointage.medcinPresent === false ? "Absent" : "Non renseigné",
+          "Infirmière 1": pointage.infirmiere1Present === true ? "Présent" : pointage.infirmiere1Present === false ? "Absent" : "Non renseigné",
+          "Infirmière 2": pointage.infirmiere2Present === true ? "Présent" : pointage.infirmiere2Present === false ? "Absent" : "Non renseigné"
+        });
+      }
+    });
+  
+    // Ajouter les unités sans pointage (exclure les unités ULC)
+    Object.entries(unitesSansPointageParRegion).forEach(([region, unites]) => {
+      unites.forEach(unite => {
+        if (unite.name && !unite.name.startsWith("ULC")) {
+          presenceData.push({
+            Date: selectedDay,
+            Région: region,
+            Province: unite.province,
+            "Unité": unite.name,
+            "Médecin": "Pas de pointage",
+            "Infirmière 1": "Pas de pointage",
+            "Infirmière 2": "Pas de pointage"
+          });
+        }
+      });
+    });
+  
+    if (presenceData.length === 0) {
+      alert("Aucune donnée à exporter pour cette date");
+      return;
+    }
+  
+    // Trier par région puis par province
+    presenceData.sort((a, b) => {
+      if (a.Région !== b.Région) {
+        return a.Région.localeCompare(b.Région);
+      }
+      return a.Province.localeCompare(b.Province);
+    });
+  
+    const wb = XLSX.utils.book_new();
+    const ws = XLSX.utils.json_to_sheet(presenceData);
+    
+    // Définir les styles de couleur
+    const greenFill = { fgColor: { rgb: "90EE90" } }; // Vert clair pour présent
+    const redFill = { fgColor: { rgb: "FFB6C1" } };   // Rouge clair pour absent
+    const grayFill = { fgColor: { rgb: "D3D3D3" } };  // Gris pour pas de pointage
+    const headerFill = { fgColor: { rgb: "FFFFAA00" } }; // Jaune pour les en-têtes
+  
+    // Appliquer les styles aux cellules
+    const range = XLSX.utils.decode_range(ws['!ref']);
+    
+    // Style des en-têtes (première ligne)
+    for (let col = range.s.c; col <= range.e.c; col++) {
+      const cellAddress = XLSX.utils.encode_cell({ r: 0, c: col });
+      if (!ws[cellAddress]) continue;
+      ws[cellAddress].s = {
+        font: { bold: true, color: { rgb: "000000" } },
+        fill: headerFill,
+        alignment: { horizontal: "center" }
+      };
+    }
+  
+    // Style des données
+    for (let row = 1; row <= range.e.r; row++) {
+      // Colonnes du personnel (Médecin, Infirmière 1, Infirmière 2)
+      const medecinCol = 4; // Colonne E (index 4)
+      const inf1Col = 5;    // Colonne F (index 5)
+      const inf2Col = 6;    // Colonne G (index 6)
+      
+      [medecinCol, inf1Col, inf2Col].forEach(col => {
+        const cellAddress = XLSX.utils.encode_cell({ r: row, c: col });
+        if (!ws[cellAddress]) return;
+        
+        const cellValue = ws[cellAddress].v;
+        let fill;
+        
+        if (cellValue === "Présent") {
+          fill = greenFill;
+        } else if (cellValue === "Absent") {
+          fill = redFill;
+        } else {
+          fill = grayFill;
+        }
+        
+        ws[cellAddress].s = {
+          fill: fill,
+          alignment: { horizontal: "center" },
+          font: { bold: cellValue === "Présent" || cellValue === "Absent" }
+        };
+      });
+    }
+    
+    // Ajuster la largeur des colonnes
+    const colWidths = [
+      { wch: 12 }, // Date
+      { wch: 15 }, // Région
+      { wch: 15 }, // Province
+      { wch: 25 }, // Unité
+      { wch: 15 }, // Médecin
+      { wch: 15 }, // Infirmière 1
+      { wch: 15 }  // Infirmière 2
+    ];
+    
+    ws['!cols'] = colWidths;
+    
+    XLSX.utils.book_append_sheet(wb, ws, "Présence Personnel");
+    
+    const fileName = `Presence_Personnel_${selectedDay.replace(/\//g, '-')}.xlsx`;
+    
+    XLSX.writeFile(wb, fileName);
+  };
+
   const pointagesDuJour =
     selectedDay && grouped[selectedDay] ? grouped[selectedDay] : [];
   const groupedByRegion = groupByRegion(pointagesDuJour);
@@ -290,6 +425,15 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
     unites,
     pointagesDuJour
   );
+
+  const showAdminButton = userRole === "chargés de performance";
+
+  function canEdit(row) {
+    return (
+      userRole === "chargés de performance" ||
+      (row.user && row.user.toLowerCase() === userEmail.toLowerCase())
+    );
+  }
 
   return (
     <>
@@ -334,12 +478,12 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
               disabled={sendingBoth || !selectedDay}
               color="primary"
               variant="contained"
-              sx={{ 
-                mb: 2, 
-                mt: 0, 
+              sx={{
+                mb: 2,
+                mt: 0,
                 ml: 2,
-                backgroundColor: '#4caf50',
-                '&:hover': { backgroundColor: '#388e3c' }
+                backgroundColor: "#4caf50",
+                "&:hover": { backgroundColor: "#388e3c" },
               }}
             >
               {sendingBoth
@@ -421,19 +565,20 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
                         </TableCell>
                         <TableCell>{formatBool(row.siteActif)}</TableCell>
                         <TableCell>
-                          <Button
-                            variant="outlined"
-                            size="small"
-                            onClick={() => handleEditClick(row)}
-                          >
-                            Modifier
-                          </Button>
+                          {canEdit(row) && (
+                            <Button
+                              variant="outlined"
+                              size="small"
+                              onClick={() => handleEditClick(row)}
+                            >
+                              Modifier
+                            </Button>
+                          )}
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
-                {/* Unités sans pointage */}
                 <Box mt={1}>
                   <Typography
                     variant="subtitle2"
@@ -459,6 +604,25 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
           )}
         </DialogContent>
         <DialogActions>
+          {showAdminButton && (
+            <>
+             <Button
+  onClick={exportAbsencesToExcel}
+  color="success"
+  variant="contained"
+  sx={{ mr: 1 }}
+>
+  Exporter statut unités (Excel)
+</Button>
+              <Button
+                onClick={handleAdminEditClick}
+                color="info"
+                variant="contained"
+              >
+                Mode Admin *
+              </Button>
+            </>
+          )}
           <Button onClick={onClose} color="primary" variant="contained">
             Fermer
           </Button>
@@ -466,9 +630,13 @@ const UniteEtatAdminModal = ({ open, onClose }) => {
       </Dialog>
       <EditPointageModal
         open={editModalOpen}
-        onClose={() => setEditModalOpen(false)}
+        onClose={handleEditModalClose}
         pointage={selectedPointage}
         onSave={handleEditSave}
+      />
+      <UniteEtatModal
+        open={adminModalOpen}
+        onClose={handleAdminModalClose}
       />
     </>
   );

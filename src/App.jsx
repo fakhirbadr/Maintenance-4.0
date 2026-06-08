@@ -5,6 +5,7 @@ import CssBaseline from "@mui/material/CssBaseline";
 import { Outlet, useLocation } from "react-router-dom";
 import TopBar from "./components/TopBar";
 import SideBar from "./components/SidBar";
+
 import { getDesignTokens } from "./theme";
 import "./index.css";
 
@@ -44,6 +45,7 @@ export default function MiniDrawer() {
           <CssBaseline />
 
           {/* Conditionally render TopBar and SideBar based on current route */}
+
           {!isLoginPage && (
             <>
               <TopBar

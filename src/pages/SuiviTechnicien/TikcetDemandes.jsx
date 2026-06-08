@@ -1,50 +1,103 @@
 import React, { useEffect, useState } from "react";
 import {
-  IconButton,
+  Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  TextField,
-  Button,
   Typography,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
 } from "@mui/material";
 import { ThemeProvider, createTheme } from "@mui/material/styles";
 import MUIDataTable from "mui-datatables";
 import * as XLSX from "xlsx";
-import moment from "moment";
 import axios from "axios";
 // @ts-ignore
 const apiUrl = import.meta.env.VITE_API_URL;
+
 const TicketDemandes = () => {
   const [name, setName] = useState("");
   const [rows, setRows] = useState([]);
+  const [loadingId, setLoadingId] = useState(null);
+  const [confirmDialogOpen, setConfirmDialogOpen] = useState(false);
+  const [selectedRow, setSelectedRow] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
-      if (!name) return; // Évite de faire une requête si name est vide
+      if (!name) return;
       try {
-        const response = await axios.get(
+        // Charger les commandes (fournitureRoutes)
+        const commandesResponse = await axios.get(
           `${apiUrl}/api/v1/fournitureRoutes?technicien=${name}&isDeleted=false`
         );
-        setRows(response.data.fournitures);
+        const commandes = commandesResponse.data.fournitures || [];
+
+        // Charger les sous-tickets
+        const subticketsResponse = await axios.get(
+          `${apiUrl}/api/v1/subtickets?technicien=${name}`
+        );
+        const subtickets = subticketsResponse.data.subTickets || [];
+        console.log("Commandes:", commandes);
+        console.log("Sous-tickets:", subtickets);
+
+        // Normaliser et fusionner les données
+        // Ajout d'un champ "type" pour distinguer commandes / sous-tickets
+        const commandesNormalized = commandes.map((item) => ({
+          id: item._id || item.id,
+          name: item.name || item.titre || "—",
+          categorie: item.categorie || "—",
+          besoin: item.besoin || item.description || "—",
+          quantite: item.quantite || 0,
+          technicien: item.technicien || "—",
+          status: item.status || "—",
+          isClosed: item.isClosed || false,
+          commentaire: item.commentaire || "",
+          dateCreation: item.dateCreation || item.createdAt || "",
+          technicienReception: item.technicienReception || "",
+          type: "Commande",
+        }));
+
+        const subticketsNormalized = subtickets.map((item) => ({
+          id: item._id || item.id,
+          name: item.name || item.titre || "—",
+          categorie: item.categorie || "—",
+          besoin: item.description || "—",
+          quantite: item.quantite || 0,
+          technicien: item.technicien || "—",
+          status: item.status || "—",
+          isClosed: item.isClosed || false,
+          commentaire: item.commentaire || "",
+          dateCreation: item.dateCreation || item.createdAt || "",
+          technicienReception: item.technicienReception || "",
+          type: "Sous-ticket",
+          parentId: item.parentId || null,
+        }));
+
+        // Fusionner les deux tableaux
+        let mergedRows = [...commandesNormalized, ...subticketsNormalized];
+
+        // --- AFFICHER LES NOUVEAUX TICKETS EN PREMIER ---
+        mergedRows = mergedRows.sort((a, b) => {
+          // Si dateCreation n'est pas valide, remonter en haut
+          const dateA = a.dateCreation ? new Date(a.dateCreation).getTime() : 0;
+          const dateB = b.dateCreation ? new Date(b.dateCreation).getTime() : 0;
+          return dateB - dateA; // Les plus récents (plus grande date) en premier
+        });
+
+        setRows(mergedRows);
       } catch (error) {
         console.error("Erreur lors de la récupération des données :", error);
       }
     };
     fetchData();
-  }, [name]); // Ajout de name comme dépendance
+  }, [name]);
 
   const handleDownloadExcel = () => {
     const worksheet = XLSX.utils.json_to_sheet(rows);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Collaborateurs");
-    XLSX.writeFile(workbook, "demande_fourniture.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Tickets");
+    XLSX.writeFile(workbook, "tickets_fourniture_et_subtickets.xlsx");
   };
+
   const getMuiTheme = () =>
     createTheme({
       typography: { fontFamily: "sans-serif" },
@@ -65,39 +118,171 @@ const TicketDemandes = () => {
         },
       },
     });
+
+  const handleReceptionClick = (rowData) => {
+    setSelectedRow(rowData);
+    setConfirmDialogOpen(true);
+  };
+
+  const handleConfirmReception = async () => {
+    const id = selectedRow.id;
+    setLoadingId(id);
+    setConfirmDialogOpen(false);
+    
+    try {
+      const token = localStorage.getItem("authToken");
+      const headers = token ? { Authorization: `Bearer ${token}` } : {};
+      const currentDate = new Date();
+      currentDate.setHours(currentDate.getHours());
+
+      if (selectedRow.type === "Commande") {
+        // Pour les commandes (fournitures)
+        const updateData = {
+          status: "recu",
+          technicienReception: name,
+          name: selectedRow.name,
+          categorie: selectedRow.categorie,
+          besoin: selectedRow.besoin,
+          quantite: selectedRow.quantite,
+          isClosed: true,
+          dateCloture: currentDate.toISOString(),
+          cloturerPar: name,
+          commentaire: selectedRow.commentaire,
+        };
+
+        console.log(`Mise à jour fournitureRoutes avec ID:`, id);
+        console.log("Données envoyées:", updateData);
+
+        await axios.patch(`${apiUrl}/api/v1/fournitureRoutes/${id}`, updateData, { headers });
+        
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            row.id === id
+              ? {
+                  ...row,
+                  status: "recu",
+                  technicienReception: name,
+                  isClosed: true,
+                }
+              : row
+          )
+        );
+      } else {
+        // Pour les sous-tickets - clôture le parent, met l'équipement à fonctionnel et clôture le sous-ticket
+        console.log("Clôture du ticket parent ID:", selectedRow.parentId);
+        
+        // 1. Fermer le ticket parent
+        const parentPatchResponse = await axios.patch(
+          `${apiUrl}/api/v1/ticketMaintenance/${selectedRow.parentId}`,
+          {
+            isClosed: true,
+            dateCloture: currentDate.toISOString(),
+            cloturerPar: name,
+          },
+          { headers }
+        );
+
+        if (parentPatchResponse.status === 200) {
+          // 2. Remettre l'équipement à fonctionnel (isFunctionel: true)
+          const url = `${apiUrl}/api/actifs/${parentPatchResponse.data.selectedActifId}/categories/${parentPatchResponse.data.selectedCategoryId}/equipments/${parentPatchResponse.data.selectedEquipmentId}`;
+          console.log("Mise à jour équipement actif à fonctionnel :", url);
+          try {
+            await axios.put(url, { isFunctionel: true }, {
+              headers: {
+                "Content-Type": "application/json",
+                ...(token && { Authorization: `Bearer ${token}` }),
+              },
+            });
+          } catch (error) {
+            console.error("Erreur lors de la mise à jour de l'équipement:", error.message);
+          }
+        }
+
+        // 3. Fermer le sous-ticket
+        const updateData = {
+          status: "recu",
+          technicienReception: name,
+          name: selectedRow.name,
+          categorie: selectedRow.categorie,
+          description: selectedRow.besoin,
+          quantite: selectedRow.quantite,
+          isClosed: true,
+          dateCloture: currentDate.toISOString(),
+          commentaire: selectedRow.commentaire,
+        };
+
+        console.log(`Mise à jour sous-ticket avec ID:`, id);
+        await axios.patch(`${apiUrl}/api/v1/sub-tickets/${id}`, updateData, { headers });
+
+        setRows((prevRows) =>
+          prevRows.map((row) =>
+            row.id === id
+              ? {
+                  ...row,
+                  status: "recu",
+                  technicienReception: name,
+                  isClosed: true,
+                }
+              : row
+          )
+        );
+      }
+
+      console.log("Accusé de réception effectué avec succès");
+      
+    } catch (error) {
+      console.error("Erreur lors de l'accusé de réception :", error);
+      console.error("Détails de l'erreur:", error.response?.data);
+      
+      let errorMessage = "Erreur inconnue";
+      if (error.response?.status === 404) {
+        errorMessage = `L'endpoint pour ${selectedRow.type} n'existe pas. Vérifiez la configuration des routes backend.`;
+      } else if (error.response?.data?.message) {
+        errorMessage = error.response.data.message;
+      } else {
+        errorMessage = error.message;
+      }
+      
+      alert(`Erreur lors de l'accusé de réception : ${errorMessage}`);
+    }
+    
+    setLoadingId(null);
+    setSelectedRow(null);
+  };
+
+  const handleCancelReception = () => {
+    setConfirmDialogOpen(false);
+    setSelectedRow(null);
+  };
+
   const options = {
     filterType: "checkbox",
     selectableRows: "none",
-
     rowsPerPage: 100,
     rowsPerPageOptions: [10, 50, 70, 100],
     search: true,
     download: true,
     setRowProps: (_, dataIndex) => {
-      // Check if the ticket is closed
       const rowData = rows[dataIndex];
       return {
         style: {
-          backgroundColor: rowData.isClosed ? "" : "inherit", // Green if closed
+          backgroundColor: rowData.isClosed ? "" : "inherit",
         },
       };
     },
   };
+
   useEffect(() => {
     const storedUserInfo = localStorage.getItem("userInfo");
     if (storedUserInfo) {
-      const userInfo = JSON.parse(storedUserInfo); // Parse the stored JSON object
-
+      const userInfo = JSON.parse(storedUserInfo);
       if (userInfo.nomComplet) {
         setName(userInfo.nomComplet);
-        // Mise à jour du technicien
       }
-
-      console.log(name);
     }
   }, []);
+
   const columns = [
-    // { name: "id", options: { filter: false } },
     {
       name: "name",
       label: "Nom",
@@ -125,20 +310,20 @@ const TicketDemandes = () => {
     },
     {
       name: "status",
-      label: "status",
+      label: "Status",
       options: { filter: true, sort: false, filterType: "dropdown" },
     },
     {
       name: "isClosed",
-      label: "etat",
+      label: "État",
       options: {
         filter: true,
         filterType: "dropdown",
         customBodyRender: (value) => (value ? "traité" : "en cours"),
         filterOptions: {
-          names: ["traité", "en cours"], // Valeurs personnalisées dans la liste déroulante
+          names: ["traité", "en cours"],
           logic: (value, filterValue) => {
-            if (filterValue.length === 0) return false; // Aucune condition si aucun filtre sélectionné
+            if (filterValue.length === 0) return false;
             return (
               (filterValue.includes("traité") && !value) ||
               (filterValue.includes("en cours") && value)
@@ -158,8 +343,9 @@ const TicketDemandes = () => {
       options: {
         filter: true,
         sort: false,
-        filterType: "dropdown", // Liste déroulante pour les dates
+        filterType: "dropdown",
         customBodyRender: (value) => {
+          if (!value) return "—";
           const date = new Date(value);
           return date.toLocaleString("fr-FR", {
             year: "numeric",
@@ -171,6 +357,47 @@ const TicketDemandes = () => {
         },
       },
     },
+    {
+      name: "technicienReception",
+      label: "Technicien réception",
+      options: {
+        filter: true,
+        sort: false,
+        filterType: "dropdown",
+        customBodyRenderLite: (dataIndex) => {
+          const row = rows[dataIndex];
+          if (row.status === "recu") {
+            return row.technicienReception || "—";
+          }
+          if (
+            row.status === "En cours de livraison" ||
+            row.status === "Achat sur place"
+          ) {
+            return (
+              <Button
+                variant="contained"
+                color="success"
+                size="small"
+                disabled={loadingId === row.id}
+                onClick={() => handleReceptionClick(row)}
+              >
+                {loadingId === row.id ? "..." : "Accuser réception"}
+              </Button>
+            );
+          }
+          return "—";
+        },
+      },
+    },
+    {
+      name: "type",
+      label: "Type",
+      options: {
+        filter: true,
+        sort: true,
+        filterType: "dropdown",
+      },
+    },
   ];
 
   return (
@@ -180,17 +407,39 @@ const TicketDemandes = () => {
           Télécharger Excel
         </Button>
       </div>
-
       <div className="w-[100%] py-3">
         <ThemeProvider theme={getMuiTheme()}>
-          <MUIDataTable
-            title={"Gestion des fournitures"}
-            data={rows}
-            columns={columns}
-            options={options}
-          />
+          <MUIDataTable title={"Gestion des Tickets"} data={rows} columns={columns} options={options} />
         </ThemeProvider>
       </div>
+
+      <Dialog open={confirmDialogOpen} onClose={handleCancelReception}>
+        <DialogTitle>Confirmation</DialogTitle>
+        <DialogContent>
+          <Typography>
+            Voulez-vous vraiment accuser la réception de cette demande ?
+            <br />
+            <strong>Type:</strong> {selectedRow?.type}
+            <br />
+            <strong>Nom:</strong> {selectedRow?.name}
+            <br />
+            Le statut sera automatiquement changé vers "recu".
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={handleCancelReception} color="secondary">
+            Annuler
+          </Button>
+          <Button
+            onClick={handleConfirmReception}
+            color="primary"
+            variant="contained"
+            disabled={loadingId === (selectedRow?.id)}
+          >
+            {loadingId === (selectedRow?.id) ? "Traitement..." : "Confirmer"}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </div>
   );
 };
